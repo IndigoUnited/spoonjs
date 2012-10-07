@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="../../vendor/r.js/require.js"></script>
+        <script>
+            requirejs.config({
+                baseUrl: './',
+                paths: {
+                    // Vendors
+                    'amd-utils': '../../vendor/amd-utils/src',
+                    'events-emitter': '../../vendor/events-emitter/src',
+                    'dom-responder': '../../vendor/dom-responder/src',
+                    'base-adapter': '../../vendor/base-adapter/src/adapters/jquery',
+                    'base-adapter/src': '../../vendor/base-adapter/src',
+                    'address': '../../vendor/address/src',
+                    'jquery': '../../vendor/base-adapter-libs/jquery/jquery-1.8.0',
+                    'handlebars': '../../vendor/handlebars/handlebars-1.0.0.beta.6',
+
+                    // App
+                    'app': './',
+
+                    // Services
+                    'services/broadcaster': '../../src/core/Broadcaster/BroadcasterFactory',
+                    'services/address': '../../src/core/Address/AddressFactory',
+                    'services/state': '../../src/core/StateRegistry/StateRegistryFactory'
+                },
+                shim: {
+                    'handlebars': {
+                        'exports': 'Handlebars'
+                    }
+                },
+                packages: [
+                    // spoon
+                    {
+                        name: 'spoon',
+                        location: '../../src',
+                    },
+                    // dejavu
+                    {
+                        name: 'dejavu',
+                        location: '../../vendor/dejavu/dist/amd/strict'
+                    }
+                ],
+                has: {
+
+                },
+                urlArgs: 'bust=' + (new Date()).getTime()
+            });
+        </script>
+        <style>
+            /*#test {
+                width: 200px;
+                height: 200px;
+                background: red;
+            }*/
+        </style>
+    </head>
+    <body>
+        <div id="test"></div>
+        <script>
+            'use strict';
+
+            require([
+                'jquery',
+                './ApplicationController',
+                'services/state'
+            ], function ($, ApplicationController, stateRegistry) {
+
+                $(document).ready(function () {
+                    // Initialize the Application controller
+                    var appController = new ApplicationController();
+
+                    // Listen for the state change event and call setState on the Application controller
+                    stateRegistry.on('change', appController.setState, appController);
+
+                    // Call set state on the Application controller with the current registry state
+                    // At this time, the current state on the state registry is already set
+                    // This will effectively bootstrap the application
+                    appController.setState(stateRegistry.getCurrent());
+                });
+            });
+        </script>
+
+    </body>
+</html>
