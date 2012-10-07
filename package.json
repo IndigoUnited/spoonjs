@@ -1,0 +1,11 @@
+{
+    "name": "spoon.js",
+    "version": "0.0.1",
+    "devDependencies": {
+        "mocha": ">= 1.6.x",
+        "expect.js": ">= 0.1.x",
+        "domReady": "git://github.com/requirejs/domReady.git",
+        "requirejs": "= 2.0.x",
+        "base-adapter-libs": "git+ssh://git@github.com:IndigoUnited/base-adapter-libs.git"
+    }
+}
