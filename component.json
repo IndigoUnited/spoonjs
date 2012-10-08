@@ -3,8 +3,8 @@
     "version": "0.0.1",
     "main": "./src/",
     "dependencies": {
-        "amd-utils": ">= 0.6.x",
-        "dejavu": ">= 0.0.x",
+        "amd-utils": "0.6.x",
+        "dejavu": "0.0.x",
         "events-emitter": "git@github.com:IndigoUnited/events-emitter.git",
         "base-adapter": "git@github.com:IndigoUnited/base-adapter.git",
         "address": "git@github.com:IndigoUnited/address.git",
