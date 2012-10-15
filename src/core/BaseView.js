@@ -25,6 +25,7 @@ define([
         _nativeElement: null,
         _dom: null,
         _events: null,
+        _controller: null,
 
         /**
          * Constructor.
@@ -124,6 +125,7 @@ define([
                 throw new Error('Views can only link other views.');
             }
 
+            this._controller = view._controller;
             this._dom.addChild(view._dom);
 
             return this.$super(view);
@@ -134,6 +136,9 @@ define([
          */
         _unlink: function (view) {
             if (view instanceof BaseView) {
+                if (this._controller === view._controller) {
+                    this._controller = null;
+                }
                 this._dom.removeChild(view._dom);
                 this.$super(view);
             }
@@ -189,6 +194,11 @@ define([
          * @return {Controller} The view's controller
          */
         _getController: function () {
+            // Return the cached controller if any
+            if (this._controller) {
+                return this._controller;
+            }
+
             var curr,
                 x,
                 length,
@@ -201,11 +211,11 @@ define([
                 for (x = length - 1; x >= 0; x -= 1) {
                     tmp = curr._uplinks[x];
                     if (tmp instanceof Controller) {
-                        return tmp;
+                        return this._controller = tmp;
                     } else if (tmp instanceof BaseView) {
                         ret = tmp._getController();
                         if (ret) {
-                            return ret;
+                            return this._controller = ret;
                         }
                     }
                 }
