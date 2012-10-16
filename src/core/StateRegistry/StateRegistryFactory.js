@@ -8,7 +8,7 @@
 define([
     'spoon/core/StateRegistry/StateRegistry',
     'services/address',
-    'app/config',
+    'app-config',
     'amd-utils/lang/isString',
     'amd-utils/lang/isObject',
     'amd-utils/object/mixIn',

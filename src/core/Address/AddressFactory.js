@@ -8,7 +8,7 @@
 define([
     'address/AddressHash',
     'address/AddressHTML5',
-    'app/config'
+    'app-config'
 ], function (AddressHash, AddressHTML5, config) {
 
     'use strict';
