@@ -11,4 +11,20 @@ Even though frontend development has come a long way, and there are some good so
 
 Not being happy with this, and taking advantage of our experience, we set out to build a framework that would solve these issues, and a few more that were bugging us. The main drive of the framework is to help developers build solid applications faster, without that bitter-sweet feeling the development simplicity will eventually turn into a nightmare of unmaintainable code due to undocumented framework compromises or even bad options by the developer.
 
-So, without getting too into the details, what defines Spoon.js? It's HMVC framework, the "H" stands for hierarchical. Unlike other frameworks, that organise the files depending of the extension, Spoon.js structures the project semantically. What this means is that the project is composed of modules, and this modularity can also be found in the way the project folders are organised. This hierarchy also means that each module has very specific responsibilities, and delegates responsibilities to its parent, but more on this later.
+So, without getting too deep in the details, what makes Spoon.js a 3rd option?
+
+It's an HMVC framework, the "H" stands for hierarchical. Unlike other frameworks, that organise the files depending on the file extension, Spoon.js structures the project semantically, in terms of what feature the module accomplishes in the application. What this means is that the project is composed of modules, and the modularity can be seen both in the implementation, and project organisation.
+
+## Concepts / Drive
+
+- Semantical folder AND application structure (possibly use screenshots), inter-module communication
+- State management and routing
+- Efficient declarative DOM event management with sandboxing
+- Development and testing iterations should be blazing fast
+- Model is undefined, for additional flexibility
+- Easy build for deployment
+- Ease of bootstrapping
+
+## Features
+
+## Feature Roadmap

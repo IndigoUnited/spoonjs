@@ -45,6 +45,7 @@ Ideas for framework:
     [http://livejs.com](http://livejs.com)
 * provide something that eases developing mobile apps
 * provide service for mobile location / orientation
+* Easy way to create separate builds for different devices?
 
 --------------------------------------------------------------------------------
 
@@ -117,7 +118,7 @@ The CLI offers the following commands:
 
 ## The Architect
 
-* Displays overall architecture
+* Displays overall architecture https://github.com/mbostock/d3
   * List of instanciated modules
   * Communication between modules is illustrated in the graph
   * List of non-instanciated modules
@@ -261,7 +262,14 @@ break the event chain.
 ```
 
 ```HTML
-<a href="{{ $url('shops.view', { id: 2 }) }}" class="some_class">
-  {{ $url('shops.view', { id: 2 }) }}
+<a {{ href('shops.view', { id: 2 }) }} class="some_class">
+  {{ url('shops.view', { id: 2 }) }}
 </a>
 ```
+
+Note that state management can work without routes. When the `href` helper is
+called, it generates an `href` HTML attribute, and possibly a `data-state`, in
+case the state does not possess a pattern by itself. In such case, the `href` is
+set to `#`, and the `data-state` is set with an escaped string of the state
+identifier and arguments. This `data-state` will be read when the user clicks
+the link, and used to change the application state.
