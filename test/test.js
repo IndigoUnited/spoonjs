@@ -1,13 +1,13 @@
-/*jshint node:true, strict:false, onevar:false*/
+/*jshint strict:false, node:true, onevar:false*/
 
-if (!(typeof window !== 'undefined' && window.navigator && window.document)) { // Test if we are at command line
+// If we are at node then we use phantomjs + mocha-phantomjs
+if (!(typeof window !== 'undefined' && window.navigator && window.document)) {
     var fs           = require('fs');
     var cp           = require('child_process');
     var createServer = require('http-server').createServer;
 
     // Start an HTTP Server to serve the files
     // This is needed because some tests fail intentionally in the file protocol
-
     var server = createServer({ root: __dirname + '/../' });
     server.listen(8081, '0.0.0.0', function () {
         var phantomjsBin = __dirname + '/../node_modules/.bin/phantomjs';
