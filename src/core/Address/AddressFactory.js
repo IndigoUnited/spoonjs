@@ -8,8 +8,9 @@
 define([
     'address/AddressHash',
     'address/AddressHTML5',
-    'app-config'
-], function (AddressHash, AddressHTML5, config) {
+    'app-config',
+    'amd-utils/string/endsWith'
+], function (AddressHash, AddressHTML5, config, endsWith) {
 
     'use strict';
 
@@ -21,12 +22,12 @@ define([
 
     config = config || {},
     config = config.address || {};
-    options.basePath = config.basePath;
     options.handleLinks = false;
 
     useHTML5 = !!config.html5;
 
     if (useHTML5 && AddressHTML5.isCompatible()) {
+        options.basePath = config.basePath + (endsWith(config.basePath, '/') ? '' : '/');
         address = AddressHTML5.getInstance(options);
 
         // If we have an hash, set its value as the current one
