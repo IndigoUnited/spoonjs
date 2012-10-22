@@ -24,8 +24,11 @@ It's an HMVC framework, the "H" stands for hierarchical. Unlike other frameworks
 
 ## Concept
 
+### HMVC
 
-### Modular projects
+
+
+### Modular projects (the H in HMVC)
 
 Most frameworks out there organise projects in terms of file extension and, although simple, it makes it hard to have reusable components, and maintain big projects. This is one aspect in which Spoon.js stands out, organising the project files in a feature oriented fashion.
 
@@ -93,7 +96,10 @@ src/                 // this is where your application code lives
             MenuController.js
             MenuView.js
 web/
-    index.html       // the project root HTML file
+    dev/
+        index.html   // the project root HTML file for the dev environment
+    prod/
+        index.html   // the project root HTML file for the prod environment
 ```
 
 As you can see, each project is composed of modules, which in their turn can be composed of other modules. Each module should have a very clear responsibility within the project, thus avoiding spaghetti code.
@@ -137,7 +143,9 @@ Another aspect that is usually tightly associated with state management is routi
 
 ### Declarative DOM event management
 
-Efficient sandboxed declarative DOM event management
+A very common task when developing web applications is attaching listeners to events on specific DOM elements. Although this is fine, it's not the most practical solution, and can have a significant impact on the performance, when the developer is not careful, in applications with lots of listeners.
+
+To avoid this, the views can specify pseudo-selectors and handlers that get called when these selectors are matched. The underlying mechanism is very powerful, and creates a sort of sandbox for events. In practice, regardless of how many listeners you create on a view, only a single listener is actually created, per event type. Since the whole project is a tree, the Application view is actually the single project sandbox. Still, if necessary, you can turn any view into a sandbox, and it will be considered the *root* sandbox for itself, and its children.
 
 
 
@@ -155,21 +163,17 @@ There are many flavours out there in terms of DOM management, and each developer
 
 
 
-### CLI
-
-In order to speed up common tasks, like creating projects, testing, etc, Spoon.js offers a CLI tool that helps you get the job done.
-
-
-
 ### Fast bootstrapping
 
 Getting up and developing should be very simple, regardless of what the framework offers. The more entropy a framework has and more software the user has to install, the more complicated will be to actually start doing something useful. The framework should help the user, not step on his way.
 
 
 
-### Fast develop-test round trips
+### Fast develop-test lifecycle
 
-One of the most annoying parts of the development process is to wait for building processes to finish before you can test something you just wrote, because your project is divided into multiple files that need to merged. More than annoying, this takes it toll on productivity. In normal operations, building should not be part of the develop and test lifecycle. Introducing, the [AMD](http://requirejs.org/docs/whyamd.html) way. AMD, or Asynchronous Module Definition, is very handy for a variety of reasons, one of them being that you don't need to keep building a unified project file after every change. Each module you define with AMD declares its dependencies explicitly, making it very organised, and also speeding up develop and test round trips.
+One of the most annoying parts of the development process is to wait for building processes to finish before you can test something you just wrote, because your project is divided into multiple files that need to merged. More than annoying, this takes it toll on productivity. In normal operations, building should not be part of the develop and test lifecycle.
+
+Introducing, the [AMD](http://requirejs.org/docs/whyamd.html) way. AMD, or Asynchronous Module Definition, is very handy for a variety of reasons, one of them being that you don't need to keep building a unified project file after every change. Each module you define with AMD declares its dependencies explicitly, making it very organised, and also speeding up develop and test round trips.
 
 
 
@@ -183,8 +187,21 @@ Building the project and preparing it for deployment shouldn't be a sort of blac
 
 ## Features
 
+Besides all the concepts that are core to the framework, here's a list of features that compose Spoon.js.
+
+### CLI
+
+In order to speed up common tasks, like creating projects, testing, etc, Spoon.js offers a CLI tool that helps you get the job done.
+
 
 
 
 
 ## Feature Roadmap
+
+### I18n service
+
+### CSS live reloading
+
+### JavaScript / template hotpush
+
