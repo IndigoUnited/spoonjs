@@ -262,8 +262,8 @@ break the event chain.
 ```
 
 ```HTML
-<a {{ href('shops.view', { id: 2 }) }} class="some_class">
-  {{ url('shops.view', { id: 2 }) }}
+<a {{ $url('shops.view', { id: 2 }) }} class="some_class">
+  {{ $url('shops.view', { id: 2 }) }}
 </a>
 ```
 

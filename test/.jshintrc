@@ -1,8 +1,17 @@
 {
     "predef": [
         "console",
+        "define",
         "require",
-        "define"
+        "expect",
+        "it",
+        "describe",
+        "before",
+        "beforeEach",
+        "after",
+        "afterEach",
+        "mochaPhantomJS",
+        "mocha"
     ],
 
     "browser": true,
@@ -21,6 +30,8 @@
     "plusplus": true,
     "regexp": true,
     "undef": true,
+    "unused": true,
+    "quotmark": "single",
     "strict": true,
     "trailing": true,
 
