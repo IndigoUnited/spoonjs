@@ -42,7 +42,7 @@ app/
     config_dev.js    // you can have separate configurations for separate environments. In order to use different configs, would load a different file in the index.html file
     config_prod.js
     states.js        // state and routing configuration
-components/          // external dependencies
+vendor/              // external dependencies
     …
 src/                 // this is where your application code lives
     Application/     // the main module
