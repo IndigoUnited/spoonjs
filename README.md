@@ -68,8 +68,8 @@ src/                 // this is where your application code lives
                     css/
                     img/
                     tmpl/
-                    HelpController.js
-                    HelpView.js
+                HelpController.js
+                HelpView.js
             Home/
                 assets/
                     css/
