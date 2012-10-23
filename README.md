@@ -146,7 +146,7 @@ Another aspect that is usually tightly associated with state management is routi
 
 A very common task when developing web applications is attaching listeners to events on specific DOM elements. Although this is fine, it's not the most practical solution, and can have a significant impact on the performance, when the developer is not careful, in applications with lots of listeners.
 
-To avoid this, the views can specify pseudo-selectors and handlers that get called when these selectors are matched. The underlying mechanism is very powerful, and creates a sort of sandbox for events. In practice, regardless of how many listeners you create on a view, only a single listener is actually created, per event type. Since the whole project is a tree, the Application view is actually the single project sandbox. Still, if necessary, you can turn any view into a sandbox, and it will be considered the *root* sandbox for itself, and its children.
+To avoid this, the views can specify pseudo-selectors and handlers that get called when these selectors are matched. The underlying mechanism is very powerful, and creates a sort of sandbox for events. In practice, regardless of how many listeners you create on a view, only a single listener is actually created, per event type. Every root view of a module will be a sandbox. Still, if necessary, you can turn any view into a sandbox, and it will be considered the *root* sandbox for itself, and its children.
 
 
 
