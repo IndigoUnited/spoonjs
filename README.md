@@ -100,6 +100,7 @@ src/                 // this is where your application code lives
             MenuView.js
 web/
     index.html   // the project root HTML file
+    …            // other files, such as robots.txt, favicon, etc
 ```
 
 As you can see, each project is composed of modules, which in their turn can be composed of other modules. Each module should have a very clear responsibility within the project, thus avoiding spaghetti code.
