@@ -139,7 +139,7 @@ The application state can be described by a simple string in the format `/articl
 - `show(172)` actually stands for the `show` state, with a parameter. When declaring a state, you can provide a list of parameters, and these get fed into the handler.
 
 Another aspect that is usually tightly associated with state management is routing. Spoon.js offers a simple routing mechanism that maps the requested URLs to their respective state, and vice-versa. This routing mechanism gives the user full flexibility on what pattern matches a state.
-
+Since your application only know states, you can add the state to routes mapping when you feel opportune to do so.
 
 
 ### Declarative DOM event management
