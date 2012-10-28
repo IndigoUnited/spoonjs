@@ -1,5 +1,3 @@
-/*jshint regexp:false*/
-
 /**
  * Inject dummy console if not present.
  * This is simply to prevent code from throwing errors in browsers such as IE.
