@@ -9,7 +9,7 @@ define([
 
     'use strict';
 
-    //if (typeof(window.console) === 'undefined') {
+    if (typeof(window.console) === 'undefined') {
         var emptyFunc = function () { },
             keys = [
                 'log',
@@ -39,5 +39,5 @@ define([
             window.console[keys[i]] = emptyFunc;
         }
  
-    //}
+    }
 });
