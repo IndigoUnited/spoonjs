@@ -6,7 +6,7 @@
         "expect.js": "0.2.x",
         "requirejs": "2.0.x",
         "phantomjs": "0.2.x",
-        "mocha-phantomjs": "git://github.com/metaskills/mocha-phantomjs.git",
+        "mocha-phantomjs": "1.0.x",
         "http-server": "0.5.x",
         "base-adapter-libs": "git+ssh://git@github.com:IndigoUnited/base-adapter-libs.git"
     },
