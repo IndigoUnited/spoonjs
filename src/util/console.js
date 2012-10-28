@@ -35,6 +35,7 @@ define([
             ],
             i = keys.length;
 
+        window.console = { };
         while (i--) {
             window.console[keys[i]] = emptyFunc;
         }
