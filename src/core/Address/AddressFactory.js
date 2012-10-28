@@ -9,8 +9,9 @@ define([
     'address/AddressHash',
     'address/AddressHTML5',
     'app-config',
-    'amd-utils/string/endsWith'
-], function (AddressHash, AddressHTML5, config, endsWith) {
+    'amd-utils/string/endsWith',
+    'has'
+], function (AddressHash, AddressHTML5, config, endsWith, has) {
 
     'use strict';
 
@@ -38,7 +39,9 @@ define([
     } else {
         // If no address is compatible we return null
         if (!AddressHash.isCompatible()) {
-            console.warn('No address compatible with the current browser.');
+            if (has('debug')) {
+                console.warn('No address compatible with the current browser.');
+            }
             address = null;
         } else {
             address = AddressHash.getInstance(options);

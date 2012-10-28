@@ -11,8 +11,9 @@ define([
     'amd-utils/lang/isBoolean',
     'amd-utils/object/keys',
     'amd-utils/object/values',
-    'amd-utils/object/mixIn'
-], function (Class, StateInterface, isString, isNumber, isBoolean, keys, values, mixIn) {
+    'amd-utils/object/mixIn',
+    'has'
+], function (Class, StateInterface, isString, isNumber, isBoolean, keys, values, mixIn, has) {
 
     'use strict';
 
@@ -35,7 +36,7 @@ define([
             var key,
                 curr;
 
-            if (!name || name.charAt(0) === '.' || name.charAt(0) === '/') {
+            if (has('debug') && !name || name.charAt(0) === '.' || name.charAt(0) === '/') {
                 throw new Error('State names cannot be empty and cannot start with a dot and a slash.');
             }
 
@@ -43,17 +44,17 @@ define([
             if ($params) {
                 this._params = $params;
 
-                if ('$state' in this._params) {
+                if (has('debug') && '$state' in this._params) {
                     throw new Error('Param "$state" is reserved.');
                 }
-                if ('$origin' in this._params) {
+                if (has('debug') && '$origin' in this._params) {
                     throw new Error('Param "$origin" is reserved.');
                 }
 
                 for (key in $params) {
                     curr = $params[key];
 
-                    if (!isString(curr) && !isNumber(curr) && !isBoolean(curr) && curr != null) {
+                    if (!has('debug') && isString(curr) && !isNumber(curr) && !isBoolean(curr) && curr != null) {
                         throw new Error('Param "' + key + '" is not an immutable value (only immutable values are allowed - string, number, booleans and nulls).');
                     }
                 }

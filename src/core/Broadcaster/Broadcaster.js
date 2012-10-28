@@ -4,8 +4,9 @@
 define([
     'dejavu/Class',
     './BroadcasterInterface',
-    'events-emitter/EventsEmitter'
-], function (Class, BroadcasterInterface, EventsEmitter) {
+    'events-emitter/EventsEmitter',
+    'has'
+], function (Class, BroadcasterInterface, EventsEmitter, has) {
 
     'use strict';
 
@@ -48,7 +49,7 @@ define([
             // If we got no interested subjects, warn that this event was unhandled
             if (this._emitter.has(event)) {
                 this._emitter.emit.apply(this._emitter, arguments);
-            } else {
+            } else if (has('debug')) {
                 console.warn('Unhandled broadcast event "' + event + '".');
             }
 

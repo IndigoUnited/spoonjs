@@ -8,6 +8,7 @@
         "events-emitter": "git@github.com:IndigoUnited/events-emitter.git",
         "base-adapter": "git@github.com:IndigoUnited/base-adapter.git",
         "address": "git@github.com:IndigoUnited/address.git",
-        "dom-responder": "git@github.com:IndigoUnited/dom-responder.git"
+        "dom-responder": "git@github.com:IndigoUnited/dom-responder.git",
+        "has": "latest"
     }
 }

@@ -7,8 +7,9 @@ define([
     'events-emitter/EventsEmitter',
     'services/broadcaster',
     'amd-utils/array/insert',
-    'amd-utils/array/remove'
-], function (AbstractClass, EventsEmitter, broadcaster, insert, remove) {
+    'amd-utils/array/remove',
+    'has'
+], function (AbstractClass, EventsEmitter, broadcaster, insert, remove, has) {
 
     'use strict';
 
@@ -141,7 +142,7 @@ define([
                             curr._upcast.apply(curr, arguments);
                         }
                     }
-                } else {
+                } else if (has('debug')) {
                     console.warn('Unhandled upcast event "' + event + '".');
                 }
             }

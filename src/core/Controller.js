@@ -13,8 +13,9 @@ define([
     'amd-utils/lang/isFunction',
     'amd-utils/lang/isString',
     'amd-utils/string/startsWith',
-    'amd-utils/object/size'
-], function (AbstractClass, instanceOf, Joint, StateInterface, stateRegistry, EventsEmitter, isFunction, isString, startsWith, size) {
+    'amd-utils/object/size',
+    'has'
+], function (AbstractClass, instanceOf, Joint, StateInterface, stateRegistry, EventsEmitter, isFunction, isString, startsWith, size, has) {
 
     'use strict';
 
@@ -46,10 +47,10 @@ define([
                 regExp = this.$static._stateParamsRegExp;
 
                 for (key in this._states) {
-                    if (!key) {
+                    if (has('debug') && !key) {
                         throw new Error('Empty state detected in "' + this.$name + '".');
                     }
-                    if (key.indexOf('.') !== -1 || key.indexOf('/') !== -1) {
+                    if (has('debug') && key.indexOf('.') !== -1 || key.indexOf('/') !== -1) {
                         throw new Error('States cannot contain dots or slashes (saw one in state "' + key + '" of "' + this.$name + '").');
                     }
 
@@ -69,7 +70,7 @@ define([
                     func = this._states[key];
                     if (isString(func)) {
                         func = this[func];
-                        if (!isFunction(func)) {
+                        if (has('debug') && !isFunction(func)) {
                             throw new Error('State handler "' + key + '" of "' + this.$name + '" references an unknown function.');
                         }
                         this._states[key] = func;
@@ -82,7 +83,7 @@ define([
             }
 
             // Process the default state
-            if (this._defaultState && !this._states[this._defaultState]) {
+            if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
                 throw new Error('The default state of "' + this.$name + '" points to an unknown state.');
             }
 
@@ -175,7 +176,7 @@ define([
                 // Validate the state parameter
                 // The state parameter can be an object containing the state parameters or a StateInterface instance
                 // If it is an object containing the parameters, the state instance is referenced by the $state property
-                if (!instanceOf($state, StateInterface) && (!($state = $state.$state) || !instanceOf($state, StateInterface))) {
+                if (has('debug') && !instanceOf($state, StateInterface) && (!($state = $state.$state) || !instanceOf($state, StateInterface))) {
                     throw new Error('Invalid state instance.');
                 }
 
@@ -212,7 +213,7 @@ define([
                     }
                 }
 
-                if ((hasChildControllers || $state.getName()) && !foundBranch) {
+                if (has('debug') && (hasChildControllers || $state.getName()) && !foundBranch) {
                     console.warn('Could not propagate state "' + $state.getBranchName() + '" to any of the "' + this.$name + '" downlinks.');
                 }
             }
@@ -268,7 +269,7 @@ define([
                     curr = this;
 
                     for (x = 1; x < length - 1; x += 1) {
-                        if (!curr._uplinks.length) {
+                        if (has('debug') && !curr._uplinks.length) {
                             throw new Error('Cannot generate relative path because "' + this.$name + '" has no uplinks.');
                         }
                         curr = curr._uplinks[0];
@@ -281,12 +282,12 @@ define([
                 x = $name.indexOf('.');
                 localName = x === -1 ? $name : $name.substr(0, x);
 
-                if (!this._states[localName]) {
+                if (has('debug') && !this._states[localName]) {
                     throw new Error('Unknown state "' + localName + '" in "' + this.$name + '".');
                 }
             } else {
                 // Check if the default state is set
-                if (!this._defaultState) {
+                if (has('debug') && !this._defaultState) {
                     throw new Error('No default state defined in "' + this.$name + '".');
                 }
 
@@ -332,7 +333,7 @@ define([
                 }
 
                 delete tmp.$origin;
-            } else if (size(this._states)) {
+            } else if (has('debug') && size(this._states)) {
                 console.warn('No state to be handled in "' + this.$name + '" by default.');
             }
 
@@ -353,7 +354,9 @@ define([
             this._currentState.next();
 
             if (!this._states[localStateName]) {
-                console.warn('Unhandled state "' + localStateName + '" on controller "' + this.$name + '".');
+                if (has('debug')) {
+                    console.warn('Unhandled state "' + localStateName + '" on controller "' + this.$name + '".');
+                }
             } else {
                 this._states[localStateName].call(this, state.getParams());
             }

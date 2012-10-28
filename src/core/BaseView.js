@@ -12,8 +12,9 @@ define([
     'dom-responder/DomResponder',
     'amd-utils/lang/isFunction',
     'amd-utils/lang/isString',
-    'dejavu/common/isPlainObject'
-], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isString, isPlainObject) {
+    'dejavu/common/isPlainObject',
+    'has'
+], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isString, isPlainObject, has) {
 
     'use strict';
 
@@ -49,7 +50,7 @@ define([
                     func = this._events[key];
                     if (isString(func)) {
                         func = this[func];
-                        if (!isFunction(func)) {
+                        if (has('debug') && !isFunction(func)) {
                             throw new Error('Event handler for "' + key + '" references an unknown function.');
                         }
                     }
@@ -121,7 +122,7 @@ define([
          * {@inheritDoc}
          */
         _link: function (view) {
-            if (!(view instanceof BaseView)) {
+            if (has('debug') && !(view instanceof BaseView)) {
                 throw new Error('Views can only link other views.');
             }
 
@@ -180,7 +181,7 @@ define([
         _generateUrl: function (state, $params) {
             var controller = this._getController();
 
-            if (!controller) {
+            if (has('debug') && !controller) {
                 throw new Error('Could not find the controller responsible for "' + this.$name + '".');
             }
 
@@ -232,7 +233,7 @@ define([
          * @return {Object} The same object with the filled helpers
          */
         _fillHelpers: function (obj) {
-            if (!isPlainObject(obj)) {
+            if (has('debug') && !isPlainObject(obj)) {
                 throw new Error('Expected a plain object to be passed to the template.');
             }
 

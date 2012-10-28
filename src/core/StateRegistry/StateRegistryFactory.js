@@ -12,8 +12,9 @@ define([
     'amd-utils/lang/isString',
     'amd-utils/lang/isObject',
     'amd-utils/object/mixIn',
-    'amd-utils/object/size'
-], function (StateRegistry, address, config, isString, isObject, mixIn, size) {
+    'amd-utils/object/size',
+    'has'
+], function (StateRegistry, address, config, isString, isObject, mixIn, size, has) {
 
     'use strict';
 
@@ -107,7 +108,7 @@ define([
                     pattern: pattern,
                     constraints: constraints
                 });
-            } else {
+            } else if (has('debug')) {
                 throw new Error('Unexpected "' + key + '" while parsing states.');
             }
         }

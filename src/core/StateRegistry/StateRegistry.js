@@ -15,8 +15,9 @@ define([
     'amd-utils/object/hasOwn',
     'amd-utils/string/startsWith',
     'amd-utils/queryString/decode',
-    'amd-utils/queryString/encode'
-], function (Class, instanceOf, StateRegistryInterface, MixableEventsEmitter, AddressInterface, StateInterface, State, Route, Events, remove, hasOwn, startsWith, decode, encode) {
+    'amd-utils/queryString/encode',
+    'has'
+], function (Class, instanceOf, StateRegistryInterface, MixableEventsEmitter, AddressInterface, StateInterface, State, Route, Events, remove, hasOwn, startsWith, decode, encode, has) {
 
     'use strict';
 
@@ -62,7 +63,7 @@ define([
          * {@inheritDoc}
          */
         register: function (state, $pattern, $constraints) {
-            if (this._states[state]) {
+            if (has('debug') && this._states[state]) {
                 throw new Error('State "' + state + '" is already registered.');
             }
 
@@ -204,10 +205,14 @@ define([
             var state = this._currentState.getFullName(),
                 route;
 
-            console.info('State changed to "' + state + '".');
+            if (has('debug')) {
+                console.info('State changed to "' + state + '".');
+            }
 
             if (!this.isRegistered(state)) {
-                console.warn('State "' + state + '" is not registered.');
+                if (has('debug')) {
+                    console.warn('State "' + state + '" is not registered.');
+                }
             } else if (this._address) {
                 route = this._states[state];
                 if (route) {
@@ -243,7 +248,7 @@ define([
                 }
             }
 
-            if (!found) {
+            if (has('debug') && !found) {
                 console.warn('No state matched the URL "' + value + '".');
             }
         },
@@ -296,7 +301,7 @@ define([
                     }
 
                     this.setCurrent(state, params);
-                } else {
+                } else if (has('debug')) {
                     console.info('Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
                 }
 
@@ -308,17 +313,21 @@ define([
                     event.preventDefault();
                     // If the link is internal, then we just prevent default behaviour
                     if (rel === 'internal') {
-                        console.info('Link poiting to "' + url + '" is flagged as internal and as such event#preventDefault() was called on the event.');
+                        if (has('debug')) {
+                            console.info('Link poiting to "' + url + '" is flagged as internal and as such event#preventDefault() was called on the event.');
+                        }
                     } else {
                         // The getValue() will throw an error if the value is not recognizable by the address
                         try {
                             value = this._address.getValue(url);
                             this._onChange(value);
                         } catch (e) {
-                            console.info('Link poiting to "' + url + '" was automatically interpreted as external.');
+                            if (has('debug')) {
+                                console.info('Link poiting to "' + url + '" was automatically interpreted as external.');
+                            }
                         }
                     }
-                } else {
+                } else if (has('debug')) {
                     console.info('Link poiting to "' + url + '" was ignored.');
                 }
             }

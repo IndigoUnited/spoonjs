@@ -5,8 +5,9 @@
  */
 define([
     'dejavu/Class',
-    'amd-utils/string/escapeRegExp'
-], function (Class, escapeRegExp) {
+    'amd-utils/string/escapeRegExp',
+    'has'
+], function (Class, escapeRegExp, has) {
 
     'use strict';
 
@@ -28,7 +29,7 @@ define([
          * @param {Object} [$constraints] The constraints to apply to the parameters
          */
         initialize: function (name, pattern, $constraints) {
-            if (pattern.charAt(0) !== '/') {
+            if (has('debug') && pattern.charAt(0) !== '/') {
                 throw new Error('A route pattern must start with a /.');
             }
 
@@ -121,7 +122,7 @@ define([
             if ($params) {
                 for (key in $params) {
                     curr = $params[key];
-                    if (constraints[key] && !constraints[key].test(curr)) {
+                    if (has('debug') && constraints[key] && !constraints[key].test(curr)) {
                         throw new Error('Param "' + key + '" does not pass the constraint.');
                     }
 
@@ -129,7 +130,7 @@ define([
                 }
             }
 
-            if (this.$static._placeholdersRegExp.test(url)) {
+            if (has('debug') && this.$static._placeholdersRegExp.test(url)) {
                 throw new Error('Missing params for URL "' + url + '"');
             }
 

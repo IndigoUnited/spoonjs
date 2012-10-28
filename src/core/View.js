@@ -6,8 +6,9 @@ define([
     'dejavu/AbstractClass',
     './BaseView',
     'base-adapter/dom/Element',
-    'amd-utils/lang/isFunction'
-], function (AbstractClass, BaseView, Element, isFunction) {
+    'amd-utils/lang/isFunction',
+    'has'
+], function (AbstractClass, BaseView, Element, isFunction, has) {
 
     'use strict';
 
@@ -32,7 +33,7 @@ define([
             if (this._template != null) {
                 this.clear();
 
-                if (!isFunction(this._template)) {
+                if (has('debug') && !isFunction(this._template)) {
                     throw new Error('Expected _template to be a compiled template (function).');
                 }
 
