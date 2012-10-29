@@ -15,21 +15,13 @@ define(function () {
                 'info',
                 'warn',
                 'error',
-                'assert',
-                'clear',
                 'dir',
-                'dirxml',
                 'trace',
                 'group',
                 'groupCollapsed',
                 'groupEnd',
                 'time',
-                'timeEnd',
-                'profile',
-                'profileEnd',
-                'count',
-                'exception',
-                'table'
+                'timeEnd'
             ],
             i;
 

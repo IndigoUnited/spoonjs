@@ -11,7 +11,8 @@ define(['spoon'], function () {
                 'debug',
                 'info',
                 'warn',
-                'error'
+                'error',
+                'timeEnd'
             ],
                 x;
 
