@@ -31,12 +31,11 @@ define(function () {
                 'exception',
                 'table'
             ],
-            i = keys.length;
+            i;
 
         window.console = {};
-        while ((i -= 1)) {
+        for (i = keys.length - 1; i >= 0; i -= 1) {
             window.console[keys[i]] = emptyFunc;
         }
-
     }
 });

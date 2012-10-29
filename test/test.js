@@ -74,7 +74,10 @@ if (!(typeof window !== 'undefined' && window.navigator && window.document)) {
         has.add('debug', !window.mochaPhantomJS && !!window.console && !!console.info && !!console.log);
 
         Utilities.ready(function () {
-            require(['specs/example'], function () {
+            require([
+                'specs/core',
+                'specs/console'
+            ], function () {
                 if (window.mochaPhantomJS) {
                     mochaPhantomJS.run();
                 } else {
