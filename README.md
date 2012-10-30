@@ -1,5 +1,6 @@
 spoon.js
 ========
+`Eat your spaghetti code with the spoon.`
 `Indigo United 2012`
 
 [indigounited.com](http://indigounited.com/)
