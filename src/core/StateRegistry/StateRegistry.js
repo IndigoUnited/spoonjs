@@ -125,12 +125,15 @@ define([
          * {@inheritDoc}
          */
         setCurrent: function (state, $params) {
+            var previousState;
+
             if (!instanceOf(state, StateInterface)) {
                 state = new State(state, $params);
             }
 
             // Only change if the current state is not the same
             if (!this.isCurrent(state)) {
+                previousState = this._currentState;
                 this._currentState = state;
 
                 // Handle after change stuff
@@ -138,7 +141,7 @@ define([
 
                 // Emit the change
                 this._currentState.setCursor(0);
-                this._emit(this.$static.EVENT_CHANGE, this._currentState);
+                this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
 
                 return true;
             }

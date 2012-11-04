@@ -36,7 +36,7 @@ define([
             var key,
                 curr;
 
-            if (has('debug') && !name || name.charAt(0) === '.' || name.charAt(0) === '/') {
+            if (has('debug') && (!name || (name.charAt(0) === '.' || name.charAt(0) === '/'))) {
                 throw new Error('State names cannot be empty and cannot start with a dot and a slash.');
             }
 
