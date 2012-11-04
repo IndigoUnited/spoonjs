@@ -176,7 +176,8 @@ define([
                 // Validate the state parameter
                 // The state parameter can be an object containing the state parameters or a StateInterface instance
                 // If it is an object containing the parameters, the state instance is referenced by the $state property
-                if (has('debug') && !instanceOf($state, StateInterface) && (!($state = $state.$state) || !instanceOf($state, StateInterface))) {
+                $state = instanceOf($state, StateInterface) ?  $state : $state.$state;
+                if (has('debug') && !instanceOf($state, StateInterface)) {
                     throw new Error('Invalid state instance.');
                 }
 
