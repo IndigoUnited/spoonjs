@@ -50,7 +50,7 @@ define([
                     if (has('debug') && !key) {
                         throw new Error('Empty state detected in "' + this.$name + '".');
                     }
-                    if (has('debug') && key.indexOf('.') !== -1 || key.indexOf('/') !== -1) {
+                    if (has('debug') && (key.indexOf('.') !== -1 || key.indexOf('/') !== -1)) {
                         throw new Error('States cannot contain dots or slashes (saw one in state "' + key + '" of "' + this.$name + '").');
                     }
 
