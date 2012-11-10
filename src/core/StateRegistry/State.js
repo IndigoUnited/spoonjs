@@ -54,7 +54,7 @@ define([
                 for (key in $params) {
                     curr = $params[key];
 
-                    if (!has('debug') && isString(curr) && !isNumber(curr) && !isBoolean(curr) && curr != null) {
+                    if (has('debug') && !isString(curr) && !isNumber(curr) && !isBoolean(curr) && curr != null) {
                         throw new Error('Param "' + key + '" is not an immutable value (only immutable values are allowed - string, number, booleans and nulls).');
                     }
                 }
@@ -161,10 +161,17 @@ define([
          * {@inheritDoc}
          */
         isFullyEqual: function (state) {
+            // Strict comparation first
+            if (this === state) {
+                return true;
+            }
+
+            // Compare the name
             if (this._name !== state._name) {
                 return false;
             }
 
+            // Compare all the params
             var selfParams = mixIn({}, this._params),
                 otherParams = mixIn({}, state._params);
 
@@ -179,19 +186,24 @@ define([
         /**
          * {@inheritDoc}
          */
-        isEqual: function (state, $stateNames) {
+        isEqual: function (state, $stateParams) {
             var x,
                 curr;
+
+            // Strict comparation first
+            if (this === state) {
+                return true;
+            }
 
             // Compare the name
             if (this.getName() !== state.getName()) {
                 return false;
             }
 
-            // Compare the state names if any
-            if ($stateNames) {
-                for (x = $stateNames.length - 1; x >= 0; x -= 1) {
-                    curr = $stateNames[x];
+            // Compare the state params if any
+            if ($stateParams) {
+                for (x = $stateParams.length - 1; x >= 0; x -= 1) {
+                    curr = $stateParams[x];
                     if (this._params[curr] != state._params[curr]) {
                         return false;
                     }
@@ -225,10 +237,6 @@ define([
 
             values1 = values(obj1);
             values2 = values(obj2);
-
-            if (values1.length !== values2.length) {
-                return false;
-            }
 
             for (x = values1.length - 1; x >= 0; x -= 1) {
                 if (values1[x] != values2[x]) {

@@ -273,27 +273,21 @@ define([
          * @param {Element} [$el] The link tag
          */
         _handleLinkClick: function (event, $el) {
-            var rel,
-                url,
-                target,
-                ctrlKey,
+            var element = $el || Events.getCurrentTarget(event),
+                type = element.getAttribute('data-url-type'),
+                url = element.href,
+                target = element.target,
+                ctrlKey = event.ctrlKey || event.metaKey,
                 value,
                 state,
                 params,
-                element,
                 pos;
-
-            element = $el || Events.getCurrentTarget(event);
-            url = element.href;
-            rel = element.rel;
-            target = element.target;
-            ctrlKey = event.ctrlKey || event.metaKey;
 
             // Only parse links with state protocol
             if (startsWith(url, 'state://')) {
                 event.preventDefault();
                 // If the link is internal, then we just prevent default behaviour
-                if (rel !== 'internal') {
+                if (type !== 'internal') {
                     pos = url.lastIndexOf('/');
                     // Extract the name and the params
                     if (pos === -1) {
@@ -312,10 +306,10 @@ define([
                 // Ignore the event if control is pressed
                 // Ignore if the link specifies a target different than self
                 // Ignore if the link rel attribute is internal or external
-                if (!ctrlKey && (!target || target === '_self') && rel !== 'external') {
+                if (!ctrlKey && (!target || target === '_self') && type !== 'external') {
                     event.preventDefault();
                     // If the link is internal, then we just prevent default behaviour
-                    if (rel === 'internal') {
+                    if (type === 'internal') {
                         if (has('debug')) {
                             console.info('Link poiting to "' + url + '" is flagged as internal and as such event#preventDefault() was called on the event.');
                         }
@@ -323,12 +317,12 @@ define([
                         // The getValue() will throw an error if the value is not recognizable by the address
                         try {
                             value = this._address.getValue(url);
-                            this._onChange(value);
                         } catch (e) {
                             if (has('debug')) {
                                 console.info('Link poiting to "' + url + '" was automatically interpreted as external.');
                             }
                         }
+                        this._onChange(value);
                     }
                 } else if (has('debug')) {
                     console.info('Link poiting to "' + url + '" was ignored.');
