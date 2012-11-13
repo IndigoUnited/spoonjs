@@ -61,7 +61,7 @@ define([
                 if (pos === 0) {
                     // Extract the value after the base path
                     tmp = location.pathname.substr(pos + options.basePath.length);
-                    // Replace trailing slashes and file names
+                    // Remove trailing slashes and file names
                     tmp = tmp.replace(/\/*$/g, '').replace(/\/.+\..+/g, '');
                     if (tmp) {
                         // Disable the address
