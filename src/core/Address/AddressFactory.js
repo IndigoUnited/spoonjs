@@ -1,4 +1,4 @@
-/*jshint regexp:false*/
+/*jshint regexp:false, eqeqeq:false*/
 
 /**
  * Address factory.
@@ -9,9 +9,10 @@ define([
     'address/AddressHash',
     'address/AddressHTML5',
     'app-config',
+    'amd-utils/string/startsWith',
     'amd-utils/string/endsWith',
     'has'
-], function (AddressHash, AddressHTML5, config, endsWith, has) {
+], function (AddressHash, AddressHTML5, config, startsWith, endsWith, has) {
 
     'use strict';
 
@@ -24,11 +25,19 @@ define([
     config = config || {},
     config = config.address || {};
     options.handleLinks = false;
+    options.basePath = config.basePath || '/';
+
+    // Ensure that the base path starts and ends with a /
+    if (!endsWith(options.basePath, '/')) {
+        options.basePath += '/';
+    }
+    if (!startsWith(options.basePath, '/')) {
+        options.basePath = '/' + options.basePath;
+    }
 
     useHTML5 = !!config.html5;
 
     if (useHTML5 && AddressHTML5.isCompatible()) {
-        options.basePath = config.basePath + (endsWith(config.basePath, '/') ? '' : '/');
         address = AddressHTML5.getInstance(options);
 
         // If we have an hash, set its value as the current one
@@ -47,14 +56,18 @@ define([
             address = AddressHash.getInstance(options);
 
             // Check if the URL is an HTML5 one and redirect it to the translated one
-            if (!address.getValue()) {
-                pos = location.href.indexOf(options.basePath);
-                if (pos !== -1) {
-                    tmp = location.href.substr(pos + options.basePath.length);
+            if (!address.getValue() && location.pathname.length > 1 && location.pathname.indexOf('#') === -1) {
+                pos = location.pathname.indexOf(options.basePath);
+                if (pos === 0) {
+                    // Extract the value after the base path
+                    tmp = location.pathname.substr(pos + options.basePath.length);
+                    // Replace trailing slashes and file names
                     tmp = tmp.replace(/\/*$/g, '').replace(/\/.+\..+/g, '');
-
-                    if (tmp && tmp !== '/#' + address.getValue()) {
-                        window.location = location.protocol + '//' + location.host + (location.port ? ':' + location.port : '') + '/' + options.basePath + '/#' + tmp;
+                    if (tmp) {
+                        // Disable the address
+                        address.disable();
+                        // Finally redirect
+                        window.location = location.protocol + '//' + location.hostname + (location.port && location.port != 80 ? ':' + location.port : '') + options.basePath + '#/' + tmp;
                     }
                 }
             }
