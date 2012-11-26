@@ -237,17 +237,19 @@ define([
                 throw new Error('Expected a plain object to be passed to the template.');
             }
 
-            obj.$url = function (state, $params) {
-                return this._generateUrl(state, $params);
-            }.$bind(this);
-
-            obj.$view = this;
-
-            if (window.Handlebars && !this.$self._injectedHandlebarsHelpers) {
-                Handlebars.registerHelper('url', function (state, params) {
-                    return this.$view._generateUrl(state, params.hash);
-                });
-                this.$self._injectedHandlebarsHelpers = true;
+            if (window.Handlebars) {
+                obj.$view = this;
+                // TODO: think of a way to avoid $self usage
+                if (!this.$self._injectedHandlebarsHelpers) {
+                    Handlebars.registerHelper('url', function (state, params) {
+                        return this.$view._generateUrl(state, params.hash);
+                    });
+                    this.$self._injectedHandlebarsHelpers = true;
+                }
+            } else {
+                obj.$url = function (state, $params) {
+                    return this._generateUrl(state, $params);
+                }.$bind(this);
             }
 
             return obj;
