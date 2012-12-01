@@ -26,6 +26,7 @@ define([
     config = config.address || {};
     options.handleLinks = false;
     options.basePath = config.basePath || '/';
+    options.translate = config.translate;
 
     // Ensure that the base path starts and ends with a /
     if (!endsWith(options.basePath, '/')) {
@@ -41,9 +42,11 @@ define([
         address = AddressHTML5.getInstance(options);
 
         // If we have an hash, set its value as the current one
-        pos = location.href.indexOf('#');
-        if (pos !== -1) {
-            address.setValue(location.href.substr(pos + 1));
+        if (options.translate) {
+            pos = location.href.indexOf('#');
+            if (pos !== -1) {
+                address.setValue(location.href.substr(pos + 1));
+            }
         }
     } else {
         // If no address is compatible we return null
@@ -56,13 +59,13 @@ define([
             address = AddressHash.getInstance(options);
 
             // Check if the URL is an HTML5 one and redirect it to the translated one
-            if (!address.getValue() && location.pathname.length > 1 && location.pathname.indexOf('#') === -1) {
+            if (options.translate && !address.getValue() && location.pathname.length > 1 && location.pathname.indexOf('#') === -1) {
                 pos = location.pathname.indexOf(options.basePath);
                 if (pos === 0) {
                     // Extract the value after the base path
                     tmp = location.pathname.substr(pos + options.basePath.length);
                     // Remove trailing slashes and file names
-                    tmp = tmp.replace(/\/*$/g, '').replace(/\/.+\..+/g, '');
+                    tmp = tmp.replace(/\/*$/g, '').replace(/\/+[^\/]*\.[^\/]+$/, '');
                     if (tmp) {
                         // Disable the address
                         address.disable();

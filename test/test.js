@@ -71,18 +71,25 @@ if (!(typeof window !== 'undefined' && window.navigator && window.document)) {
 
     define(['base-adapter/dom/Utilities', 'has'], function (Utilities, has) {
 
-        has.add('debug', !window.mochaPhantomJS && !!window.console && !!console.info && !!console.log);
+        has.add('debug', !!window.console && !!console.info && !!console.log);
 
         Utilities.ready(function () {
-            require([
-                'specs/core',
-                'specs/console'
-            ], function () {
-                if (window.mochaPhantomJS) {
-                    mochaPhantomJS.run();
-                } else {
-                    mocha.run();
-                }
+            require(['app-config'], function (config) {
+                // Turn  off translation in order for the url to not be translated
+                // TODO: think of a better way to do this
+                config.address = config.address || {};
+                config.address.translate = false;
+
+                require([
+                    'specs/core',
+                    'specs/console'
+                ], function () {
+                    if (window.mochaPhantomJS) {
+                        mochaPhantomJS.run();
+                    } else {
+                        mocha.run();
+                    }
+                });
             });
         });
     });

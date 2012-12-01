@@ -2,12 +2,12 @@
     "name": "spoon.js",
     "version": "0.0.1",
     "devDependencies": {
-        "mocha": "1.6.x",
-        "expect.js": "0.2.x",
-        "requirejs": "2.0.x",
-        "phantomjs": "0.2.x",
-        "mocha-phantomjs": "1.0.x",
-        "http-server": "0.5.x",
+        "mocha": "~1.7.3",
+        "expect.js": "~0.2.0",
+        "requirejs": "~2.1.2",
+        "phantomjs": "~0.2.3",
+        "mocha-phantomjs": "~1.0.1",
+        "http-server": "~0.5.2",
         "base-adapter-libs": "git+ssh://git@github.com:IndigoUnited/base-adapter-libs.git"
     },
     "scripts": {
