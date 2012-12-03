@@ -13,8 +13,6 @@ define([
 
     'use strict';
 
-    // TODO: detect circular references
-
     return AbstractClass.declare({
         $name: 'Joint',
 
@@ -133,7 +131,6 @@ define([
                     for (x = 0; x < length; x += 1) {
                         curr = this._uplinks[x];
 
-                        // TODO: shall we refactor the code bellow to a function? it would decrease performance but developers could override it
                         // If this uplink explicit listens for this event, fire the callbacks and stop the propagation
                         if (curr._emitter.has(event)) {
                             curr._emitter.emit.apply(curr._emitter, arguments);

@@ -302,7 +302,6 @@ define([
                     console.info('Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
                 }
             } else if (this._address) {
-                // TODO: I think we can't use the address now to handle things bellow
                 // Ignore the event if control is pressed
                 // Ignore if the link specifies a target different than self
                 // Ignore if the link rel attribute is internal or external
