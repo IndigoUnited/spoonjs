@@ -51,6 +51,7 @@ define([
 
                 // Listen to the external change
                 $address.on(AddressInterface.EVENT_EXTERNAL_CHANGE, this._onChange, this);
+                $address.on(AddressInterface.EVENT_LINK_CHANGE, this._onChange, this);
 
                 // Manually call the change handler with the current address value
                 this._onChange($address.getValue());
