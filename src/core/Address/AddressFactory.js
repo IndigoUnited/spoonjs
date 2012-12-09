@@ -24,7 +24,6 @@ define([
 
     config = config || {},
     config = config.address || {};
-    options.handleLinks = false;
     options.basePath = config.basePath || '/';
     options.translate = config.translate;
 

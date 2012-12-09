@@ -35,7 +35,7 @@ define([
         _destroyed: false,
 
         /**
-         *
+         * Constructor.
          */
         initialize: function () {
             Events.on(document.body, 'click a', this._handleLinkClick);
@@ -276,9 +276,6 @@ define([
             var element = $el || Events.getCurrentTarget(event),
                 type = element.getAttribute('data-url-type'),
                 url = element.href,
-                target = element.target,
-                ctrlKey = event.ctrlKey || event.metaKey,
-                value,
                 state,
                 params,
                 pos;
@@ -300,31 +297,6 @@ define([
                     this.setCurrent(state, params);
                 } else if (has('debug')) {
                     console.info('Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
-                }
-            } else if (this._address) {
-                // Ignore the event if control is pressed
-                // Ignore if the link specifies a target different than self
-                // Ignore if the link rel attribute is internal or external
-                if (!ctrlKey && (!target || target === '_self') && type !== 'external') {
-                    event.preventDefault();
-                    // If the link is internal, then we just prevent default behaviour
-                    if (type === 'internal') {
-                        if (has('debug')) {
-                            console.info('Link poiting to "' + url + '" is flagged as internal and as such event#preventDefault() was called on the event.');
-                        }
-                    } else {
-                        // The getValue() will throw an error if the value is not recognizable by the address
-                        try {
-                            value = this._address.getValue(url);
-                        } catch (e) {
-                            if (has('debug')) {
-                                console.info('Link poiting to "' + url + '" was automatically interpreted as external.');
-                            }
-                        }
-                        this._onChange(value);
-                    }
-                } else if (has('debug')) {
-                    console.info('Link poiting to "' + url + '" was ignored.');
                 }
             }
         }.$bound(),
