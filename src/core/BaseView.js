@@ -11,7 +11,7 @@ define([
     'base-adapter/dom/Element',
     'dom-responder/DomResponder',
     'amd-utils/lang/isFunction',
-    'amd-utils/lang/isString'
+    'amd-utils/lang/isString',
     'has'
 ], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isString, has) {
 
