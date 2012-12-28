@@ -4,7 +4,7 @@
   "main": "./src/",
   "dependencies": {
     "amd-utils": "~0.9.0",
-    "dejavu": "~0.1.20",
+    "dejavu": "~0.1.24",
     "events-emitter": "git@github.com:IndigoUnited/events-emitter.git",
     "base-adapter": "git@github.com:IndigoUnited/base-adapter.git",
     "address": "git@github.com:IndigoUnited/address.git",
