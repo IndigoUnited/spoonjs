@@ -173,7 +173,6 @@ define([
                 x,
                 curr;
 
-
             // Remove the listeners from the broadcaster
             this._emitter.forEach(broadcaster.off, broadcaster);
 
