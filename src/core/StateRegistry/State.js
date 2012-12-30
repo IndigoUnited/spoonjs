@@ -160,32 +160,6 @@ define([
         /**
          * {@inheritDoc}
          */
-        isFullyEqual: function (state) {
-            // Strict comparation first
-            if (this === state) {
-                return true;
-            }
-
-            // Compare the name
-            if (this._name !== state._name) {
-                return false;
-            }
-
-            // Compare all the params
-            var selfParams = mixIn({}, this._params),
-                otherParams = mixIn({}, state._params);
-
-            delete selfParams.$state;
-            delete otherParams.$state;
-            delete selfParams.$origin;
-            delete otherParams.$origin;
-
-            return this._compareObjects(selfParams, otherParams);
-        },
-
-        /**
-         * {@inheritDoc}
-         */
         isEqual: function (state, $stateParams) {
             var x,
                 curr;
@@ -211,6 +185,33 @@ define([
             }
 
             return true;
+        },
+
+
+        /**
+         * {@inheritDoc}
+         */
+        isFullyEqual: function (state) {
+            // Strict comparation first
+            if (this === state) {
+                return true;
+            }
+
+            // Compare the name
+            if (this._name !== state._name) {
+                return false;
+            }
+
+            // Compare all the params
+            var selfParams = mixIn({}, this._params),
+                otherParams = mixIn({}, state._params);
+
+            delete selfParams.$state;
+            delete otherParams.$state;
+            delete selfParams.$origin;
+            delete otherParams.$origin;
+
+            return this._compareObjects(selfParams, otherParams);
         },
 
         /**

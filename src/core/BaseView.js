@@ -12,9 +12,8 @@ define([
     'dom-responder/DomResponder',
     'amd-utils/lang/isFunction',
     'amd-utils/lang/isString',
-    'dejavu/common/isPlainObject',
     'has'
-], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isString, isPlainObject, has) {
+], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isString, has) {
 
     'use strict';
 
@@ -233,7 +232,7 @@ define([
          * @return {Object} The same object with the filled helpers
          */
         _fillHelpers: function (obj) {
-            if (has('debug') && !isPlainObject(obj)) {
+            if (has('debug') && (!obj || obj.constructor !== Object)) {
                 throw new Error('Expected a plain object to be passed to the template.');
             }
 
