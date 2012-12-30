@@ -237,18 +237,13 @@ define([
                 throw new Error('Expected a plain object to be passed to the template.');
             }
 
-            var helpers,
-                key;
-
             if (window.Handlebars) {
                 obj.$view = this;
-                helpers = this.$static.helpers;
 
-                for (key in helpers) {
-                    if (helpers[key] !== true) {
-                        Handlebars.registerHelper(key, helpers[key]);
-                        helpers[key] = true;
-                    }
+                if (!registeredHandlebarsHelpers) {
+                    Handlebars.registerHelper('url', function (state, params) {
+                        return this.$view._generateUrl(state, params.hash);
+                    });
                 }
             } else {
                 obj.$url = function (state, $params) {
@@ -274,18 +269,9 @@ define([
 
             // Null references
             this._element = this._nativeElement = null;
-        },
-
-        ////////////////////////////////////////////////////////////
-
-        $statics: {
-            helpers: {
-                url: function (state, params) {
-                    return this.$view._generateUrl(state, params.hash);
-                }
-            }
         }
-    });
+    }),
+        registeredHandlebarsHelpers = false;
 
 
 
