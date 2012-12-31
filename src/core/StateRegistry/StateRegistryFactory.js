@@ -11,48 +11,26 @@ define([
     'app-config',
     'amd-utils/lang/isString',
     'amd-utils/lang/isObject',
-    'amd-utils/object/mixIn',
+    'amd-utils/object/fillIn',
     'amd-utils/object/size',
     'has'
-], function (StateRegistry, address, config, isString, isObject, mixIn, size, has) {
+], function (StateRegistry, address, config, isString, isObject, fillIn, size, has) {
 
     'use strict';
 
-    config = config || {};
-    config = config.state || {};
-
-    var registry = new StateRegistry(),
-        states = config.states || [],
-        curr,
-        key,
-        obj,
-        pattern,
-        fullPattern,
-        constraints,
-        priority,
-        value,
-        isLeaf,
-        trimSlashRegExp = /\/+$/g,
-        cleanSlashRegExp = /\/\/+/g,
-        paramsRegExp = /\(.+?\)/g,
-        x,
-        length,
-        queue = [],
-        arr = [];
-
     /**
-     * Standardizes a pattern.
-     * It ensures that it starts with a / and does not end with a /.
+     * Joins two patterns, standardizing them.
      *
-     * @param {String} pattern The pattern to standardize
+     * @param {String} pattern1 The first pattern
+     * @param {String} pattern2 The second pattern
      *
-     * @return {String} The standardized pattern
+     * @return {String} The joined pattern
      */
     function patternJoin(pattern1, pattern2) {
         var joined;
 
-        pattern1 = pattern1.replace(trimSlashRegExp, '');
-        pattern2 = pattern2.replace(trimSlashRegExp, '');
+        pattern1 = pattern1 ? pattern1.replace(trimSlashRegExp, '') : '';
+        pattern2 = pattern2 ? pattern2.replace(trimSlashRegExp, '') : '';
 
 
         joined = pattern1 + '/' + pattern2;
@@ -61,70 +39,73 @@ define([
             joined = '/' + joined;
         }
 
-        return joined.replace(cleanSlashRegExp, '/')
-                     .replace(trimSlashRegExp, '');
+        joined = joined.replace(cleanSlashRegExp, '/').replace(trimSlashRegExp, '');
+
+        return joined || '/';
     }
 
+    config = config || {};
+    config = config.state || {};
+
+    var registry = new StateRegistry(),
+        states = config.states || [],
+        curr,
+        key,
+        value,
+        trimSlashRegExp = /\/+$/g,
+        cleanSlashRegExp = /\/\/+/g,
+        paramsRegExp = /\(.+?\)/g,
+        x,
+        length,
+        queue = [],
+        arr = [];
 
     // Process the states and add them to the registry
     // The code bellow uses a stack (deep first) to avoid recursion
-    queue.push({ obj: states });
+    queue.push(states);
 
     while (queue.length) {
         curr = queue.shift();
-        obj = curr.obj;
-        pattern = patternJoin(curr.pattern ? curr.pattern : '', obj.$pattern || curr.key || '');
-        fullPattern = obj.$fullPattern;
-        constraints = mixIn(curr.constraints || {}, obj.$constraints);
-        priority = obj.$priority || 0;
-        delete obj.$pattern;
-        delete obj.$constraints;
-        delete obj.$fullPattern;
-        delete obj.$priority;
 
-        if (!size(constraints)) {
-            constraints = null;
-        }
+        for (key in curr) {
+            if (key.charAt(0) === '$') {
+                continue;
+            }
 
-        isLeaf = true;
-        for (key in obj) {
-            value = obj[key];
+            value = curr[key];
             key = key.replace(paramsRegExp, '');    // Remove the parentheses if any
-            isLeaf = false;
 
             // Boolean falsy -> state has no route
             if (!value) {
                 // We can add it already because the priority only apply to states with routes
-                registry.register(curr.state ? curr.state + '.' + key : key);
+                registry.register(curr.$state ? curr.$state + '.' + key : key);
+            // Object -> add to the processing queue
+            } else if (isObject(value)) {
+                value.$state = curr.$state ? curr.$state + '.' + key : key;
+                value.$pattern = curr.$fullPattern || patternJoin(curr.$pattern, value.$pattern || key);
+                value.$constraints = fillIn(value.$constraints || {}, curr.$constraints);
+
+                queue.unshift(value);
             // String -> state has a route
-            } else if (isString(obj[key])) {
+            } else if (isString(value)) {
                 // Add to the array to be sorted later
                 arr.push({
-                    state: curr.state ? curr.state + '.' + key : key,
-                    pattern: patternJoin(pattern, value),
-                    constraints: constraints,
-                    priority: priority
-                });
-            // Object -> add to the processing queue
-            } else if (isObject(obj[key])) {
-                queue.unshift({
-                    obj: value,
-                    state: curr.state ? curr.state + '.' + key : key,
-                    key: key,
-                    pattern: pattern,
-                    constraints: constraints
+                    state: curr.$state ? curr.$state + '.' + key : key,
+                    pattern: patternJoin(curr.$pattern, value),
+                    constraints: curr.$constraints,
+                    priority: curr.$priority || 0
                 });
             } else if (has('debug')) {
                 throw new Error('Unexpected "' + key + '" while parsing states.');
             }
         }
 
-        if (curr.state) {
+        if (curr.$state) {
             arr.push({
-                state: curr.state,
-                pattern: fullPattern || pattern,
-                constraints: constraints,
-                priority: priority
+                state: curr.$state,
+                pattern: curr.$fullPattern || curr.$pattern,
+                constraints: curr.$constraints,
+                priority: curr.$priority || 0
             });
         }
     }

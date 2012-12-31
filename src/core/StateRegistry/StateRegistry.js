@@ -68,7 +68,7 @@ define([
                 throw new Error('State "' + state + '" is already registered.');
             }
 
-            var route = $pattern ? new Route(state, $pattern, $constraints) : null;
+            var route = $pattern != null ? new Route(state, $pattern, $constraints) : null;
 
             // Add to the states object
             this._states[state] = route;
