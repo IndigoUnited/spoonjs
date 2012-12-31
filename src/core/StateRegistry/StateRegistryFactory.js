@@ -32,7 +32,8 @@ define([
         priority,
         value,
         isLeaf,
-        slashRegExp = /\/+$/g,
+        trimSlashRegExp = /\/+$/g,
+        cleanSlashRegExp = /\/\/+/g,
         paramsRegExp = /\(.+?\)/g,
         x,
         length,
@@ -47,16 +48,21 @@ define([
      *
      * @return {String} The standardized pattern
      */
-    function standardizePattern(pattern) {
-        if (pattern === '/') {
-            return pattern;
+    function patternJoin(pattern1, pattern2) {
+        var joined;
+
+        pattern1 = pattern1.replace(trimSlashRegExp, '');
+        pattern2 = pattern2.replace(trimSlashRegExp, '');
+
+
+        joined = pattern1 + '/' + pattern2;
+
+        if (joined.charAt(0) !== '/') {
+            joined = '/' + joined;
         }
 
-        if (pattern.charAt(0) !== '/') {
-            pattern = '/' + pattern;
-        }
-
-        return pattern.replace(slashRegExp, '');
+        return joined.replace(cleanSlashRegExp, '/')
+                     .replace(trimSlashRegExp, '');
     }
 
 
@@ -67,8 +73,8 @@ define([
     while (queue.length) {
         curr = queue.shift();
         obj = curr.obj;
-        pattern = standardizePattern((curr.pattern ? curr.pattern : '') + (obj.$pattern || obj.key || ''));
-        fullPattern = obj.$fullPattern ? standardizePattern(obj.$fullPattern) : null;
+        pattern = patternJoin(curr.pattern ? curr.pattern : '', obj.$pattern || curr.key || '');
+        fullPattern = obj.$fullPattern;
         constraints = mixIn(curr.constraints || {}, obj.$constraints);
         priority = obj.$priority || 0;
         delete obj.$pattern;
@@ -95,7 +101,7 @@ define([
                 // Add to the array to be sorted later
                 arr.push({
                     state: curr.state ? curr.state + '.' + key : key,
-                    pattern:  standardizePattern(pattern + standardizePattern(value)),
+                    pattern: patternJoin(pattern, value),
                     constraints: constraints,
                     priority: priority
                 });
