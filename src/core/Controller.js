@@ -142,6 +142,7 @@ define([
                 curr,
                 oldState,
                 foundBranch,
+                ret,
                 tmp,
                 hasChildControllers;
 
@@ -161,15 +162,12 @@ define([
                     tmp.$origin = this;
                 }
 
-                if (stateRegistry.setCurrent(absoluteStateName, $params)) {
-                    if (tmp) {
-                        delete tmp.$origin;
-                    }
-
+                ret = stateRegistry.setCurrent(absoluteStateName, $params);
+                delete tmp.$origin;
+    
+                if (tmp) {
                     return this;
                 }
-
-                delete tmp.$origin;
             // setState(stateObj)
             } else {
                 // Validate the state parameter
@@ -236,14 +234,14 @@ define([
          * @return {String} The full state name
          */
         _generateFullStateName: function ($name) {
-            // We assume that all the uplinks are controllers
-            // This may not be true if a developer implements a class that extends the Joint and links it to the controller
-
             var matches,
                 length,
                 curr,
                 x,
                 localName;
+
+            // We assume that all the uplinks are controllers
+            // This may not be true if a developer implements a class that extends the Joint and links it to the controller
 
             if ($name) {
                 // Check if it is an absolute name
@@ -324,14 +322,7 @@ define([
                     tmp.$origin = this;
                 }
 
-                if (stateRegistry.setCurrent(absoluteStateName, $params)) {
-                    if (tmp) {
-                        delete tmp.$origin;
-                    }
-
-                    return this;
-                }
-
+                stateRegistry.setCurrent(absoluteStateName, $params);
                 delete tmp.$origin;
             } else if (has('debug') && size(this._states)) {
                 console.warn('No state to be handled in "' + this.$name + '" by default.');
