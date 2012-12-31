@@ -9,13 +9,12 @@ define([
     './Joint',
     './StateRegistry/StateInterface',
     'services/state',
-    'events-emitter/EventsEmitter',
     'amd-utils/lang/isFunction',
     'amd-utils/lang/isString',
     'amd-utils/string/startsWith',
     'amd-utils/object/size',
     'has'
-], function (AbstractClass, instanceOf, Joint, StateInterface, stateRegistry, EventsEmitter, isFunction, isString, startsWith, size, has) {
+], function (AbstractClass, instanceOf, Joint, StateInterface, stateRegistry, isFunction, isString, startsWith, size, has) {
 
     'use strict';
 
