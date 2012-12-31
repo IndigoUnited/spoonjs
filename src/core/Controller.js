@@ -344,12 +344,10 @@ define([
             this._currentStateBranchName = state.getBranchName();
             this._currentState.next();
 
-            if (!this._states[localStateName]) {
-                if (has('debug')) {
-                    console.warn('Unhandled state "' + localStateName + '" on controller "' + this.$name + '".');
-                }
-            } else {
+            if (this._states[localStateName]) {
                 this._states[localStateName].call(this, state.getParams());
+            } else if (has('debug')) {
+                console.warn('Unhandled state "' + localStateName + '" on controller "' + this.$name + '".');
             }
         },
 
