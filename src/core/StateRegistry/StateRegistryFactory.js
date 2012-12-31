@@ -32,7 +32,6 @@ define([
         pattern1 = pattern1 ? pattern1.replace(trimSlashRegExp, '') : '';
         pattern2 = pattern2 ? pattern2.replace(trimSlashRegExp, '') : '';
 
-
         joined = pattern1 + '/' + pattern2;
 
         if (joined.charAt(0) !== '/') {
