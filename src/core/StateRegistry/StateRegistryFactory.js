@@ -53,8 +53,6 @@ define([
 
         pattern1 = pattern1.replace(trimSlashRegExp, '');
         pattern2 = pattern2.replace(trimSlashRegExp, '');
-
-
         joined = pattern1 + '/' + pattern2;
 
         if (joined.charAt(0) !== '/') {
@@ -64,7 +62,6 @@ define([
         return joined.replace(cleanSlashRegExp, '/')
                      .replace(trimSlashRegExp, '');
     }
-
 
     // Process the states and add them to the registry
     // The code bellow uses a stack (deep first) to avoid recursion
