@@ -36,6 +36,15 @@ define([
         /**
          * {@inheritDoc}
          */
+        once: function (event, fn, $context) {
+            this._emitter.once(event, fn, $context);
+
+            return this;
+        },
+
+        /**
+         * {@inheritDoc}
+         */
         off: function ($event, $fn, $context) {
             this._emitter.off($event, $fn, $context);
 
