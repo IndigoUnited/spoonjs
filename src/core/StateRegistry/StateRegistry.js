@@ -225,6 +225,8 @@ define([
                 route = this._states[state];
                 if (route) {
                     this._address.setValue(route.generateUrl(this._currentState.getParams()));
+                } else {
+                    this._address.reset();
                 }
             }
         },
@@ -288,6 +290,7 @@ define([
             // Only parse links with state protocol
             if (startsWith(url, 'state://')) {
                 event.preventDefault();
+
                 // If the link is internal, then we just prevent default behaviour
                 if (type !== 'internal') {
                     pos = url.lastIndexOf('/');
@@ -303,6 +306,9 @@ define([
                 } else if (has('debug')) {
                     console.info('Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
                 }
+
+                // Reset the address state
+                this._address.reset();
             }
         }.$bound(),
 
