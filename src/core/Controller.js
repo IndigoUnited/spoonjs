@@ -163,9 +163,7 @@ define([
                 }
 
                 ret = stateRegistry.setCurrent(absoluteStateName, $params);
-                delete tmp.$origin;
-    
-                if (tmp) {
+                if (ret) {
                     return this;
                 }
             // setState(stateObj)
@@ -323,7 +321,6 @@ define([
                 }
 
                 stateRegistry.setCurrent(absoluteStateName, $params);
-                delete tmp.$origin;
             } else if (has('debug') && size(this._states)) {
                 console.warn('No state to be handled in "' + this.$name + '" by default.');
             }

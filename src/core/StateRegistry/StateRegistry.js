@@ -126,14 +126,18 @@ define([
          * {@inheritDoc}
          */
         setCurrent: function (state, $params) {
-            var previousState;
+            var previousState,
+                current;
 
             if (!instanceOf(state, StateInterface)) {
                 state = new State(state, $params);
             }
 
+            current = this.isCurrent(state);
+            delete state.getParams().$origin;
+
             // Only change if the current state is not the same
-            if (!this.isCurrent(state)) {
+            if (!current) {
                 previousState = this._currentState;
                 this._currentState = state;
 
