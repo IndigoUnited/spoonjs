@@ -127,17 +127,17 @@ define([
          */
         setCurrent: function (state, $params) {
             var previousState,
-                current;
+                isCurrent;
 
             if (!instanceOf(state, StateInterface)) {
                 state = new State(state, $params);
             }
 
-            current = this.isCurrent(state);
+            isCurrent = this.isCurrent(state);
             delete state.getParams().$origin;
 
             // Only change if the current state is not the same
-            if (!current) {
+            if (!isCurrent) {
                 previousState = this._currentState;
                 this._currentState = state;
 
@@ -220,6 +220,9 @@ define([
             if (!this.isRegistered(state)) {
                 if (has('debug')) {
                     console.warn('State "' + state + '" is not registered.');
+                }
+                if (this._address) {
+                    this._address.reset();
                 }
             } else if (this._address) {
                 route = this._states[state];
