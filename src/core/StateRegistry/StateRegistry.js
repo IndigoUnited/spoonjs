@@ -309,9 +309,6 @@ define([
                 } else if (has('debug')) {
                     console.info('Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
                 }
-
-                // Reset the address state
-                this._address.reset();
             }
         }.$bound(),
 
