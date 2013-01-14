@@ -10,8 +10,8 @@ define([
     'services/state',
     'base-adapter/dom/Element',
     'dom-responder/DomResponder',
-    'amd-utils/lang/isFunction',
-    'amd-utils/lang/isString',
+    'mout/lang/isFunction',
+    'mout/lang/isString',
     'has'
 ], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isString, has) {
 

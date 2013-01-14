@@ -6,8 +6,8 @@ define([
     'dejavu/AbstractClass',
     'events-emitter/EventsEmitter',
     'services/broadcaster',
-    'amd-utils/array/insert',
-    'amd-utils/array/remove',
+    'mout/array/insert',
+    'mout/array/remove',
     'has'
 ], function (AbstractClass, EventsEmitter, broadcaster, insert, remove, has) {
 

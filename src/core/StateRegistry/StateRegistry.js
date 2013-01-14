@@ -11,11 +11,11 @@ define([
     './State',
     './Route',
     'base-adapter/dom/Events',
-    'amd-utils/array/remove',
-    'amd-utils/object/hasOwn',
-    'amd-utils/string/startsWith',
-    'amd-utils/queryString/decode',
-    'amd-utils/queryString/encode',
+    'mout/array/remove',
+    'mout/object/hasOwn',
+    'mout/string/startsWith',
+    'mout/queryString/decode',
+    'mout/queryString/encode',
     'has'
 ], function (Class, instanceOf, StateRegistryInterface, MixableEventsEmitter, AddressInterface, StateInterface, State, Route, Events, remove, hasOwn, startsWith, decode, encode, has) {
 

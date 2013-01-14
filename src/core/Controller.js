@@ -9,10 +9,10 @@ define([
     './Joint',
     './StateRegistry/StateInterface',
     'services/state',
-    'amd-utils/lang/isFunction',
-    'amd-utils/lang/isString',
-    'amd-utils/string/startsWith',
-    'amd-utils/object/size',
+    'mout/lang/isFunction',
+    'mout/lang/isString',
+    'mout/string/startsWith',
+    'mout/object/size',
     'has'
 ], function (AbstractClass, instanceOf, Joint, StateInterface, stateRegistry, isFunction, isString, startsWith, size, has) {
 

@@ -9,8 +9,8 @@ define([
     'address/AddressHash',
     'address/AddressHTML5',
     'app-config',
-    'amd-utils/string/startsWith',
-    'amd-utils/string/endsWith',
+    'mout/string/startsWith',
+    'mout/string/endsWith',
     'has'
 ], function (AddressHash, AddressHTML5, config, startsWith, endsWith, has) {
 

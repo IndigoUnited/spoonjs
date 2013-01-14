@@ -6,12 +6,12 @@
 define([
     'dejavu/Class',
     './StateInterface',
-    'amd-utils/lang/isString',
-    'amd-utils/lang/isNumber',
-    'amd-utils/lang/isBoolean',
-    'amd-utils/object/keys',
-    'amd-utils/object/values',
-    'amd-utils/object/mixIn',
+    'mout/lang/isString',
+    'mout/lang/isNumber',
+    'mout/lang/isBoolean',
+    'mout/object/keys',
+    'mout/object/values',
+    'mout/object/mixIn',
     'has'
 ], function (Class, StateInterface, isString, isNumber, isBoolean, keys, values, mixIn, has) {
 

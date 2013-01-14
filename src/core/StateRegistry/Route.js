@@ -5,7 +5,7 @@
  */
 define([
     'dejavu/Class',
-    'amd-utils/string/escapeRegExp',
+    'mout/string/escapeRegExp',
     'has'
 ], function (Class, escapeRegExp, has) {
 

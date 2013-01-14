@@ -6,7 +6,7 @@ define([
     'dejavu/AbstractClass',
     './BaseView',
     'base-adapter/dom/Element',
-    'amd-utils/lang/isFunction',
+    'mout/lang/isFunction',
     'has'
 ], function (AbstractClass, BaseView, Element, isFunction, has) {
 

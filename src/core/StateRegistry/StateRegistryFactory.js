@@ -9,10 +9,10 @@ define([
     'spoon/core/StateRegistry/StateRegistry',
     'services/address',
     'app-config',
-    'amd-utils/lang/isString',
-    'amd-utils/lang/isObject',
-    'amd-utils/object/fillIn',
-    'amd-utils/object/size',
+    'mout/lang/isString',
+    'mout/lang/isObject',
+    'mout/object/fillIn',
+    'mout/object/size',
     'has'
 ], function (StateRegistry, address, config, isString, isObject, fillIn, size, has) {
 
