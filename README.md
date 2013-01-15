@@ -196,7 +196,13 @@ Besides all the concepts that are core to the framework, here's a list of featur
 
 In order to speed up common tasks, like creating projects, testing, etc, Spoon.js offers a [CLI](https://github.com/IndigoUnited/spoon.js-cli) tool that helps you get the job done.
 
+### Base library support
 
+Spoon.js supports jquery, mootools, YUI3 and dojo. You use your favorite library, no need for adapters.
+
+### Template system support
+
+Spoon.js supports all the template systems that compile to a function (almost all?).
 
 
 
