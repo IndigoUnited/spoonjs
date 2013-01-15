@@ -216,6 +216,6 @@ Simple
 ### CSS live reloading
 
 
-### Grunt.js build
+### automaton build
 
-The building process will be based in Grunt.js, allowing the user to completely customise the build.
+The building process will be based on automaton, allowing the user to completely customise the build.
