@@ -6,6 +6,9 @@ spoon.js
 
 [indigounited.com](http://indigounited.com/)
 
+Spoon.js is not yet officially released. Until then breaking changes might happen without notice.
+The code is open to gather some attention and for curious people to try it out.
+Besides that our own [site](http://indigounited.com/) is powered by Spoon.js.
 
 ## Motivation
 
@@ -38,14 +41,25 @@ Please check below a typical project file structure (note that a few files are o
 
 ```
 app/
-    bootstrap.js     // the script that boots the application. This file is included the index.html file
-    grunt.js         // the grunt config file for building the project. You can edit this file and customise the building process
-    config.js        // project configurations
-    config_dev.js    // you can have separate configurations for separate environments. In order to use different configs, would load a different file in the index.html file
-    config_prod.js
-    states.js        // state and routing configuration
-vendor/              // external dependencies
-    …
+    config/
+        config.js          // base project configurations
+        config_dev.js      // you can have separate configurations for separate environments. In order to use different configs, would load a different file in the index.html file
+        config_prod.js
+    states.js              // states to routes configuration
+    bootstrap.js           // the script that boots the application and also setups the AMD loader
+vendor/                    // external dependencies
+    spoon.js
+    events-emitter
+    ...
+tasks/                                  // place where useful tasks live
+    generators/                         // you can change the generators to tweak the scaffolding process when using the CLI
+        module_create.autofile.js
+        controller_create.autofile.js
+        view_create.autofile.js
+        ...
+    server.js
+    build.js
+    install.js
 src/                 // this is where your application code lives
     Application/     // the main module
         assets/      // this is the ideal place for placing CSS files, images, templates, or anything else you feel appropriate
@@ -53,56 +67,58 @@ src/                 // this is where your application code lives
             css/
             img/
             tmpl/
-        ApplicationController.js        // the root controller (can be changed in the bootstrap file)
+        ApplicationController.js    // the root controller (can be changed in the bootstrap file)
         ApplicationView.js
-        Content/                        // this folder only has modules within it, but it not a module by itself. You can create these folders if it helps you organise the project
-            Articles/
-                assets/
-                    css/
-                    img/
-                    tmpl/
-                ArticleDetailsView.js
-                ArticleListItemView.js
-                ArticlesController.js
-                ArticlesListView.js
-            Help/
-                assets/
-                    css/
-                    img/
-                    tmpl/
-                HelpController.js
-                HelpView.js
-            Home/
-                assets/
-                    css/
-                    img/
-                    tmpl/
-                HomeController.js
-                HomeView.js
-        Footer/
+    Content/                        // this folder only has modules within it, but it not a module by itself. You can create these folders if it helps you organise the project
+        Articles/
             assets/
                 css/
                 img/
                 tmpl/
-            FooterController.js
-            FooterView.js
-        Header/
+            ArticleDetailsView.js
+            ArticleListItemView.js
+            ArticlesController.js
+            ArticlesListView.js
+        Help/
             assets/
                 css/
                 img/
                 tmpl/
-            HeaderController.js
-            HeaderView.js
-        Menu/
+            HelpController.js
+            HelpView.js
+        Home/
             assets/
                 css/
                 img/
                 tmpl/
-            MenuController.js
-            MenuView.js
+            HomeController.js
+            HomeView.js
+    Footer/
+        assets/
+            css/
+            img/
+            tmpl/
+        FooterController.js
+        FooterView.js
+    Header/
+        assets/
+            css/
+            img/
+            tmpl/
+        HeaderController.js
+        HeaderView.js
+    Menu/
+        assets/
+            css/
+            img/
+            tmpl/
+        MenuController.js
+        MenuView.js
 web/
-    index.html   // the project root HTML file
-    …            // other files, such as robots.txt, favicon, etc
+    index.html       // the project root HTML file (dev environment)
+    index_prod.html  // the project root HTML (prod environment)
+    favicon.ico
+    …                // other files, such as robots.txt, etc
 ```
 
 As you can see, each project is composed of modules, which in their turn can be composed of other modules. Each module should have a very clear responsibility within the project, thus avoiding spaghetti code.
@@ -222,6 +238,6 @@ Simple
 ### CSS live reloading
 
 
-### automaton build
+### Build process
 
 The building process will be based on automaton, allowing the user to completely customise the build.
