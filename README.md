@@ -194,7 +194,7 @@ Besides all the concepts that are core to the framework, here's a list of featur
 
 ### CLI
 
-In order to speed up common tasks, like creating projects, testing, etc, Spoon.js offers a CLI tool that helps you get the job done.
+In order to speed up common tasks, like creating projects, testing, etc, Spoon.js offers a [CLI](https://github.com/IndigoUnited/spoon.js-cli) tool that helps you get the job done.
 
 
 
@@ -210,7 +210,7 @@ A key-value storage service with support for persistence.
 
 ### I18n service
 
-Simple 
+Simple
 
 
 ### CSS live reloading
