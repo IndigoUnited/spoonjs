@@ -5,10 +5,10 @@
   "dependencies": {
     "mout": "~0.2.0",
     "dejavu": "~0.2.0",
-    "events-emitter": "git@github.com:IndigoUnited/events-emitter.git",
-    "base-adapter": "git@github.com:IndigoUnited/base-adapter.git",
-    "address": "git@github.com:IndigoUnited/address.git",
-    "dom-responder": "git@github.com:IndigoUnited/dom-responder.git",
+    "events-emitter": "git:github.com:IndigoUnited/events-emitter.git",
+    "base-adapter": "git:github.com:IndigoUnited/base-adapter.git",
+    "address": "git:github.com:IndigoUnited/address.git",
+    "dom-responder": "git:github.com:IndigoUnited/dom-responder.git",
     "has": "latest"
   }
 }
