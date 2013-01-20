@@ -125,7 +125,7 @@ define([
                 throw new Error('Views can only link other views.');
             }
 
-            this._controller = view._controller;
+            view._controller = this._controller;
             this._dom.addChild(view._dom);
 
             return this.$super(view);
@@ -137,13 +137,13 @@ define([
         _unlink: function (view) {
             if (view instanceof BaseView) {
                 if (this._controller === view._controller) {
-                    this._controller = null;
+                    view._controller = null;
                 }
+
                 this._dom.removeChild(view._dom);
-                this.$super(view);
             }
 
-            return this;
+            return this.$super(view);
         },
 
         /**
