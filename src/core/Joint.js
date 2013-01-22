@@ -88,6 +88,7 @@ define([
         _link: function (joint) {
             insert(joint._uplinks, this);
             insert(this._downlinks, joint);
+            joint._emitter.emit('link', this);
 
             return joint;
         },
@@ -102,6 +103,7 @@ define([
         _unlink: function (joint) {
             remove(joint._uplinks, this);
             remove(this._downlinks, joint);
+            joint._emitter.emit('unlink', this);
 
             return this;
         },
