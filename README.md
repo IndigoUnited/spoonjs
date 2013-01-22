@@ -53,9 +53,9 @@ vendor/                    // external dependencies
     ...
 tasks/                                  // place where useful tasks live
     generators/                         // you can change the generators to tweak the scaffolding process when using the CLI
-        module_create.autofile.js
-        controller_create.autofile.js
-        view_create.autofile.js
+        module_create.js
+        controller_create.js
+        view_create.js
         ...
     server.js
     build.js
