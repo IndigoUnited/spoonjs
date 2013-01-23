@@ -209,7 +209,7 @@ define([
                     }
                 }
 
-                if (has('debug') && (hasChildControllers || $state.getName()) && !foundBranch) {
+                if (has('debug') && hasChildControllers && $state.getName() && !foundBranch) {
                     console.warn('Could not propagate state "' + $state.getBranchName() + '" to any of the "' + this.$name + '" downlinks.');
                 }
             }
