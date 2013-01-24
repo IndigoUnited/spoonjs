@@ -11,21 +11,6 @@ define(['dejavu/Interface'], function (Interface) {
         $name: 'StateInterface',
 
         /**
-         * Get the state name (the name imediatly after the current cursor position).
-         *
-         * @return {String} The name
-         */
-        getName: function () {},
-
-        /**
-         * Get the current state name, including the branch (complete name after the current cursor position).
-         * Returns null if none is set.
-         *
-         * @return {String} The branch state name
-         */
-        getBranchName: function () {},
-
-        /**
          * Get the full state name.
          *
          * @return {String} The full state name
@@ -33,11 +18,36 @@ define(['dejavu/Interface'], function (Interface) {
         getFullName: function () {},
 
         /**
+         * Get the state name (the name imediatly after the current cursor position).
+         *
+         * @return {String} The name
+         */
+        getName: function () {},
+
+        /**
+         * Set the state name (the name imediatly after the current cursor position).
+         *
+         * @param {String} The name
+         *
+         * @return {StateInterface} The instance itself to allow chaining
+         */
+        setName: function (name) {},
+
+        /**
          * Get the state parameters.
          *
          * @return {Object} The state parameters
          */
         getParams: function () {},
+
+        /**
+         * Set the state parameters.
+         *
+         * @param {Object} The state parameters
+         *
+         * @return {StateInterface} The instance itself to allow chaining
+         */
+        setParams: function (params) {},
 
         /**
          * Advance the cursor position.
@@ -70,7 +80,8 @@ define(['dejavu/Interface'], function (Interface) {
 
         /**
          * Compares the instance to another one.
-         * The state is considered to the same if the name is equal and its params are equal.
+         * The state is considered to the same if the name and parameters are the same.
+         * If parameter names are passed, only those will be compared.
          *
          * @param {StateInterface} state         The state
          * @param {Array}          [$paramNames] An array of param names to be compared
@@ -81,12 +92,19 @@ define(['dejavu/Interface'], function (Interface) {
 
         /**
          * Compares the instance to another one.
-         * The state is considered to be fully equal if the full state name and the parameters are the same.
+         * The state is considered to be fully equal if the full state name and parameters are the same.
          *
          * @param {StateInterface} state The state
          *
          * @return {Boolean} True if the state is fully equal
          */
-        isFullyEqual: function (state) {}
+        isFullyEqual: function (state) {},
+
+        /**
+         * Clones the state.
+         *
+         * @return {StateInterface} The cloned state
+         */
+        clone: function () {}
     });
 });

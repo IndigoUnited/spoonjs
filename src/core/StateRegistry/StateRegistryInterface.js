@@ -109,9 +109,9 @@ define([
          * Generates an URL for a given state.
          * If no route is associated with the state, a state:// URL will be generated.
          *
-         * @param {String}  state       The state
-         * @param {Object}  [$params]   The state parameters
-         * @param {Boolean} [$absolute] True to only generate an absolute URL, false otherwise
+         * @param {String|StateInterface} state       The state name or the state object
+         * @param {Object}                [$params]   The state parameters if the state was a string
+         * @param {Boolean}               [$absolute] True to only generate an absolute URL, false otherwise
          *
          * @return {String} The URL for the state or null if unable to generate one
          */

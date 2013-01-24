@@ -134,7 +134,6 @@ define([
             }
 
             isCurrent = this.isCurrent(state);
-            delete state.getParams().$origin;
 
             // Only change if the current state is not the same
             if (!isCurrent) {

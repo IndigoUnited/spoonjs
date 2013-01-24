@@ -6,14 +6,12 @@
 define([
     'dejavu/Class',
     './StateInterface',
-    'mout/lang/isString',
-    'mout/lang/isNumber',
-    'mout/lang/isBoolean',
     'mout/object/keys',
     'mout/object/values',
     'mout/object/mixIn',
+    'mout/lang/deepClone',
     'has'
-], function (Class, StateInterface, isString, isNumber, isBoolean, keys, values, mixIn, has) {
+], function (Class, StateInterface, keys, values, mixIn, deepClone, has) {
 
     'use strict';
 
@@ -33,63 +31,14 @@ define([
          * @param {Object} [$params] The state parameters
          */
         initialize: function (name, $params) {
-            var key,
-                curr;
-
             if (has('debug') && (!name || name.charAt(0) === '.' || name.charAt(0) === '/')) {
+                console.log(name);
                 throw new Error('State names cannot be empty and cannot start with a dot and a slash.');
             }
 
             this._name = name;
-            if ($params) {
-                this._params = $params;
-
-                if (has('debug') && '$state' in this._params) {
-                    throw new Error('Param "$state" is reserved.');
-                }
-                if (has('debug') && '$origin' in this._params) {
-                    throw new Error('Param "$origin" is reserved.');
-                }
-
-                for (key in $params) {
-                    curr = $params[key];
-
-                    if (has('debug') && !isString(curr) && !isNumber(curr) && !isBoolean(curr) && curr != null) {
-                        throw new Error('Param "' + key + '" is not an immutable value (only immutable values are allowed - string, number, booleans and nulls).');
-                    }
-                }
-            } else {
-                this._params = {};
-            }
-
+            this._params = $params || {};
             this._params.$state = this;
-        },
-
-        /**
-         * {@inheritDoc}
-         */
-        getName: function () {
-            if (this._pos === -1) {
-                return null;
-            }
-
-            var branchName = this.getBranchName(),
-                dotPos;
-
-            if (branchName == null) {
-                return null;
-            }
-
-            dotPos = branchName.indexOf('.');
-
-            return dotPos === -1 ? branchName : branchName.substr(0, dotPos);
-        },
-
-        /**
-         * {@inheritDoc}
-         */
-        getBranchName: function () {
-            return this._pos === -1 ? null : this._name.substr(!this._pos ? this._pos : this._pos + 1);
         },
 
         /**
@@ -102,8 +51,48 @@ define([
         /**
          * {@inheritDoc}
          */
+        getName: function () {
+            if (this._pos === -1) {
+                return null;
+            }
+
+            var branchName = this._name.substr(!this._pos ? this._pos : this._pos + 1),
+                dotPos = branchName.indexOf('.');
+
+            return dotPos === -1 ? branchName : branchName.substr(0, dotPos);
+        },
+
+        /**
+         * {@inheritDoc}
+         */
+        setName: function (name) {
+            if (name.indexOf('.') !== -1) {
+                throw new Error('Name parts cannot contain a dot.');
+            }
+
+            var parts = this._name.split('.');
+
+            parts.splice(this._cursor, 1, name);
+            this._name = parts.join('.');
+
+            return this;
+        },
+
+
+        /**
+         * {@inheritDoc}
+         */
         getParams: function () {
             return this._params;
+        },
+
+        /**
+         * {@inheritDoc}
+         */
+        setParams: function (params) {
+            this._params = params || {};
+
+            return this;
         },
 
         /**
@@ -208,10 +197,20 @@ define([
 
             delete selfParams.$state;
             delete otherParams.$state;
-            delete selfParams.$origin;
-            delete otherParams.$origin;
 
             return this._compareObjects(selfParams, otherParams);
+        },
+
+        /**
+         * {@inheritDoc}
+         */
+        clone: function () {
+            var ret = new State(this._name);
+            ret._params = deepClone(this._params);
+            ret._pos = this._pos;
+            ret._cursor = this._cursor;
+
+            return ret;
         },
 
         /**

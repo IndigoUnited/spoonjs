@@ -5,16 +5,14 @@
  */
 define([
     'dejavu/AbstractClass',
-    'dejavu/instanceOf',
     './Joint',
-    './StateRegistry/StateInterface',
     'services/state',
     'mout/lang/isFunction',
     'mout/lang/isString',
     'mout/string/startsWith',
     'mout/object/size',
     'has'
-], function (AbstractClass, instanceOf, Joint, StateInterface, stateRegistry, isFunction, isString, startsWith, size, has) {
+], function (AbstractClass, Joint, stateRegistry, isFunction, isString, startsWith, size, has) {
 
     'use strict';
 
@@ -25,10 +23,9 @@ define([
         _states: null,
         _statesParams: null,
         _defaultState: null,
+        _nrStates: 0,
 
         _currentState: null,
-        _currentStateCursor: null,
-        _currentStateBranchName: null,
 
         /**
          * Constructor.
@@ -38,47 +35,42 @@ define([
                 tmp,
                 func,
                 matches,
-                regExp;
-
-            // Process the _states object if any
-            if (this._states) {
-                this._statesParams = {};
                 regExp = this.$static._stateParamsRegExp;
 
-                for (key in this._states) {
-                    if (has('debug') && !key) {
-                        throw new Error('Empty state detected in "' + this.$name + '".');
-                    }
-                    if (has('debug') && (key.indexOf('.') !== -1 || key.indexOf('/') !== -1)) {
-                        throw new Error('States cannot contain dots or slashes (saw one in state "' + key + '" of "' + this.$name + '").');
-                    }
+            this._statesParams = {};
+            this._states = this._states || {};
+            this._nrStates = size(this._states);
 
-                    // Process the params specified in the parentheses
-                    matches = key.match(regExp);
-                    if (matches) {
-                        tmp = key.substr(0, key.indexOf('('));
-                        this._states[tmp] = this._states[key];
-                        delete this._states[key];
-                        key = tmp;
-                        this._statesParams[key] = matches[1].split(',');
-                    } else {
-                        this._states[key] = this._states[key];
-                    }
-
-                    // Check if it is a string or already a function
-                    func = this._states[key];
-                    if (isString(func)) {
-                        func = this[func];
-                        if (has('debug') && !isFunction(func)) {
-                            throw new Error('State handler "' + key + '" of "' + this.$name + '" references an unknown function.');
-                        }
-                        this._states[key] = func;
-                    }
+            // Process the _states object
+            for (key in this._states) {
+                if (has('debug') && !key) {
+                    throw new Error('Empty state detected in "' + this.$name + '".');
+                }
+                if (has('debug') && (key.indexOf('.') !== -1 || key.indexOf('/') !== -1)) {
+                    throw new Error('States cannot contain dots or slashes (saw one in state "' + key + '" of "' + this.$name + '").');
                 }
 
-            } else {
-                this._states = {};
-                this._statesParams = {};
+                // Process the params specified in the parentheses
+                matches = key.match(regExp);
+                if (matches) {
+                    tmp = key.substr(0, key.indexOf('('));
+                    this._states[tmp] = this._states[key];
+                    delete this._states[key];
+                    key = tmp;
+                    this._statesParams[key] = matches[1].split(',');
+                } else {
+                    this._states[key] = this._states[key];
+                }
+
+                // Check if it is a string or already a function
+                func = this._states[key];
+                if (isString(func)) {
+                    func = this[func];
+                    if (has('debug') && !isFunction(func)) {
+                        throw new Error('State handler "' + key + '" of "' + this.$name + '" references an unknown function.');
+                    }
+                    this._states[key] = func;
+                }
             }
 
             // Process the default state
@@ -90,28 +82,12 @@ define([
         },
 
         /**
-         * Get the current state name or null if none is set.
+         * Get the current state or null if none is set.
          *
-         * @return {String} The state name or null if the cursor reached the end
+         * @return {StateInterface} The state
          */
         getState: function () {
-            if (!this._currentStateBranchName) {
-                return null;
-            }
-
-            var pos = this._currentStateBranchName.indexOf('.');
-
-            return pos === -1 ? this._currentStateBranchName : this._currentStateBranchName.substr(0, pos);
-        },
-
-        /**
-         * Get the current state name, including the branch (hierarchy) state.
-         * Returns null if none is set.
-         *
-         * @return {String} The branch state name
-         */
-        getBranchState: function () {
-            return this._currentStateBranchName;
+            return this._currentState;
         },
 
         /**
@@ -123,7 +99,7 @@ define([
          * @return {String} The generated URL
          */
         generateUrl: function (state, $params) {
-            return stateRegistry.generateUrl(this._generateFullStateName(state), $params);
+            return stateRegistry.generateUrl(this._resolveFullState(state), $params);
         },
 
         /**
@@ -136,82 +112,56 @@ define([
          * @return {Controller} The instance itself to allow chaining
          */
         setState: function ($state, $params) {
-            var absoluteStateName,
-                x,
-                length,
-                curr,
-                oldState,
-                foundBranch,
-                ret,
-                tmp,
-                hasChildControllers;
+            var name,
+                fullName;
 
-            // When a setState is called, we first check if the global state will be changed
-            // If it does, we don't need do anything more because the state will propagate from the root controller
-            // Otherwise, we check if the state is different from the current one in the controller
+            if (!this._nrStates) {
+                return this;
+            }
 
-            // setState()
-            if (!$state) {
-                return this._setDefaultState($params);
-            // setState('x.y.z', {})
-            } else if (isString($state)) {
-                absoluteStateName = this._generateFullStateName($state);
-                $state = stateRegistry.getCurrent();
-                if ($state) {
-                    tmp = $state.getParams();
-                    tmp.$origin = this;
-                }
+            // 1st - Try to make the state transition globally and only proceed if it didn't changed
+            //       Also extract the local and full name of the state
+            if (!$state || isString($state)) {
+                // Resolve to the full name
+                fullName = this._resolveFullState($state);
 
-                ret = stateRegistry.setCurrent(absoluteStateName, $params);
-                if (ret) {
+                // Change the state globally, and abort if actually changed
+                if (stateRegistry.setCurrent(fullName, $params)) {
                     return this;
                 }
-            // setState(stateObj)
-            } else {
-                // Validate the state parameter
-                // The state parameter can be an object containing the state parameters or a StateInterface instance
-                // If it is an object containing the parameters, the state instance is referenced by the $state property
-                $state = instanceOf($state, StateInterface) ?  $state : $state.$state;
-                if (has('debug') && !instanceOf($state, StateInterface)) {
-                    throw new Error('Invalid state instance.');
-                }
 
+                name = $state;
+            } else {
+                $state = $state.$state || $state;
+
+                // Change the state globally, and abort if actually changed
                 if (stateRegistry.setCurrent($state)) {
                     return this;
                 }
 
-                if (!$state.getName()) {
-                    return this._setDefaultState($params);
+                name = $state.getName();
+                $params = $state.getParams();
+            }
+
+            $state = stateRegistry.getCurrent();
+            $state.setParams($params);
+
+            // 2nd - If no name is found, translate to the default state
+            if (!name) {
+                if (this._defaultState) {
+                    $state.setName(this._defaultState).previous();
+                    name = this._defaultState;
+                } else if (has('debug')) {
+                    throw new Error('No default state defined in "' + this.$name + '".');
                 }
             }
 
-            // The current global state is the same
-            // Now we check if the state of this controller changed
-            if (!this._currentState || !this._currentState.setCursor(this._currentStateCursor).isEqual($state, this._statesParams[$state.getName()])) {
+            // 3rd - Check if the state of the controller actually changed
+            if (!this._currentState || !this._currentState.isEqual($state, this._statesParams[$state.getName()])) {
                 this._performStateChange($state);
-            // If it didn't changed we must propagate down the controller's current branch
+            // 4th - If not, propagate the state downwards
             } else {
-                oldState = this._currentState;
-                tmp = oldState ? oldState.getParams().$origin : null;
-                this._currentState = $state;
-                $state.next();
-
-                length = this._downlinks.length;
-                for (x = 0; x < length; x += 1) {
-                    curr = this._downlinks[x];
-                    if (curr instanceof Controller) {
-                        if (tmp === curr || (curr._currentState && oldState.getFullName() === curr._currentState.getFullName())) {
-                            curr.setState($state);
-                            foundBranch = true;
-                            break;
-                        }
-                        hasChildControllers = true;
-                    }
-                }
-
-                if (has('debug') && hasChildControllers && $state.getName() && !foundBranch) {
-                    console.warn('Could not propagate state "' + $state.getBranchName() + '" to any of the "' + this.$name + '" downlinks.');
-                }
+                this._propagateState($state);
             }
 
             return this;
@@ -220,112 +170,71 @@ define([
         //////////////////////////////////////////////////////////////////
 
         /**
-         * Generates a full state name.
-         * Empty states can be used and will be mapped to the default states.
+         * Resolves a full state name.
          *
-         * If the name of the state starts with a /, it will be handled as an absolute state
-         * If the name of the state starts with a ../, it will be handled as a relative state
-         * Otherwise it will be handled as a local state
+         * If starts with a / are absolute.
+         * If starts with ../ are relative.
+         * If empty will try to map to the default state.
+         * Otherwise the full state name will be resolved from the local name.
          *
          * @param {String} [$name] The state name
          *
          * @return {String} The full state name
          */
-        _generateFullStateName: function ($name) {
+        _resolveFullState: function ($name) {
             var matches,
                 length,
                 curr,
-                x,
-                localName;
+                currState,
+                x;
 
-            // We assume that all the uplinks are controllers
-            // This may not be true if a developer implements a class that extends the Joint and links it to the controller
+            // TODO: we assume all the uplinks are controllers but this might not be true
+            //       if the user implements a new class that extends from the Joint that
+            //       are able to link to controllers
 
-            if ($name) {
-                // Check if it is an absolute name
-                if ($name.charAt(0) === '/') {
-                    $name = $name.substr(1);
+            // TODO: this function must be improved:
+            //       - it must account for local names with a .
 
-                    if (!$name) {
-                        curr = this;
-                        while (curr._uplinks.length) {
-                            curr = curr._uplinks[0];
-                        }
-
-                        $name = curr._generateFullStateName();
-                    }
-
-                    return $name;
-                }
-
-                // Check if it is a relative name
-                if (startsWith($name, '../')) {
-                    matches = $name.match(this.$static._relativeStateRegExp),
-                    length = matches.length,
-                    curr = this;
-
-                    for (x = 1; x < length - 1; x += 1) {
-                        if (has('debug') && !curr._uplinks.length) {
-                            throw new Error('Cannot generate relative path because "' + this.$name + '" has no uplinks.');
-                        }
-                        curr = curr._uplinks[0];
-                    }
-
-                    return curr._generateFullStateName(matches[length - 1] || null);
-                }
-
-                // Check if it is a local name
-                x = $name.indexOf('.');
-                localName = x === -1 ? $name : $name.substr(0, x);
-
-                if (has('debug') && !this._states[localName]) {
-                    throw new Error('Unknown state "' + localName + '" in "' + this.$name + '".');
-                }
-            } else {
-                // Check if the default state is set
-                if (has('debug') && !this._defaultState) {
-                    throw new Error('No default state defined in "' + this.$name + '".');
-                }
-
-                $name = this._defaultState;
+            // Absolute
+            if ($name.charAt(0) === '/') {
+                return $name.substr(1);
             }
 
-            // Generate the full state
+            // Relative
+            if (startsWith($name, '../')) {
+                matches = $name.match(this.$static._relativeStateRegExp),
+                length = matches.length - 1,
+                curr = this;
+
+                for (x = 1; x < length; x += 1) {
+                    if (has('debug') && !curr._uplinks.length) {
+                        throw new Error('Cannot generate relative path because "' + this.$name + '" has no uplinks.');
+                    }
+
+                    curr = curr._uplinks[0];
+                }
+
+                return curr._resolveFullState(matches[length] || null);
+            }
+
+            // Local
             curr = this;
-            while (curr._uplinks.length) {
-                curr = curr._uplinks[0];
-                $name = curr.getState() + ($name ? '.' + $name : '');
+            if (curr._uplinks.length) {
+                if ($name === this._defaultState) {
+                    $name = '';
+                }
+
+                while (curr._uplinks.length) {
+                    curr = curr._uplinks[0];
+                    currState = curr.getState();
+                    if (!currState && has('debug')) {
+                        throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
+                    }
+                    $name = currState.getName() + ($name ? '.' + $name : '');
+                }
             }
 
             return $name;
-        },
-
-        /**
-         * Changes the state to the default one.
-         *
-         * @param {Object} [$params] The state params
-         *
-         * @return {Controller} The instance itself to allow chaining
-         */
-        _setDefaultState: function ($params) {
-            var absoluteStateName,
-                tmp,
-                state;
-
-            if (this._defaultState) {
-                absoluteStateName = this._generateFullStateName(this._defaultState);
-                state = stateRegistry.getCurrent();
-                if (state) {
-                    tmp = state.getParams();
-                    tmp.$origin = this;
-                }
-
-                stateRegistry.setCurrent(absoluteStateName, $params);
-            } else if (has('debug') && size(this._states)) {
-                console.warn('No state to be handled in "' + this.$name + '" by default.');
-            }
-
-            return this;
         },
 
         /**
@@ -334,17 +243,47 @@ define([
          * @param {StateInterface} state The state
          */
         _performStateChange: function (state) {
-            var localStateName = state.getName();
+            var name = state.getName();
 
-            this._currentState = state;
-            this._currentStateCursor = state.getCursor();
-            this._currentStateBranchName = state.getBranchName();
-            this._currentState.next();
+            this._currentState = state.clone();
+            state.next();
 
-            if (this._states[localStateName]) {
-                this._states[localStateName].call(this, state.getParams());
+            if (this._states[name]) {
+                this._states[name].call(this, state.getParams());
             } else if (has('debug')) {
-                console.warn('Unhandled state "' + localStateName + '" on controller "' + this.$name + '".');
+                console.warn('Unhandled state "' + name + '" on controller "' + this.$name + '".');
+            }
+        },
+
+        /**
+         * Attempts to propagate the state to one of the downlinks.
+         *
+         * @param {StateInterface} state The state
+         */
+        _propagateState: function (state) {
+            var name,
+                curr,
+                length,
+                x;
+
+            state.next();
+
+            name = state.getName() || '';
+            length = this._downlinks.length;
+
+            for (x = 0; x < length; x += 1) {
+                curr = this._downlinks[x];
+
+                if (curr instanceof Controller) {
+                    if (curr._states[name] || (!name && curr._defaultState)) {
+                        curr.setState(state);
+                        return;
+                    }
+                }
+            }
+
+            if (has('debug')) {
+                console.warn('Could not propagate state "' + name + '" to any of the "' + this.$name + '" downlinks.');
             }
         },
 
