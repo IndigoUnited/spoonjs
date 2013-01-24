@@ -121,7 +121,8 @@ define([
 
             if ($params) {
                 for (key in $params) {
-                    curr = $params[key];
+                    curr = $params[key] + '';
+
                     if (has('debug') && constraints[key] && !constraints[key].test(curr)) {
                         throw new Error('Param "' + key + '" does not pass the constraint.');
                     }
