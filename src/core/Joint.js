@@ -48,6 +48,25 @@ define([
         },
 
         /**
+         * Adds a one time listener for an upcast or broadcast event.
+         * Duplicate listeners for the same event will be discarded.
+         *
+         * @param {String}   event      The event name
+         * @param {Function} fn         The handler
+         * @param {Object}   [$context] The context to be used to call the handler, defaults to the conector instance
+         *
+         * @return {Object} The instance itself to allow chaining
+         */
+        once: function (event, fn, $context) {
+            var context = $context || this;
+
+            this._emitter.once(event, fn, context);
+            this.$static._broadcaster.once(event, fn, context);
+
+            return this;
+        },
+
+        /**
          * Removes a previously added listener.
          *
          * @param {String}   event      The event name
