@@ -9,9 +9,8 @@ define([
     'mout/object/keys',
     'mout/object/values',
     'mout/object/mixIn',
-    'mout/lang/deepClone',
     'has'
-], function (Class, StateInterface, keys, values, mixIn, deepClone, has) {
+], function (Class, StateInterface, keys, values, mixIn, has) {
 
     'use strict';
 
@@ -206,7 +205,7 @@ define([
          */
         clone: function () {
             var ret = new State(this._name);
-            ret._params = deepClone(this._params);
+            ret._params = this._params;
             ret._pos = this._pos;
             ret._cursor = this._cursor;
 

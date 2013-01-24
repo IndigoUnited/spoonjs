@@ -266,6 +266,7 @@ define([
                 length,
                 x;
 
+            this._currentState.setParams(state.getParams());
             state.next();
 
             name = state.getName() || '';
