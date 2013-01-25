@@ -9,8 +9,9 @@ define([
     'mout/object/keys',
     'mout/object/values',
     'mout/object/mixIn',
+    'mout/lang/deepClone',
     'has'
-], function (Class, StateInterface, keys, values, mixIn, has) {
+], function (Class, StateInterface, keys, values, mixIn, deepClone, has) {
 
     'use strict';
 
@@ -20,7 +21,8 @@ define([
 
         _name: null,
         _params: null,
-        _pos: 0,
+        _parts: null,
+        _nrParts: 0,
         _cursor: 0,
 
         /**
@@ -45,15 +47,14 @@ define([
          * {@inheritDoc}
          */
         setFullName: function (name) {
-            if (has('debug') && (!name || name.charAt(0) === '.' || name.charAt(0) === '/')) {
-                throw new Error('State names cannot be empty and cannot start with a dot and a slash.');
+            if (has('debug') && !this.$static.isValid(name)) {
+                throw new Error('The state name contains unallowed chars.');
             }
 
             this._name = name;
-
-            var cursor = this._cursor;
-            this._pos = this._cursor = 0;
-            this.setCursor(cursor);
+            this._parts = name.split('.');
+            this._nrParts = this._parts.length;
+            this.setCursor(this._cursor);
 
             return this;
         },
@@ -62,14 +63,7 @@ define([
          * {@inheritDoc}
          */
         getName: function () {
-            if (this._pos === -1) {
-                return null;
-            }
-
-            var branchName = this._name.substr(!this._pos ? this._pos : this._pos + 1),
-                dotPos = branchName.indexOf('.');
-
-            return dotPos === -1 ? branchName : branchName.substr(0, dotPos);
+            return this._cursor < this._nrParts ? this._parts[this._cursor] : null;
         },
 
         /**
@@ -93,8 +87,7 @@ define([
          * {@inheritDoc}
          */
         next: function () {
-            if (this._pos !== -1) {
-                this._pos = this._name.indexOf('.', !this._pos ? this._pos : this._pos + 1);
+            if (this._cursor < this._nrParts) {
                 this._cursor += 1;
             }
 
@@ -105,11 +98,7 @@ define([
          * {@inheritDoc}
          */
         previous: function () {
-            if (this._cursor > 0) {
-                this._pos = this._name.substr(0, this._pos === -1 ? this._name.length : this._pos).lastIndexOf('.');
-                if (this._pos === -1) {
-                    this._pos = 0;
-                }
+            if (this._cursor > 1) {
                 this._cursor -= 1;
             }
 
@@ -127,14 +116,12 @@ define([
          * {@inheritDoc}
          */
         setCursor: function (cursor) {
-            if (cursor > this._cursor) {
-                while (cursor > this._cursor) {
-                    this.next();
-                }
+            if (this._cursor > this._nrParts) {
+                this._cursor = this._nrParts;
+            } else if (this._cursor < 0) {
+                this._cursor = 0;
             } else {
-                while (cursor < this._cursor) {
-                    this.previous();
-                }
+                this._cursor = cursor;
             }
 
             return this;
@@ -199,9 +186,7 @@ define([
          * {@inheritDoc}
          */
         clone: function () {
-            var ret = new State(this._name);
-            ret._params = this._params;
-            ret._pos = this._pos;
+            var ret = new State(this._name, deepClone(this._params));
             ret._cursor = this._cursor;
 
             return ret;
@@ -239,6 +224,21 @@ define([
             }
 
             return true;
+        },
+
+        $statics: {
+            _nameRegExp: /^[a-z0-9_\-]+(\.[a-z0-9_\-]+)*$/i,
+
+            /**
+             * Checks if a given state name is valid.
+             *
+             * @param {String} state The state
+             *
+             * @return {Boolean} True if valid, false otherwise
+             */
+            isValid: function (name) {
+                return this._nameRegExp.test(name);
+            }
         }
     });
 

@@ -101,16 +101,6 @@ define([
         /**
          * {@inheritDoc}
          */
-        clear: function () {
-            this._states = {};
-            this._routes = [];
-
-            return this;
-        },
-
-        /**
-         * {@inheritDoc}
-         */
         isRegistered: function (state) {
             return hasOwn(this._states, state);
         },
@@ -122,6 +112,24 @@ define([
             return !!this._states[state];
         },
 
+
+        /**
+         * {@inheritDoc}
+         */
+        clear: function () {
+            this._states = {};
+            this._routes = [];
+
+            return this;
+        },
+
+        /**
+         * {@inheritDoc}
+         */
+        isValid: function (name) {
+            return State.isValid(name);
+        },
+
         /**
          * {@inheritDoc}
          */
@@ -130,7 +138,7 @@ define([
                 isCurrent;
 
             if (!instanceOf(state, StateInterface)) {
-                state = new State(state, $params);
+                state = this._createState(state, $params);
             }
 
             isCurrent = this.isCurrent(state);
@@ -171,7 +179,7 @@ define([
 
             // Build the state object
             if (!instanceOf(state, StateInterface)) {
-                state = new State(state, $params);
+                state = this._createState(state, $params);
             }
 
             return this._currentState.isFullyEqual(state);
@@ -204,6 +212,18 @@ define([
         },
 
         ///////////////////////////////////////////////////////////////
+
+        /**
+         * Creates a new state instance.
+         *
+         * @param {String} state     The state name
+         * @param {Object} [$params] The state parameters if the state was a string
+         *
+         * @return {StateInterface} The state instance
+         */
+        _createState: function (state, $params) {
+            return new State(state, $params);
+        },
 
         /**
          * Handles stuff after the state has changed.

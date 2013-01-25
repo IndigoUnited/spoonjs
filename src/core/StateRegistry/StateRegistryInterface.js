@@ -52,13 +52,6 @@ define([
         unregister: function (state) {},
 
         /**
-         * Clears all the registered states.
-         *
-         * @return {StateRegistryInterface} The instance itself to allow chaining
-         */
-        clear: function () {},
-
-        /**
          * Checks if a state is registered.
          *
          * @param {String} state The state
@@ -75,6 +68,22 @@ define([
          * @return {Boolean} True if it is, false otherwise
          */
         hasRoute: function (state) {},
+
+        /**
+         * Clears all the registered states.
+         *
+         * @return {StateRegistryInterface} The instance itself to allow chaining
+         */
+        clear: function () {},
+
+        /**
+         * Checks if a given state name is valid.
+         *
+         * @param {String} state The state
+         *
+         * @return {Boolean} True if valid, false otherwise
+         */
+        isValid: function (state) {},
 
         /**
          * Sets the current state.

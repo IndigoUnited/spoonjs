@@ -43,11 +43,8 @@ define([
 
             // Process the _states object
             for (key in this._states) {
-                if (has('debug') && !key) {
-                    throw new Error('Empty state detected in "' + this.$name + '".');
-                }
-                if (has('debug') && (key.indexOf('.') !== -1 || key.indexOf('/') !== -1)) {
-                    throw new Error('States cannot contain dots or slashes (saw one in state "' + key + '" of "' + this.$name + '").');
+                if (has('debug') && !stateRegistry.isValid(key)) {
+                    throw new Error('State name "' + key + '" of "' + this.$name + '" contains unallowed chars.');
                 }
 
                 // Process the params specified in the parentheses
@@ -67,7 +64,7 @@ define([
                 if (isString(func)) {
                     func = this[func];
                     if (has('debug') && !isFunction(func)) {
-                        throw new Error('State handler "' + key + '" of "' + this.$name + '" references an unknown function.');
+                        throw new Error('State handler "' + key + '" of "' + this.$name + '" references a nonexistent function.');
                     }
                     this._states[key] = func;
                 }
@@ -75,7 +72,7 @@ define([
 
             // Process the default state
             if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
-                throw new Error('The default state of "' + this.$name + '" points to an unknown state.');
+                throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
             }
 
             this.$super();
@@ -294,7 +291,7 @@ define([
                 length,
                 x;
 
-            this._currentState.setParams(state.getParams());
+            this._currentState = state.clone();
             state.next();
 
             name = state.getName();

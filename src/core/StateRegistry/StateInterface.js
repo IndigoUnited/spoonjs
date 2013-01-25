@@ -81,10 +81,11 @@ define(['dejavu/Interface'], function (Interface) {
         /**
          * Compares the instance to another one.
          * The state is considered to the same if the name and parameters are the same.
-         * If parameter names are passed, only those will be compared.
+         * If parameter names are passed, those will be compared.
+         * If no parameter names are passed, no parameters are compared.
          *
          * @param {StateInterface} state         The state
-         * @param {Array}          [$paramNames] An array of param names to be compared
+         * @param {Array}          [$paramNames] An array of parameter names to be compared
          *
          * @return {Boolean} True if the state is the same, false otherwise
          */
