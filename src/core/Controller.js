@@ -146,18 +146,13 @@ define([
             $state = stateRegistry.getCurrent();
             $state.setParams($params);
 
-            // 2nd - If no name is found, translate to the default state
-            if (!name) {
-                if (this._defaultState) {
-                    $state.setName(this._defaultState).previous();
-                    name = this._defaultState;
-                } else if (has('debug')) {
-                    throw new Error('No default state defined in "' + this.$name + '".');
-                }
+            // 2nd - If no name is found check if we got a default state
+            if (!name && !this._defaultState) {
+                throw new Error('No default state defined in "' + this.$name + '".');
             }
 
             // 3rd - Check if the state of the controller actually changed
-            if (!this._currentState || !this._currentState.isEqual($state, this._statesParams[$state.getName()])) {
+            if (!this._isSameState($state)) {
                 this._performStateChange($state);
             // 4th - If not, propagate the state downwards
             } else {
@@ -168,6 +163,40 @@ define([
         },
 
         //////////////////////////////////////////////////////////////////
+
+        /**
+         * Checks if a given state is the same as the current controller state.
+         *
+         * @param {StateInterface} state The state
+         *
+         * @return {Boolean} True if the same, false otherwise
+         */
+        _isSameState: function (state) {
+            if (!this._currentState) {
+                return false;
+            }
+
+            var params = this._statesParams[state.getName()],
+                isEqual;
+
+            // Check if equal
+            if (this._currentState.isEqual(state, params)) {
+                return true;
+            }
+
+            // Check if equal when expanding the state to the default one
+            if (!state.getName() && this._currentState.getName() === this._defaultState) {
+                state.setFullName(state.getFullName() + '.' + this._defaultState);
+                isEqual = this._currentState.isEqual(state, params);
+                state.setFullName(this._defaultState);
+
+                if (isEqual) {
+                    return true;
+                }
+            }
+
+            return false;
+        },
 
         /**
          * Resolves a full state name.
@@ -219,19 +248,13 @@ define([
 
             // Local
             curr = this;
-            if (curr._uplinks.length) {
-                if ($name === this._defaultState) {
-                    $name = '';
+            while (curr._uplinks.length) {
+                curr = curr._uplinks[0];
+                currState = curr.getState();
+                if (!currState && has('debug')) {
+                    throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
                 }
-
-                while (curr._uplinks.length) {
-                    curr = curr._uplinks[0];
-                    currState = curr.getState();
-                    if (!currState && has('debug')) {
-                        throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
-                    }
-                    $name = currState.getName() + ($name ? '.' + $name : '');
-                }
+                $name = currState.getName() + ($name ? '.' + $name : '');
             }
 
             return $name;
@@ -243,9 +266,14 @@ define([
          * @param {StateInterface} state The state
          */
         _performStateChange: function (state) {
-            var name = state.getName();
-
             this._currentState = state.clone();
+
+            // Resolve to default state always
+            if (!state.getName() && this._defaultState) {
+                this._currentState.setFullName(state.getFullName() + '.' + this._defaultState);
+            }
+
+            var name = this._currentState.getName();
             state.next();
 
             if (this._states[name]) {
@@ -283,7 +311,7 @@ define([
                 }
             }
 
-            if (has('debug')) {
+            if (name && has('debug')) {
                 console.warn('Could not propagate state "' + name + '" to any of the "' + this.$name + '" downlinks.');
             }
         },
