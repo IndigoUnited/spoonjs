@@ -296,7 +296,6 @@ define([
                 length,
                 x;
 
-            this._currentState = state.clone();
             state.next();
 
             name = state.getName();
