@@ -138,7 +138,7 @@ define([
                 isCurrent;
 
             if (!instanceOf(state, StateInterface)) {
-                state = this._createState(state, $params);
+                state = this._createStateInstance(state, $params);
             }
 
             isCurrent = this.isCurrent(state);
@@ -179,7 +179,7 @@ define([
 
             // Build the state object
             if (!instanceOf(state, StateInterface)) {
-                state = this._createState(state, $params);
+                state = this._createStateInstance(state, $params);
             }
 
             return this._currentState.isFullyEqual(state);
@@ -221,7 +221,7 @@ define([
          *
          * @return {StateInterface} The state instance
          */
-        _createState: function (state, $params) {
+        _createStateInstance: function (state, $params) {
             return new State(state, $params);
         },
 
