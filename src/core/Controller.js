@@ -189,6 +189,7 @@ define([
 
             // Check if equal when expanding the state to the default one
             if (!state.getName() && this._currentState.getName() === this._defaultState) {
+                params = this._statesParams[this._defaultState];
                 state.setFullName(state.getFullName() + '.' + this._defaultState);
                 isEqual = this._currentState.isEqual(state, params);
                 state.setFullName(this._defaultState);
@@ -226,6 +227,7 @@ define([
 
             // TODO: this function must be improved:
             //       - it must account for local names with a .
+            $name = $name || '';
 
             // Absolute
             if ($name.charAt(0) === '/') {
@@ -273,7 +275,7 @@ define([
 
             // Resolve to default state always
             if (!state.getName() && this._defaultState) {
-                this._currentState.setFullName(state.getFullName() + '.' + this._defaultState);
+                this._currentState.setFullName(state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState);
             }
 
             var name = this._currentState.getName();
