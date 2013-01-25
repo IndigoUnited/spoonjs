@@ -223,7 +223,7 @@ define([
         },
 
         $statics: {
-            _nameRegExp: /^[a-z0-9_\-]+(\.[a-z0-9_\-]+)*$/i,
+            _nameRegExp: /^[a-z0-9_\-]*(\.[a-z0-9_\-]+)*$/i,
 
             /**
              * Checks if a given state name is valid.
