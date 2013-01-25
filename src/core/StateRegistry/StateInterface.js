@@ -18,20 +18,20 @@ define(['dejavu/Interface'], function (Interface) {
         getFullName: function () {},
 
         /**
+         * Sets the full state name.
+         *
+         * @param {String} name The full state name
+         *
+         * @return {StateInterface} The instance itself to allow chaining
+         */
+        setFullName: function (name) {},
+
+        /**
          * Get the state name (the name imediatly after the current cursor position).
          *
          * @return {String} The name
          */
         getName: function () {},
-
-        /**
-         * Set the state name (the name imediatly after the current cursor position).
-         *
-         * @param {String} The name
-         *
-         * @return {StateInterface} The instance itself to allow chaining
-         */
-        setName: function (name) {},
 
         /**
          * Get the state parameters.

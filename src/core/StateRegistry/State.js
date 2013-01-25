@@ -30,14 +30,8 @@ define([
          * @param {Object} [$params] The state parameters
          */
         initialize: function (name, $params) {
-            if (has('debug') && (!name || name.charAt(0) === '.' || name.charAt(0) === '/')) {
-                console.log(name);
-                throw new Error('State names cannot be empty and cannot start with a dot and a slash.');
-            }
-
-            this._name = name;
-            this._params = $params || {};
-            this._params.$state = this;
+            this.setFullName(name);
+            this.setParams($params);
         },
 
         /**
@@ -45,6 +39,23 @@ define([
          */
         getFullName: function () {
             return this._name;
+        },
+
+        /**
+         * {@inheritDoc}
+         */
+        setFullName: function (name) {
+            if (has('debug') && (!name || name.charAt(0) === '.' || name.charAt(0) === '/')) {
+                throw new Error('State names cannot be empty and cannot start with a dot and a slash.');
+            }
+
+            this._name = name;
+
+            var cursor = this._cursor;
+            this._pos = this._cursor = 0;
+            this.setCursor(cursor);
+
+            return this;
         },
 
         /**
@@ -64,23 +75,6 @@ define([
         /**
          * {@inheritDoc}
          */
-        setName: function (name) {
-            if (name.indexOf('.') !== -1) {
-                throw new Error('Name parts cannot contain a dot.');
-            }
-
-            var parts = this._name.split('.');
-
-            parts.splice(this._cursor, 1, name);
-            this._name = parts.join('.');
-
-            return this;
-        },
-
-
-        /**
-         * {@inheritDoc}
-         */
         getParams: function () {
             return this._params;
         },
@@ -90,6 +84,7 @@ define([
          */
         setParams: function (params) {
             this._params = params || {};
+            this._params.$state = this;
 
             return this;
         },
