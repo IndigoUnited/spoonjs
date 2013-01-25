@@ -297,7 +297,7 @@ define([
             this._currentState.setParams(state.getParams());
             state.next();
 
-            name = state.getName() || '';
+            name = state.getName();
             length = this._downlinks.length;
 
             for (x = 0; x < length; x += 1) {
