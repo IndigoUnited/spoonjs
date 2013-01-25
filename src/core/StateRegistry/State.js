@@ -10,8 +10,9 @@ define([
     'mout/object/values',
     'mout/object/mixIn',
     'mout/lang/deepClone',
+    'mout/array/remove',
     'has'
-], function (Class, StateInterface, keys, values, mixIn, deepClone, has) {
+], function (Class, StateInterface, keys, values, mixIn, deepClone, remove, has) {
 
     'use strict';
 
@@ -152,9 +153,12 @@ define([
                         return false;
                     }
                 }
+
+                return true;
             }
 
-            return true;
+            // Otherwise compare them all
+            return this._compareObjects(this._params, state._params);
         },
 
 
@@ -173,13 +177,7 @@ define([
             }
 
             // Compare all the params
-            var selfParams = mixIn({}, this._params),
-                otherParams = mixIn({}, state._params);
-
-            delete selfParams.$state;
-            delete otherParams.$state;
-
-            return this._compareObjects(selfParams, otherParams);
+            return this._compareObjects(this._params, state._params);
         },
 
         /**
@@ -200,9 +198,10 @@ define([
         _compareObjects: function (obj1, obj2) {
             var keys1 = keys(obj1),
                 keys2 = keys(obj2),
-                values1,
-                values2,
                 x;
+
+            remove(keys1, '$state');
+            remove(keys2, '$state');
 
             if (keys1.length !== keys2.length) {
                 return false;
@@ -214,11 +213,8 @@ define([
                 }
             }
 
-            values1 = values(obj1);
-            values2 = values(obj2);
-
-            for (x = values1.length - 1; x >= 0; x -= 1) {
-                if (values1[x] != values2[x]) {
+            for (x = keys1.length - 1; x >= 0; x -= 1) {
+                if (obj1[keys[x]] !== obj2[keys[x]]) {
                     return false;
                 }
             }

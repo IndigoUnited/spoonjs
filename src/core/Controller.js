@@ -62,6 +62,7 @@ define([
                     this._statesParams[key] = matches[1].split(',');
                 } else {
                     this._states[key] = this._states[key];
+                    this._statesParams[key] = [];
                 }
 
                 // Check if it is a string or already a function
