@@ -43,8 +43,13 @@ define([
 
             // Process the _states object
             for (key in this._states) {
-                if (has('debug') && !stateRegistry.isValid(key)) {
-                    throw new Error('State name "' + key + '" of "' + this.$name + '" contains unallowed chars.');
+                if (has('debug')) {
+                    if (!stateRegistry.isValid(key)) {
+                        throw new Error('State name "' + key + '" of "' + this.$name + '" has an invalid format.');
+                    }
+                    if (key.indexOf('.') !== -1) {
+                        throw new Error('State name "' + key + '" of "' + this.$name + '" must be local (cannot contain dots).');
+                    }
                 }
 
                 // Process the params specified in the parentheses

@@ -48,7 +48,7 @@ define([
          */
         setFullName: function (name) {
             if (has('debug') && !this.$static.isValid(name)) {
-                throw new Error('The state name contains unallowed chars.');
+                throw new Error('State name "' + name + '" has an invalid format.');
             }
 
             this._name = name;
