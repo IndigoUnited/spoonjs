@@ -198,6 +198,7 @@ define([
         _compareObjects: function (obj1, obj2) {
             var keys1 = keys(obj1),
                 keys2 = keys(obj2),
+                key,
                 x;
 
             remove(keys1, '$state');
@@ -208,13 +209,14 @@ define([
             }
 
             for (x = keys1.length - 1; x >= 0; x -= 1) {
-                if (keys1[x] !== keys2[x]) {
+                if (keys2.indexOf(keys2) === -1) {
                     return false;
                 }
             }
 
             for (x = keys1.length - 1; x >= 0; x -= 1) {
-                if (obj1[keys[x]] !== obj2[keys[x]]) {
+                key = keys[x];
+                if (obj1[key] !== obj2[key]) {
                     return false;
                 }
             }
