@@ -43,15 +43,6 @@ define([
 
             // Process the _states object
             for (key in this._states) {
-                if (has('debug')) {
-                    if (!stateRegistry.isValid(key)) {
-                        throw new Error('State name "' + key + '" of "' + this.$name + '" has an invalid format.');
-                    }
-                    if (key.indexOf('.') !== -1) {
-                        throw new Error('State name "' + key + '" of "' + this.$name + '" must be local (cannot contain dots).');
-                    }
-                }
-
                 // Process the params specified in the parentheses
                 matches = key.match(regExp);
                 if (matches) {
@@ -61,8 +52,16 @@ define([
                     key = tmp;
                     this._statesParams[key] = matches[1].split(',');
                 } else {
-                    this._states[key] = this._states[key];
                     this._statesParams[key] = [];
+                }
+
+                if (has('debug')) {
+                    if (!stateRegistry.isValid(key)) {
+                        throw new Error('State name "' + key + '" of "' + this.$name + '" has an invalid format.');
+                    }
+                    if (key.indexOf('.') !== -1) {
+                        throw new Error('State name "' + key + '" of "' + this.$name + '" must be local (cannot contain dots).');
+                    }
                 }
 
                 // Check if it is a string or already a function
