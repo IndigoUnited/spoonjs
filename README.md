@@ -127,7 +127,7 @@ The correlation between the module purpose and the file structure makes it reall
 
 Still, when dealing with reusable modules, that could show up in several places in the application, you can place the module wherever you feel the right place is. Ultimately, this is a developer's choice.
 
-Since there is a clear separation of responsibilities, some modules might end up with some option that they don't know how to handle, and need to delegate that responsibility to another module. To enable this sort of operation, modules can upcast application events, delegating the responsibility to its parent, or even broadcast the event, and the whole project will listen to it.
+Since there is a clear separation of responsibilities, some modules might end up with some option that they don't know how to handle, and need to delegate that responsibility to another module. Since a module do not hold references to its parent, it upcast events, delegating the responsibility to its parent, or even broadcast events, and the whole project will listen to it.
 
 
 #### Upcasting events
@@ -164,7 +164,7 @@ Since your application only know states, you can add the state to routes mapping
 
 A very common task when developing web applications is attaching listeners to events on specific DOM elements. Although this is fine, it's not the most practical solution, and can have a significant impact on the performance, when the developer is not careful, in applications with lots of listeners.
 
-To avoid this, the views can specify pseudo-selectors and handlers that get called when these selectors are matched. The underlying mechanism is very powerful, and creates a sort of sandbox for events. In practice, regardless of how many listeners you create on a view, only a single listener is actually created, per event type. Every root view of a module will be a sandbox. Still, if necessary, you can turn any view into a sandbox, and it will be considered the *root* sandbox for itself, and its children.
+To avoid this, the views can specify pseudo-selectors and handlers that get called when these selectors are matched. The underlying mechanism is very powerful, and creates a sort of sandbox for events. In practice, regardless of how many listeners you create on a view, only a single listener is actually created, per event type on its sandbox. Every root view of a module will be a sandbox. Still, if necessary, you can turn any view into a sandbox, and it will be considered the *root* sandbox for itself, and its children.
 
 
 
