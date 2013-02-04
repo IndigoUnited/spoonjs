@@ -209,7 +209,7 @@ define([
             }
 
             for (x = keys1.length - 1; x >= 0; x -= 1) {
-                if (keys2.indexOf(keys2) === -1) {
+                if (keys2.indexOf(keys1[x]) === -1) {
                     return false;
                 }
             }
