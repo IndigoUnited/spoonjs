@@ -215,7 +215,7 @@ define([
             }
 
             for (x = keys1.length - 1; x >= 0; x -= 1) {
-                key = keys[x];
+                key = keys1[x];
                 if (obj1[key] !== obj2[key]) {
                     return false;
                 }
