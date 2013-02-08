@@ -161,6 +161,12 @@ define([
                 this._propagateState($state);
             }
 
+            // 5th - Sync up the full state name with the application one
+            //       This is needed because default states where translated down the chain
+            if (stateRegistry.getCurrent() === $state) {
+                this._currentState.setFullName($state.getFullName());
+            }
+
             return this;
         },
 
@@ -178,7 +184,8 @@ define([
                 return false;
             }
 
-            var params = this._statesParams[state.getName()],
+            var tmp,
+                params = this._statesParams[state.getName()],
                 isEqual;
 
             // Check if equal
@@ -188,10 +195,11 @@ define([
 
             // Check if equal when expanding the state to the default one
             if (!state.getName() && this._currentState.getName() === this._defaultState) {
+                tmp = state.getFullName();
                 params = this._statesParams[this._defaultState];
                 state.setFullName(state.getFullName() + '.' + this._defaultState);
                 isEqual = this._currentState.isEqual(state, params);
-                state.setFullName(this._defaultState);
+                state.setFullName(tmp);
 
                 if (isEqual) {
                     return true;
@@ -204,8 +212,8 @@ define([
         /**
          * Resolves a full state name.
          *
-         * If starts with a / are absolute.
-         * If starts with ../ are relative.
+         * If name starts with a / then state is absolute.
+         * If name starts with ../ then state is relative.
          * If empty will try to map to the default state.
          * Otherwise the full state name will be resolved from the local name.
          *
@@ -270,14 +278,19 @@ define([
          * @param {StateInterface} state The state
          */
         _performStateChange: function (state) {
+            var name,
+                fullName;
+
             this._currentState = state.clone();
 
             // Resolve to default state always
             if (!state.getName() && this._defaultState) {
-                this._currentState.setFullName(state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState);
+                fullName = state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState;
+                this._currentState.setFullName(fullName);
+                stateRegistry.getCurrent().setFullName(fullName); // Update also the state registry one
             }
 
-            var name = this._currentState.getName();
+            name = this._currentState.getName();
             state.next();
 
             if (this._states[name]) {
@@ -294,13 +307,21 @@ define([
          */
         _propagateState: function (state) {
             var name,
+                fullName,
                 curr,
                 length,
                 x;
 
             this._currentState = state.clone();
-            state.next();
 
+            // Resolve to default state always
+            if (!state.getName() && this._defaultState) {
+                fullName = state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState;
+                this._currentState.setFullName(fullName);
+                stateRegistry.getCurrent().setFullName(fullName); // Update also the state registry one
+            }
+
+            state.next();
             name = state.getName();
             length = this._downlinks.length;
 
