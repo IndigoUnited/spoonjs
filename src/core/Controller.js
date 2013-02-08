@@ -11,8 +11,9 @@ define([
     'mout/lang/isString',
     'mout/string/startsWith',
     'mout/object/size',
+    'mout/array/find',
     'has'
-], function (AbstractClass, Joint, stateRegistry, isFunction, isString, startsWith, size, has) {
+], function (AbstractClass, Joint, stateRegistry, isFunction, isString, startsWith, size, find, has) {
 
     'use strict';
 
@@ -162,7 +163,7 @@ define([
             }
 
             // 5th - Sync up the full state name with the application one
-            //       This is needed because default states where translated down the chain
+            //       This is needed because default states might have been translated down the chain
             if (stateRegistry.getCurrent() === $state) {
                 this._currentState.setFullName($state.getFullName());
             }
@@ -226,11 +227,8 @@ define([
                 length,
                 curr,
                 currState,
+                findParentCtrl,
                 x;
-
-            // TODO: we assume all the uplinks are controllers but this might not be true
-            //       if the user implements a new class that extends from the Joint that
-            //       are able to link to controllers
 
             // TODO: this function must be improved:
             //       - it must account for local names with a .
@@ -241,32 +239,33 @@ define([
                 return $name.substr(1);
             }
 
+            findParentCtrl = function (uplink) { return uplink instanceof Controller; };
+
             // Relative
             if (startsWith($name, '../')) {
-                matches = $name.match(this.$static._relativeStateRegExp),
-                length = matches.length - 1,
+                matches = $name.split(this.$static._relativeStateRegExp),
+                length = matches.length,
                 curr = this;
 
-                for (x = 1; x < length; x += 1) {
-                    if (has('debug') && !curr._uplinks.length) {
-                        throw new Error('Cannot generate relative path because "' + this.$name + '" has no uplinks.');
+                for (x = 0; x < length - 1; x += 1) {
+                    if (has('debug') && (!curr || !curr._uplinks.length)) {
+                        throw new Error('Cannot generate full state from "' + $name + '" in "' + this.$name + '".');
                     }
-
-                    curr = curr._uplinks[0];
+                    curr = find(curr._uplinks, findParentCtrl);
                 }
 
-                return curr._resolveFullState(matches[length] || null);
+                return curr._resolveFullState(matches[length - 1] || null);
             }
 
             // Local
-            curr = this;
-            while (curr._uplinks.length) {
-                curr = curr._uplinks[0];
+            curr = find(this._uplinks, findParentCtrl);
+            while (curr) {
                 currState = curr.getState();
                 if (!currState && has('debug')) {
                     throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
                 }
                 $name = currState.getName() + ($name ? '.' + $name : '');
+                curr = find(curr._uplinks, findParentCtrl);
             }
 
             return $name;
@@ -345,7 +344,7 @@ define([
 
         $statics: {
             _stateParamsRegExp: /\((.+?)\)/,
-            _relativeStateRegExp: /^(\.\.\/)+(.*)/
+            _relativeStateRegExp: /\.\.\//
         }
     });
 
