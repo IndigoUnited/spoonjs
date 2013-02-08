@@ -29,6 +29,18 @@ define([
         setAddress: function ($address) {},
 
         /**
+         * Parses a given route.
+         * If no route is passed, the current address value is used.
+         * If a state is found for the route and is different from the current one, a transition
+         * will occur and the change event will be emitted
+         *
+         * @param {String} [$route] The route (URL fragment)
+         *
+         * @return {StateRegistryInterface} The instance itself to allow chaining
+         */
+        parse: function ($route) {},
+
+        /**
          * Registers a map between a state and a route.
          * The pattern can have placeholders which will be used to fill a parameters object.
          * The constraints object is a simple key value object in which the keys are the placeholder names and the values are regular expressions.

@@ -52,10 +52,18 @@ define([
                 // Listen to the external change
                 $address.on(AddressInterface.EVENT_EXTERNAL_CHANGE, this._onChange, this);
                 $address.on(AddressInterface.EVENT_LINK_CHANGE, this._onChange, this);
-
-                // Manually call the change handler with the current address value
-                this._onChange($address.getValue());
             }
+
+            return this;
+        },
+
+        /**
+         * {@inheritDoc}
+         */
+        parse: function ($route) {
+            // Manually call the change handler with the passed route
+            // or the address value (if available)
+            this._onChange($route !== null ? $route : (this._address ? this._address.getValue() : ''));
 
             return this;
         },
@@ -135,16 +143,15 @@ define([
          */
         setCurrent: function (state, $params) {
             var previousState,
-                isCurrent;
+                fullName,
+                tmp;
 
             if (!instanceOf(state, StateInterface)) {
                 state = this._createStateInstance(state, $params);
             }
 
-            isCurrent = this.isCurrent(state);
-
             // Only change if the current state is not the same
-            if (!isCurrent) {
+            if (!this.isCurrent(state)) {
                 previousState = this._currentState;
                 this._currentState = state;
 
@@ -152,8 +159,16 @@ define([
                 this._postChangeHandler();
 
                 // Emit the change
+                tmp = this._currentState;
+                fullName = this._currentState.getFullName();
                 this._currentState.setCursor(0);
                 this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
+
+                // If the final state name has changed in the process, inform the user
+                // This happens if the final state is changed (tipically because of default state translations)
+                if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
+                    console.info('Final state after transition is "' + this._currentState.getFullName() + '".');
+                }
 
                 return true;
             }
