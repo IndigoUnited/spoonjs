@@ -52,6 +52,8 @@ define([
                         if (has('debug') && !isFunction(func)) {
                             throw new Error('Event handler for "' + key + '" references an unknown function.');
                         }
+                    } else {
+                        func = func.$member();
                     }
 
                     this._dom.on(key, func, this);
