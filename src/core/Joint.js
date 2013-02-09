@@ -16,7 +16,7 @@ define([
     return AbstractClass.declare({
         $name: 'Joint',
 
-        _uplinks: [],
+        _uplink: null,
         _downlinks: [],
         _emitter: null,
         _destroyed: false,
@@ -105,9 +105,15 @@ define([
          * @return {Joint} The joint passed in as the argument
          */
         _link: function (joint) {
-            insert(joint._uplinks, this);
-            insert(this._downlinks, joint);
-            joint._emitter.emit('link', this);
+            if (has('debug') && joint._uplink && joint._uplink !== this) {
+                throw new Error('"' + this.$name + '" is already linked to other joint');
+            }
+
+            if (joint._uplink !== this) {
+                joint._uplink = this;
+                insert(this._downlinks, joint);
+                joint._emitter.emit('link', this);
+            }
 
             return joint;
         },
@@ -120,9 +126,12 @@ define([
          * @return {Object} The instance itself to allow chaining
          */
         _unlink: function (joint) {
-            remove(joint._uplinks, this);
             remove(this._downlinks, joint);
-            joint._emitter.emit('unlink', this);
+
+            if (joint._uplink === this) {
+                joint._uplink = null;
+                joint._emitter.emit('unlink', this);
+            }
 
             return this;
         },
@@ -136,33 +145,14 @@ define([
          * @return {Object} The instance itself to allow chaining
          */
         _upcast: function (event, $args) {
-            var x,
-                length,
-                curr;
-
             // Check if the event will be handled locally
             // Otherwise we will keep upcasting upwards the chain
             if (this._emitter.has(event)) {
                 this._emitter.emit.apply(this._emitter, arguments);
-            } else {
-                length = this._uplinks.length;
-
-                // If we got no uplinks, then warn that this event was unhandled
-                if (length) {
-                    for (x = 0; x < length; x += 1) {
-                        curr = this._uplinks[x];
-
-                        // If this uplink explicit listens for this event, fire the callbacks and stop the propagation
-                        if (curr._emitter.has(event)) {
-                            curr._emitter.emit.apply(curr._emitter, arguments);
-                        // Otherwise keep upcasting
-                        } else {
-                            curr._upcast.apply(curr, arguments);
-                        }
-                    }
-                } else if (has('debug')) {
-                    console.warn('Unhandled upcast event "' + event + '".');
-                }
+            } else if (this._uplink) {
+                this._uplink._upcast.apply(this._uplink, arguments);
+            } else if (has('debug')) {
+                console.warn('Unhandled upcast event "' + event + '".');
             }
 
             return this;
@@ -186,8 +176,9 @@ define([
 
         /**
          * Function called after calling destroy().
-         * This function is ensured to only be called once.
-         * Subclasses should override this method to release their resources.
+         * Subclasses should override this method to release additional resources.
+         *
+         * The default implementation will also destroy any linked joints.
          */
         _onDestroy: function () {
             var broadcaster = this.$static._broadcaster,
@@ -201,21 +192,19 @@ define([
             this._emitter.off();
 
             // Foreach uplink, automatically unlink this instance
-            for (x = this._uplinks.length - 1; x >= 0; x -= 1) {
-                this._uplinks[x]._unlink(this);
+            if (this._uplink) {
+                this._uplink._unlink(this);
+                this._uplink = null;
             }
 
             // Foreach downlink, automatically unlink it and destroy it if no more references exist to it
             for (x = this._downlinks.length - 1; x >= 0; x -= 1) {
                 curr = this._downlinks[x];
                 this._unlink(curr);
-                if (!curr._uplinks.length) {
-                    curr.destroy();
-                }
+                curr.destroy();
             }
 
-            // Null references
-            this._uplinks = this._downlinks = this._emitter = null;
+            this._downlinks = [];
         },
 
         ////////////////////////////////////////////////////////////

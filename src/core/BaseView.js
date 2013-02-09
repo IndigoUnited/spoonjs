@@ -154,18 +154,14 @@ define([
          * @return {Boolean} True if it is the root view, false otherwise
          */
         _isRoot: function () {
-            var x;
-
             // Check if it has been told to be listening
             if (this._dom.isListening()) {
                 return true;
             }
 
             // Check if this view is the root view of the module
-            for (x = this._uplinks.length - 1; x >= 0; x -= 1) {
-                if (this._uplinks[x] instanceof BaseView) {
-                    return false;
-                }
+            if (this._uplink && this._uplink instanceof BaseView) {
+                return false;
             }
 
             return true;
@@ -201,26 +197,13 @@ define([
                 return this._controller;
             }
 
-            var curr,
-                x,
-                length,
-                ret,
-                tmp;
-
-            // Find the view's controller
-            curr = this;
-            while ((length = curr._uplinks.length)) {
-                for (x = length - 1; x >= 0; x -= 1) {
-                    tmp = curr._uplinks[x];
-                    if (tmp instanceof Controller) {
-                        return this._controller = tmp;
-                    } else if (tmp instanceof BaseView) {
-                        ret = tmp._getController();
-                        if (ret) {
-                            return this._controller = ret;
-                        }
-                    }
+            // Search for it in the uplink ancestors
+            if (this._uplink) {
+                if (this._uplink instanceof Controller) {
+                    return this._controller = this._uplink;
                 }
+
+                return this._controller = this._uplink._getController();
             }
 
             return null;

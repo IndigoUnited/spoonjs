@@ -227,7 +227,6 @@ define([
                 length,
                 curr,
                 currState,
-                findParentCtrl,
                 x;
 
             // TODO: this function must be improved:
@@ -239,8 +238,6 @@ define([
                 return $name.substr(1);
             }
 
-            findParentCtrl = function (uplink) { return uplink instanceof Controller; };
-
             // Relative
             if (startsWith($name, '../')) {
                 matches = $name.split(this.$static._relativeStateRegExp),
@@ -248,24 +245,24 @@ define([
                 curr = this;
 
                 for (x = 0; x < length - 1; x += 1) {
-                    if (has('debug') && (!curr || !curr._uplinks.length)) {
+                    if (has('debug') && (!curr._uplink || !(curr._uplink instanceof Controller))) {
                         throw new Error('Cannot generate full state from "' + $name + '" in "' + this.$name + '".');
                     }
-                    curr = find(curr._uplinks, findParentCtrl);
+                    curr = curr._uplink;
                 }
 
                 return curr._resolveFullState(matches[length - 1] || null);
             }
 
             // Local
-            curr = find(this._uplinks, findParentCtrl);
-            while (curr) {
+            curr = this._uplink;
+            while (curr && curr instanceof Controller) {
                 currState = curr.getState();
                 if (!currState && has('debug')) {
                     throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
                 }
                 $name = currState.getName() + ($name ? '.' + $name : '');
-                curr = find(curr._uplinks, findParentCtrl);
+                curr = curr._uplink;
             }
 
             return $name;
