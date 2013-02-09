@@ -63,7 +63,7 @@ define([
         parse: function ($route) {
             // Manually call the change handler with the passed route
             // or the address value (if available)
-            this._onChange($route !== null ? $route : (this._address ? this._address.getValue() : ''));
+            this._onChange($route != null ? $route : (this._address ? this._address.getValue() : ''));
 
             return this;
         },
