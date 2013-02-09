@@ -229,9 +229,10 @@ define([
                 currState,
                 x;
 
-            // TODO: this function must be improved:
-            //       - it must account for local names with a .
-            $name = $name || '';
+            // Empty
+            if (!$name) {
+                return '';
+            }
 
             // Absolute
             if ($name.charAt(0) === '/') {
