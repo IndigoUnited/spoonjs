@@ -197,7 +197,7 @@ define([
                 this._uplink = null;
             }
 
-            // Foreach downlink, automatically unlink it and destroy it if no more references exist to it
+            // Foreach downlink, automatically unlink it and destroy
             for (x = this._downlinks.length - 1; x >= 0; x -= 1) {
                 curr = this._downlinks[x];
                 this._unlink(curr);
