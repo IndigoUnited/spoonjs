@@ -75,15 +75,18 @@ define([
         /**
          * Convenience method to append the element's view to a target.
          * The target can be another view, a DOM element or a CSS selector.
+         * If the target is another view, an additional selector can be passed to specify
+         * the element where it will get appended.
          *
-         * @param {Element|String|BaseView} target The target
+         * @param {Element|String|BaseView} target    The target
+         * @param {String}                  [$within] The selector in case the target is a view
          *
          * @return {BaseView} The instance itself to allow chaining
          */
-        appendTo: function (target) {
+        appendTo: function (target, $within) {
             if (target) {
                 if (target instanceof BaseView) {
-                    target = target._element;
+                    target = !$within ? target._element : Element.findOne($within, target._element);
                 } else if (isString(target)) {
                     target = Element.findOne(target);
                 }
