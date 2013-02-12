@@ -151,7 +151,11 @@ define([
 
             // 2nd - If no name is found check if we got a default state
             if (!name && !this._defaultState) {
-                throw new Error('No default state defined in "' + this.$name + '".');
+                if (has('debug')) {
+                    console.warn('No default state defined in "' + this.$name + '".');
+                }
+
+                return;
             }
 
             // 3rd - Check if the state of the controller actually changed
