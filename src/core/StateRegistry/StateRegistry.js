@@ -116,7 +116,7 @@ define([
         /**
          * {@inheritDoc}
          */
-        hasRoute: function (state) {
+        isRoutable: function (state) {
             return !!this._states[state];
         },
 

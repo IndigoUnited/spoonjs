@@ -81,7 +81,7 @@ define([
          *
          * @return {Boolean} True if it is, false otherwise
          */
-        hasRoute: function (state) {},
+        isRoutable: function (state) {},
 
         /**
          * Clears all the registered states.
