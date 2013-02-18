@@ -263,8 +263,14 @@ define([
             curr = this._uplink;
             while (curr && curr instanceof Controller) {
                 currState = curr.getState();
-                if (!currState && has('debug')) {
-                    throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
+                // If this ancestor controller has no current state
+                // and it has states, then something is wrong
+                if (!currState) {
+                    if (curr._nrStates && has('debug')) {
+                        throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
+                    }
+                    // Break here, the ancestor has no states defined
+                    break;
                 }
                 $name = currState.getName() + ($name ? '.' + $name : '');
                 curr = curr._uplink;
