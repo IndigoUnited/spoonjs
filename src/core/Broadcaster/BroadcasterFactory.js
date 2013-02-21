@@ -3,7 +3,7 @@
  * This class provides access to the broadcaster as a service.
  */
 define([
-    'spoon/core/broadcaster/Broadcaster'
+    'spoon/core/Broadcaster/Broadcaster'
 ], function (Broadcaster) {
 
     'use strict';
