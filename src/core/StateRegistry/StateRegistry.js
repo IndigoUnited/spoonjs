@@ -45,16 +45,26 @@ define([
          * {@inheritDoc}
          */
         setAddress: function ($address) {
-            this._unsetAddress();
+            this.unsetAddress();
             if ($address) {
                 this._address = $address;
 
-                // Listen to the external change
-                $address.on(AddressInterface.EVENT_EXTERNAL_CHANGE, this._onChange, this);
-                $address.on(AddressInterface.EVENT_LINK_CHANGE, this._onChange, this);
+                // Listen to the address change
+                $address.on(AddressInterface.EVENT_CHANGE, this._onChange, this);
             }
 
             return this;
+        },
+
+
+        /**
+         * Unsets the address, if any.
+         */
+        unsetAddress: function () {
+            if (this._address) {
+                this._address.off(AddressInterface.EVENT_CHANGE, this._onChange, this);
+                this._address = null;
+            }
         },
 
         /**
@@ -63,7 +73,13 @@ define([
         parse: function ($route) {
             // Manually call the change handler with the passed route
             // or the address value (if available)
-            this._onChange($route != null ? $route : (this._address ? this._address.getValue() : ''));
+            var obj = {
+                newValue: $route != null ? $route : (this._address ? this._address.getValue() : ''),
+                oldValue: null,
+                type: AddressInterface.TYPE_EXTERNAL_CHANGE
+            };
+
+            this._onChange(obj);
 
             return this;
         },
@@ -269,15 +285,22 @@ define([
         },
 
         /**
-         * Handles the address external and link change event.
+         * Handles the address change event.
          *
-         * @param {String} value The new address value
+         * @param {Object} obj The address object containing the change details
          */
-        _onChange: function (value) {
+        _onChange: function (obj) {
+            // Ignore the internal change event
+            if (obj.type === AddressInterface.TYPE_INTERNAL_CHANGE) {
+                return;
+            }
+
+            // Find if there's a matching route for the new address value
             var x,
                 length = this._routes.length,
-                curr,
-                found = false;
+                route,
+                found = false,
+                value = obj.newValue;
 
             if (!value) {
                 value = '/';
@@ -286,27 +309,17 @@ define([
             }
 
             for (x = 0; x < length; x += 1) {
-                curr = this._routes[x];
+                route = this._routes[x];
 
-                if (curr.test(value)) {
+                if (route.test(value)) {
                     found = true;
-                    this.setCurrent(curr.getName(), curr.match(value));
+                    this.setCurrent(route.getName(), route.match(value));
                     break;
                 }
             }
 
             if (has('debug') && !found) {
                 console.warn('No state matched the URL "' + value + '".');
-            }
-        },
-
-        /**
-         * Unsets the address, if any.
-         */
-        _unsetAddress: function () {
-            if (this._address) {
-                this._address.off(AddressInterface.EVENT_EXTERNAL_CHANGE, this._onChange, this);
-                this._address = null;
             }
         },
 
@@ -358,7 +371,7 @@ define([
 
             Events.off(document.body, 'click a', this._handleLinkClick);
 
-            this._unsetAddress();
+            this.unsetAddress();
             this._currentState = null;
         }
     });

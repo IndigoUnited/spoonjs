@@ -29,6 +29,13 @@ define([
         setAddress: function ($address) {},
 
         /**
+         * Unsets the address.
+         *
+         * @return {StateRegistryInterface} The instance itself to allow chaining
+         */
+        unsetAddress: function () {},
+
+        /**
          * Parses a given route.
          * If no route is passed, the current address value is used.
          * If a state is found for the route and is different from the current one, a transition
