@@ -13,11 +13,12 @@ define([
     'base-adapter/dom/Events',
     'mout/array/remove',
     'mout/object/hasOwn',
+    'mout/object/mixIn',
     'mout/string/startsWith',
     'mout/queryString/decode',
     'mout/queryString/encode',
     'has'
-], function (Class, instanceOf, StateRegistryInterface, MixableEventsEmitter, AddressInterface, StateInterface, State, Route, Events, remove, hasOwn, startsWith, decode, encode, has) {
+], function (Class, instanceOf, StateRegistryInterface, MixableEventsEmitter, AddressInterface, StateInterface, State, Route, Events, remove, hasOwn, mixIn, startsWith, decode, encode, has) {
 
     'use strict';
 
@@ -306,7 +307,8 @@ define([
                 route,
                 found = false,
                 value = obj.newValue,
-                newState;
+                newState,
+                addressObj;
 
             if (!value) {
                 value = '/';
@@ -319,8 +321,16 @@ define([
 
                 if (route.test(value)) {
                     found = true;
+
+                    // Create the state instance
                     newState = this._createStateInstance(route.getName(), route.match(value));
-                    newState.getParams().$address = obj;
+
+                    // Associate the address info to the params
+                    addressObj = mixIn({}, obj);
+                    delete addressObj.event;       // Delete the event to avoid memory leaks
+                    newState.getParams().$address = addressObj;
+
+                    // Finally change to the state
                     this.setCurrent(newState);
                     break;
                 }
