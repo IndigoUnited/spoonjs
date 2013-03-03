@@ -28,6 +28,8 @@ define([
 
         /**
          * Constructor.
+         * Special parameters can be prefixed with $.
+         * Those will not be taken into account in the comparisons.
          *
          * @param {String} name      The state name
          * @param {Object} [$params] The state parameters
@@ -184,14 +186,28 @@ define([
          * {@inheritDoc}
          */
         clone: function () {
-            var ret = new State(this._name, deepClone(this._params));
+            var params = {},
+                key,
+                ret;
+
+            // Construct a clone of the parameters, except the special ones
+            for (key in this._params) {
+                if (key.charAt(0) !== '$') {
+                    params[key] = deepClone(this._params[key]);
+                } else {
+                    params[key] = this._params[key];
+                }
+            }
+
+            // Create a new state
+            ret = new State(this._name, params);
             ret._cursor = this._cursor;
 
             return ret;
         },
 
         /**
-         * Compares to objects loosely (not recursively).
+         * Compares two objects loosely and not recursively.
          *
          * @return {Boolean} True if they are loosely equal, false otherwise
          */
@@ -201,22 +217,26 @@ define([
                 key,
                 x;
 
-            remove(keys1, '$state');
-            remove(keys2, '$state');
-
-            if (keys1.length !== keys2.length) {
-                return false;
-            }
-
+            // Remove special keys
             for (x = keys1.length - 1; x >= 0; x -= 1) {
-                if (keys2.indexOf(keys1[x]) === -1) {
-                    return false;
+                if (keys1[x].charAt(0) === '$') {
+                    keys1.splice(x, 1);
                 }
             }
 
+            // Compare the objects
+            // We first compare the first with the second and then the second with the first
             for (x = keys1.length - 1; x >= 0; x -= 1) {
                 key = keys1[x];
-                if (obj1[key] !== obj2[key]) {
+
+                if (obj1[key] != obj2[key]) {
+                    return false;
+                }
+            }
+            for (x = keys2.length - 1; x >= 0; x -= 1) {
+                key = keys2[x];
+
+                if (obj2[key] != obj1[key]) {
                     return false;
                 }
             }

@@ -300,7 +300,8 @@ define([
                 length = this._routes.length,
                 route,
                 found = false,
-                value = obj.newValue;
+                value = obj.newValue,
+                newState;
 
             if (!value) {
                 value = '/';
@@ -313,7 +314,9 @@ define([
 
                 if (route.test(value)) {
                     found = true;
-                    this.setCurrent(route.getName(), route.match(value));
+                    newState = this._createStateInstance(route.getName(), route.match(value));
+                    newState.getParams().$address = obj;
+                    this.setCurrent(newState);
                     break;
                 }
             }
