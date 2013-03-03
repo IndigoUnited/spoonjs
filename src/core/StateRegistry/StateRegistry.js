@@ -171,6 +171,11 @@ define([
                 previousState = this._currentState;
                 this._currentState = state;
 
+                // Mark the state as initial if there's no previous state
+                if (!previousState) {
+                    this._currentState.getParams().$initial = true;
+                }
+
                 // Handle after change stuff
                 this._postChangeHandler();
 
