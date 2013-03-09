@@ -256,9 +256,9 @@ define([
          * Handles stuff after the state has changed.
          *
          * @param {StateInterface} previousState The previous state
-         * @param {Object}         [$options]    The options
+         * @param {Object}         options       The options
          */
-        _postChangeHandler: function (previousState, $options) {
+        _postChangeHandler: function (previousState, options) {
             var state = this._currentState.getFullName(),
                 route,
                 tmp,
@@ -272,17 +272,17 @@ define([
             }
 
             // Set address value
-            if (this._address && $options.route) {
+            if (this._address && options.route) {
                 route = this._states[state];
                 if (!route) {
                     this._address.reset();
                 } else {
-                    this._address.setValue(route.generateUrl(this._currentState.getParams()), $options);
+                    this._address.setValue(route.generateUrl(this._currentState.getParams()), options);
                 }
             }
 
             // Emit the change
-            if (!$options.silent) {
+            if (!options.silent) {
                 tmp = this._currentState;
                 this._currentState.setCursor(0);
                 this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
