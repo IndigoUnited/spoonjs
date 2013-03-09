@@ -281,10 +281,11 @@ define([
                 }
             }
 
+            this._currentState.setCursor(0);
+
             // Emit the change
             if (!options.silent) {
                 tmp = this._currentState;
-                this._currentState.setCursor(0);
                 this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
 
                 // If the final state name has changed in the process, inform the user
