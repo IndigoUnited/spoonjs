@@ -314,7 +314,8 @@ define([
                 found = false,
                 value = obj.newValue,
                 newState,
-                addressObj;
+                addressObj,
+                params;
 
             if (!value) {
                 value = '/';
@@ -334,7 +335,11 @@ define([
                     // Associate the address info to the params
                     addressObj = mixIn({}, obj);
                     delete addressObj.event;       // Delete the event to avoid memory leaks
-                    newState.getParams().$route = addressObj;
+                    params = newState.getParams();
+                    params.$address = addressObj;
+
+                    // Associate the route info to the params
+                    params.$route = route;
 
                     // Finally change to the state
                     this.setCurrent(newState);
