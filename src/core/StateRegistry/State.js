@@ -137,7 +137,7 @@ define([
             var x,
                 curr;
 
-            // Strict comparation first
+            // Strict comparison first
             if (this === state) {
                 return true;
             }
@@ -168,7 +168,7 @@ define([
          * {@inheritDoc}
          */
         isFullyEqual: function (state) {
-            // Strict comparation first
+            // Strict comparison first
             if (this === state) {
                 return true;
             }

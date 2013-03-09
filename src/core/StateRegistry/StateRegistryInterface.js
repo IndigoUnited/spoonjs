@@ -20,7 +20,6 @@ define([
 
         /**
          * Sets the address.
-         * When an address is set, the state of the registry will be changed according to its value.
          *
          * @param {AddressInterface} [$address] The address to set or null to unset it
          *
