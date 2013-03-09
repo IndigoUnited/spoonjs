@@ -81,7 +81,6 @@ define([
          */
         setParams: function (params) {
             this._params = params || {};
-            this._params.$state = this;
 
             return this;
         },

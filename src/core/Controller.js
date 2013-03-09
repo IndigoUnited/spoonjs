@@ -136,7 +136,7 @@ define([
 
                 name = $state;
             } else {
-                $state = $state.$state || $state;
+                $state = $state.$info ? $state.$info.newState : $state;
 
                 // Change the state globally, and abort if actually changed
                 if (stateRegistry.setCurrent($state, $options)) {

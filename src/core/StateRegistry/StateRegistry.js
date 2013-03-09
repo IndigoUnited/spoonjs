@@ -174,11 +174,6 @@ define([
                 previousState = this._currentState;
                 this._currentState = state;
 
-                // Mark the state as initial if there's no previous state
-                if (!previousState) {
-                    this._currentState.getParams().$initial = true;
-                }
-
                 // Handle after change stuff
                 this._postChangeHandler(previousState, $options);
 
@@ -260,6 +255,7 @@ define([
          */
         _postChangeHandler: function (previousState, options) {
             var state = this._currentState.getFullName(),
+                params = this._currentState.getParams(),
                 route,
                 tmp,
                 fullName;
@@ -271,13 +267,17 @@ define([
                 }
             }
 
+            params.$info = params.$info || {};
+            params.$info.newState = this._currentState;
+            params.$info.previousState = previousState;
+
             // Set address value
             if (this._address && options.route) {
                 route = this._states[state];
                 if (!route) {
                     this._address.reset();
                 } else {
-                    this._address.setValue(route.generateUrl(this._currentState.getParams()), options);
+                    this._address.setValue(route.generateUrl(params), options);
                 }
             }
 
@@ -302,52 +302,55 @@ define([
          * @param {Object} obj The address object containing the change details
          */
         _onChange: function (obj) {
-            // Ignore the internal change event
-            if (obj.type === AddressInterface.TYPE_INTERNAL_CHANGE) {
-                return;
-            }
-
-            // Find if there's a matching route for the new address value
             var x,
-                length = this._routes.length,
-                route,
-                found = false,
                 value = obj.newValue,
-                newState,
-                addressObj,
+                length,
+                route,
+                state,
                 params;
 
-            if (!value) {
-                value = '/';
-            } else if (value.charAt(0) !== '/') {
-                value = '/' + value;
-            }
-
-            for (x = 0; x < length; x += 1) {
-                route = this._routes[x];
-
-                if (route.test(value)) {
-                    found = true;
-
-                    // Create the state instance
-                    newState = this._createStateInstance(route.getName(), route.match(value));
-
-                    // Associate the address info to the params
-                    addressObj = mixIn({}, obj);
-                    delete addressObj.event;       // Delete the event to avoid memory leaks
-                    params = newState.getParams();
-                    params.$address = addressObj;
-
-                    // Associate the route info to the params
-                    params.$route = route;
-
-                    // Finally change to the state
-                    this.setCurrent(newState);
-                    break;
+            // If the type of change is internal, match against the current state/route
+            // If it's the same ignore, otherwise someone changed the value directly in the address instance
+            if (obj.type === AddressInterface.TYPE_INTERNAL_CHANGE && this._currentState) {
+                route = this._states[this._currentState.getFullName()];
+                if (route && route.test(value)) {
+                    this._currentState.getParams().$info.address = obj;
+                    return;
                 }
             }
 
-            if (has('debug') && !found) {
+            // Find if there's a matching route for the new address value
+            // Ensure that the value starts with a /
+            value = value || '/';
+            if (value.charAt(0) !== '/') {
+                value = '/' + value;
+            }
+
+            length = this._routes.length;
+            for (x = 0; x < length; x += 1) {
+                route = this._routes[x];
+
+                // Test the route against the value
+                if (route.test(value)) {
+                    // Create the state instance
+                    state = this._createStateInstance(route.getName(), route.match(value));
+                    params = state.getParams();
+                    params.$info = {};
+
+                    // Associate the address info to the params
+                    if (obj.event) {
+                        obj = mixIn({}, obj);
+                        delete obj.event;       // Delete the event to avoid memory leaks
+                    }
+                    params.$info.address = obj;
+
+                    // Finally change to the state
+                    this.setCurrent(state);
+                    return;
+                }
+            }
+
+            if (has('debug')) {
                 console.warn('No state matched the URL "' + value + '".');
             }
         },
