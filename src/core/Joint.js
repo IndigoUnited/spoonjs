@@ -204,7 +204,7 @@ define([
                 curr.destroy();
             }
 
-            this._downlinks = [];
+            this._downlinks = null;
         },
 
         ////////////////////////////////////////////////////////////
