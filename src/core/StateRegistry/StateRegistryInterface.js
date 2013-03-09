@@ -72,6 +72,13 @@ define([
         unregister: function (state) {},
 
         /**
+         * Unregisters all the registered states.
+         *
+         * @return {StateRegistryInterface} The instance itself to allow chaining
+         */
+        unregisterAll: function () {},
+
+        /**
          * Checks if a state is registered.
          *
          * @param {String} state The state
@@ -88,13 +95,6 @@ define([
          * @return {Boolean} True if it is, false otherwise
          */
         isRoutable: function (state) {},
-
-        /**
-         * Clears all the registered states.
-         *
-         * @return {StateRegistryInterface} The instance itself to allow chaining
-         */
-        clear: function () {},
 
         /**
          * Checks if a given state name is valid.

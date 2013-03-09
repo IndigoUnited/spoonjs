@@ -57,7 +57,6 @@ define([
             return this;
         },
 
-
         /**
          * Unsets the address, if any.
          */
@@ -126,6 +125,16 @@ define([
         /**
          * {@inheritDoc}
          */
+        unregisterAll: function () {
+            this._states = {};
+            this._routes = [];
+
+            return this;
+        },
+
+        /**
+         * {@inheritDoc}
+         */
         isRegistered: function (state) {
             return hasOwn(this._states, state);
         },
@@ -135,17 +144,6 @@ define([
          */
         isRoutable: function (state) {
             return !!this._states[state];
-        },
-
-
-        /**
-         * {@inheritDoc}
-         */
-        clear: function () {
-            this._states = {};
-            this._routes = [];
-
-            return this;
         },
 
         /**
@@ -384,7 +382,7 @@ define([
          * @see StateRegistry#destroy
          */
         _onDestroy: function () {
-            this.clear();
+            this.unregisterAll();
             this.off();
 
             Events.off(document.body, 'click a', this._handleLinkClick);
