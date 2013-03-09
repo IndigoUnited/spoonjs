@@ -156,17 +156,21 @@ define([
         /**
          * {@inheritDoc}
          */
-        setCurrent: function (state, $params) {
-            var previousState,
-                fullName,
-                tmp;
+        setCurrent: function (state, $params, $options) {
+            var previousState;
 
+            // Handle args
             if (!instanceOf(state, StateInterface)) {
                 state = this._createStateInstance(state, $params);
+            } else {
+                $options = $params;
             }
 
+            // Set defaul options and merge them with the user ones
+            $options = mixIn({ route: true }, $options || {});
+
             // Only change if the current state is not the same
-            if (!this.isCurrent(state)) {
+            if (!this.isCurrent(state) || $options.force) {
                 previousState = this._currentState;
                 this._currentState = state;
 
@@ -176,19 +180,7 @@ define([
                 }
 
                 // Handle after change stuff
-                this._postChangeHandler();
-
-                // Emit the change
-                tmp = this._currentState;
-                fullName = this._currentState.getFullName();
-                this._currentState.setCursor(0);
-                this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
-
-                // If the final state name has changed in the process, inform the user
-                // This happens if the final state is changed (tipically because of default state translations)
-                if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
-                    console.info('Final state after transition is "' + this._currentState.getFullName() + '".');
-                }
+                this._postChangeHandler(previousState, $options);
 
                 return true;
             }
@@ -262,28 +254,44 @@ define([
 
         /**
          * Handles stuff after the state has changed.
+         *
+         * @param {StateInterface} previousState The previous state
+         * @param {Object}         [$options]    The options
          */
-        _postChangeHandler: function () {
+        _postChangeHandler: function (previousState, $options) {
             var state = this._currentState.getFullName(),
-                route;
+                route,
+                tmp,
+                fullName;
 
             if (has('debug')) {
                 console.info('State changed to "' + state + '".');
-            }
-
-            if (!this.isRegistered(state)) {
-                if (has('debug')) {
+                if (!this.isRegistered(state)) {
                     console.warn('State "' + state + '" is not registered.');
                 }
-                if (this._address) {
-                    this._address.reset();
-                }
-            } else if (this._address) {
+            }
+
+            // Set address value
+            if (this._address && $options.route) {
                 route = this._states[state];
-                if (route) {
-                    this._address.setValue(route.generateUrl(this._currentState.getParams()));
-                } else {
+                if (!route) {
                     this._address.reset();
+                } else {
+                    this._address.setValue(route.generateUrl(this._currentState.getParams()), $options);
+                }
+            }
+
+            // Emit the change
+            if (!$options.silent) {
+                tmp = this._currentState;
+                this._currentState.setCursor(0);
+                this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
+
+                // If the final state name has changed in the process, inform the user
+                // This happens if the final state is changed (tipically because of default state translations)
+                fullName = this._currentState.getFullName();
+                if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
+                    console.info('Final state after transition is "' + this._currentState.getFullName() + '".');
                 }
             }
         },
@@ -326,7 +334,7 @@ define([
                     // Associate the address info to the params
                     addressObj = mixIn({}, obj);
                     delete addressObj.event;       // Delete the event to avoid memory leaks
-                    newState.getParams().$address = addressObj;
+                    newState.getParams().$route = addressObj;
 
                     // Finally change to the state
                     this.setCurrent(newState);
@@ -351,7 +359,8 @@ define([
                 url = element.href,
                 state,
                 params,
-                pos;
+                pos,
+                options;
 
             // Only parse links with state protocol
             if (startsWith(url, 'state://')) {
@@ -368,7 +377,13 @@ define([
                         params = decode(url.substr(pos + 1));
                     }
 
-                    this.setCurrent(state, params);
+                    // Extract options from attributes
+                    options = {
+                        force: !!element.getAttribute('data-url-force'),
+                        silent: !!element.getAttribute('data-url-silent')
+                    };
+
+                    this.setCurrent(state, params, options);
                 } else if (has('debug')) {
                     console.info('Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
                 }

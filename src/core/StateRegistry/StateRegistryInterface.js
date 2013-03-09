@@ -110,12 +110,18 @@ define([
          * If the state is not the same, the change event will be emited.
          * Also if the state has a route associated and the routing is enabled, the browser URL will be updated accordingly.
          *
-         * @param {String|StateInterface} state     The state name or the state object
-         * @param {Object}                [$params] The state parameters if the state was a string
+         * The default implementation should handle these options:
+         *  - force:  true to force the value to be changed even if the value is the same
+         *  - silent: true to change the value with firing the change event
+         *  - route:  false to not change the address value
+         *
+         * @param {String|StateInterface} state      The state name or the state object
+         * @param {Object}                [$params]  The state parameters if the state was a string
+         * @param {Object}                [$options] The options
          *
          * @return {Boolean} True if the transition was made, false otherwise
          */
-        setCurrent: function (state, $params) {},
+        setCurrent: function (state, $params, $options) {},
 
         /**
          * Returns the current state.

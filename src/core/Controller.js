@@ -109,12 +109,13 @@ define([
          * Sets the current state.
          * If the state is the same, nothing happens.
          *
-         * @param {String|Object|StateInterface} [$state]  The state name, the state parameter bag or a state instance
-         * @param {Object}                       [$params] The state params to be used if the state is a string
+         * @param {Mixed}  [$state]   The state name, the state parameter bag or a state instance
+         * @param {Object} [$params]  The state params to be used if the state is a string
+         * @param {Object} [$options] The options
          *
          * @return {Controller} The instance itself to allow chaining
          */
-        setState: function ($state, $params) {
+        setState: function ($state, $params, $options) {
             var name,
                 fullName;
 
@@ -129,7 +130,7 @@ define([
                 fullName = this._resolveFullState($state);
 
                 // Change the state globally, and abort if actually changed
-                if (stateRegistry.setCurrent(fullName, $params)) {
+                if (stateRegistry.setCurrent(fullName, $params, $options)) {
                     return this;
                 }
 
@@ -138,7 +139,7 @@ define([
                 $state = $state.$state || $state;
 
                 // Change the state globally, and abort if actually changed
-                if (stateRegistry.setCurrent($state)) {
+                if (stateRegistry.setCurrent($state, $options)) {
                     return this;
                 }
 
