@@ -284,16 +284,14 @@ define([
             this._currentState.setCursor(0);
 
             // Emit the change
-            if (!options.silent) {
-                tmp = this._currentState;
-                this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
+            tmp = this._currentState;
+            this._emit(this.$static.EVENT_CHANGE, this._currentState, previousState);
 
-                // If the final state name has changed in the process, inform the user
-                // This happens if the final state is changed (tipically because of default state translations)
-                fullName = this._currentState.getFullName();
-                if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
-                    console.info('Final state after transition is "' + this._currentState.getFullName() + '".');
-                }
+            // If the final state name has changed in the process, inform the user
+            // This happens if the final state is changed (tipically because of default state translations)
+            fullName = this._currentState.getFullName();
+            if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
+                console.info('Final state after transition is "' + this._currentState.getFullName() + '".');
             }
         },
 
@@ -388,8 +386,8 @@ define([
 
                     // Extract options from attributes
                     options = {
-                        force: !!element.getAttribute('data-url-force'),
-                        silent: !!element.getAttribute('data-url-silent')
+                        force: element.getAttribute('data-url-force') === 'true'
+                        // No need to parse route and replace options here because they will be always false
                     };
 
                     this.setCurrent(state, params, options);
