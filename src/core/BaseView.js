@@ -61,6 +61,14 @@ define([
             }
 
             this.$super();
+
+            // Start listening as soon as this view is linked
+            this.once('link', function () {
+                // Listen to DOM events if this is a root view
+                if (this._isRoot()) {
+                    this._dom.listen();
+                }
+            }, this);
         },
 
         /**
@@ -92,6 +100,41 @@ define([
                 }
 
                 Element.append(target, this._element);
+            }
+
+            // Listen to DOM events if this is a root view
+            if (this._isRoot()) {
+                this._dom.listen();
+            }
+
+            return this;
+        },
+
+        /**
+         * Convenience method to prepend the element's view to a target.
+         * The target can be another view, a DOM element or a CSS selector.
+         * If the target is another view, an additional selector can be passed to specify
+         * the element where it will get appended.
+         *
+         * @param {Element|String|BaseView} target    The target
+         * @param {String}                  [$within] The selector in case the target is a view
+         *
+         * @return {BaseView} The instance itself to allow chaining
+         */
+        prependTo: function (target, $within) {
+            if (target) {
+                if (target instanceof BaseView) {
+                    target = !$within ? target._element : Element.findOne($within, target._element);
+                } else if (isString(target)) {
+                    target = Element.findOne(target);
+                }
+
+                Element.append(target, this._element);
+            }
+
+            // Listen to DOM events if this is a root view
+            if (this._isRoot()) {
+                this._dom.listen();
             }
 
             return this;
