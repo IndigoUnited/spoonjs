@@ -11,9 +11,11 @@ define([
     'base-adapter/dom/Element',
     'dom-responder/DomResponder',
     'mout/lang/isFunction',
+    'mout/lang/isArray',
+    'mout/lang/isPlainObject',
     'mout/lang/isString',
     'has'
-], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isString, has) {
+], function (AbstractClass, Joint, Controller, stateRegistry, Element, DomResponder, isFunction, isArray, isPlainObject, isString, has) {
 
     'use strict';
 
@@ -62,9 +64,8 @@ define([
 
             this.$super();
 
-            // Start listening as soon as this view is linked
+            // Start listening as soon as this view is linked (only if is the root)
             this.once('link', function () {
-                // Listen to DOM events if this is a root view
                 if (this._isRoot()) {
                     this._dom.listen();
                 }
@@ -245,11 +246,11 @@ define([
 
             // Search for it in the uplink ancestors
             if (this._uplink) {
-                if (this._uplink instanceof Controller) {
-                    return this._controller = this._uplink;
-                }
+                this._controller = this._uplink instanceof Controller ?
+                    this._uplink :
+                    this._uplink._getController();
 
-                return this._controller = this._uplink._getController();
+                return this._controller;
             }
 
             return null;
@@ -258,28 +259,23 @@ define([
         /**
          * Fills an object with helpers to be used in the templates.
          *
-         * @param {Object} obj The object to be filled
+         * @param {Object|Array} obj The object to be filled
          *
          * @return {Object} The same object with the filled helpers
          */
         _fillHelpers: function (obj) {
-            if (has('debug') && (!obj || obj.constructor !== Object)) {
-                throw new Error('Expected a plain object to be passed to the template.');
+            if (has('debug') && !isPlainObject(obj) && !isArray(obj)) {
+                throw new Error('Expected a plain object or an array to be passed to the template.');
             }
 
+            // Only needed for handlebars
             if (window.Handlebars) {
                 obj.$view = this;
-
-                if (!registeredHandlebarsHelpers) {
-                    Handlebars.registerHelper('url', function (state, params) {
-                        return this.$view._generateUrl(state, params.hash);
-                    });
-                }
-            } else {
-                obj.$url = function (state, $params) {
-                    return this._generateUrl(state, $params);
-                }.$bind(this);
             }
+
+            obj.$url = function (state, $params) {
+                return this._generateUrl(state, $params);
+            }.$bind(this);
 
             return obj;
         },
@@ -300,10 +296,14 @@ define([
             // Null references
             this._element = this._nativeElement = null;
         }
-    }),
-        registeredHandlebarsHelpers = false;
+    });
 
-
+    // Register handlebar helpers
+    if (window.Handlebars) {
+        Handlebars.registerHelper('url', function (state, params) {
+            return this.$view._generateUrl(state, params.hash);
+        });
+    }
 
     return BaseView;
 });

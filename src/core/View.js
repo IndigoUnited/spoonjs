@@ -24,7 +24,7 @@ define([
          * view listen to the declared DOM events, and also manage its descendants
          * uplinked DOM events.
          *
-         * @param {Object} [$data] The data to pass to the template
+         * @param {Object|Array} [$data] The data to pass to the template
          *
          * @return {View} The instance itself to allow chaining
          */
