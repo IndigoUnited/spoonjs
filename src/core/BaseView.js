@@ -68,7 +68,7 @@ define([
                 if (this._isRoot()) {
                     this._dom.listen();
                 }
-            }, this);
+            }.$bind(this));
         },
 
         /**
