@@ -257,27 +257,27 @@ define([
         },
 
         /**
-         * Fills an object with helpers to be used in the templates.
+         * Fills a target with helpers to be used in the templates.
          *
-         * @param {Object|Array} obj The object to be filled
+         * @param {Object|Array} target The target to be filled
          *
-         * @return {Object} The same object with the filled helpers
+         * @return {Object|Array} The same target with the filled helpers
          */
-        _fillHelpers: function (obj) {
-            if (has('debug') && !isPlainObject(obj) && !isArray(obj)) {
+        _fillHelpers: function (target) {
+            if (has('debug') && !isPlainObject(target) && !isArray(target)) {
                 throw new Error('Expected a plain object or an array to be passed to the template.');
             }
 
             // Only needed for handlebars
             if (window.Handlebars) {
-                obj.$view = this;
+                target.$view = this;
             }
 
-            obj.$url = function (state, $params) {
+            target.$url = function (state, $params) {
                 return this._generateUrl(state, $params);
             }.$bind(this);
 
-            return obj;
+            return target;
         },
 
         /**
