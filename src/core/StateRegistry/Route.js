@@ -117,8 +117,8 @@ define([
         generateUrl: function ($params) {
             var url = this._pattern,
                 constraints = this._constraints || {},
-                paramName,
-                paramValue,
+                placeholderName,
+                placeholderValue,
                 length = this._placeholderNames ? this._placeholderNames.length : 0,
                 x;
 
@@ -126,23 +126,23 @@ define([
                 $params = $params || {};
 
                 for (x = 0; x < length; x += 1) {
-                    paramName = this._placeholderNames[x];
+                    placeholderName = this._placeholderNames[x];
 
                     // Check if parameter was forgotten
-                    if (has('debug') && !hasOwn($params, paramName)) {
-                        throw new Error('Missing param "' + paramName + '".');
+                    if (has('debug') && !hasOwn($params, placeholderName)) {
+                        throw new Error('Missing param "' + placeholderName + '".');
                     }
 
                     // Coerce it into a string
-                    paramValue = '' + $params[paramName];
+                    placeholderValue = '' + $params[placeholderName];
 
                     // Validate against the constraints
-                    if (has('debug') && constraints[paramName] && !constraints[paramName].test(paramValue)) {
-                        throw new Error('Param "' + paramName + '" with value "' + paramValue + '" does not pass the constraint.');
+                    if (has('debug') && constraints[placeholderName] && !constraints[placeholderName].test(placeholderValue)) {
+                        throw new Error('Param "' + placeholderName + '" with value "' + placeholderValue + '" does not pass the constraint.');
                     }
 
                     // Replace it in the URL
-                    url = url.replace(this.$static._placeholdersRegExp, paramValue);
+                    url = url.replace(this.$static._placeholdersRegExp, placeholderValue);
                 }
             }
 
