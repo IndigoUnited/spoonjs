@@ -6,8 +6,9 @@
 define([
     'dejavu/Class',
     'mout/string/escapeRegExp',
+    'mout/object/hasOwn',
     'has'
-], function (Class, escapeRegExp, has) {
+], function (Class, escapeRegExp, hasOwn, has) {
 
     'use strict';
 
@@ -114,25 +115,35 @@ define([
          * @return {String} The URL
          */
         generateUrl: function ($params) {
-            var key,
-                url = this._pattern,
+            var url = this._pattern,
                 constraints = this._constraints || {},
-                curr;
+                paramName,
+                paramValue,
+                length = this._placeholderNames ? this._placeholderNames.length : 0,
+                x;
 
-            if ($params) {
-                for (key in $params) {
-                    curr = '' + $params[key];
+            if (length) {
+                $params = $params || {};
 
-                    if (has('debug') && constraints[key] && !constraints[key].test(curr)) {
-                        throw new Error('Param "' + key + '" does not pass the constraint.');
+                for (x = 0; x < length; x += 1) {
+                    paramName = this._placeholderNames[x];
+
+                    // Check if parameter was forgotten
+                    if (has('debug') && !hasOwn($params, paramName)) {
+                        throw new Error('Missing param "' + paramName + '".');
                     }
 
-                    url = url.replace('{' + key + '}', curr);
-                }
-            }
+                    // Coerce it into a string
+                    paramValue = '' + $params[paramName];
 
-            if (has('debug') && this.$static._placeholdersRegExp.test(url)) {
-                throw new Error('Missing params for URL "' + url + '"');
+                    // Validate against the constraints
+                    if (has('debug') && constraints[paramName] && !constraints[paramName].test(paramValue)) {
+                        throw new Error('Param "' + paramName + '" with value "' + paramValue + '" does not pass the constraint.');
+                    }
+
+                    // Replace it in the URL
+                    url = url.replace(this.$static._placeholdersRegExp, paramValue);
+                }
             }
 
             return url;
@@ -141,7 +152,7 @@ define([
         ////////////////////////////////////////////////////////
 
         $statics: {
-            _placeholdersRegExp: /\{.+?\}/g,
+            _placeholdersRegExp: /\{.+?\}/,
             _placeholdersEscapedRegExp: /\\\{.+?\\\}/g
         }
     });
