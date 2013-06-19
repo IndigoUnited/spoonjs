@@ -2,69 +2,83 @@
  * Broadcaster class.
  */
 define([
-    'dejavu/Class',
-    './BroadcasterInterface',
     'events-emitter/EventsEmitter',
     'has'
-], function (Class, BroadcasterInterface, EventsEmitter, has) {
+], function (EventsEmitter, has) {
 
     'use strict';
 
-    // It is just a simple façade to a single EventsEmitter
-    var Broadcaster = Class.declare({
-        $name: 'Broadcaster',
-        $implements: BroadcasterInterface,
+    function Broadcaster() {
+        this._emitter = new EventsEmitter();
+    }
 
-        _emitter: null,
+    /**
+     * Adds a new event listener.
+     * If the listener is already attached, it won't get duplicated.
+     *
+     * @param {String}   event     The event name
+     * @param {Function} fn        The listener
+     * @param {Object}   [context] The context in which the function will be executed, defaults to the instance
+     *
+     * @return {Broadcaster} The instance itself to allow chaining
+     */
+    Broadcaster.prototype.on = function (event, fn, context) {
+        this._emitter.on(event, fn, context);
 
-        /**
-         * Constructor.
-         */
-        initialize: function () {
-            this._emitter = new EventsEmitter();
-        },
+        return this;
+    };
 
-        /**
-         * {@inheritDoc}
-         */
-        on: function (event, fn, $context) {
-            this._emitter.on(event, fn, $context);
+    /**
+     * Adds a new event listener that is removed automatically afterwards.
+     * If the listener is already attached, it won't get duplicated.
+     *
+     * @param {String}   event     The event name
+     * @param {Function} fn        The listener
+     * @param {Object}   [context] The context in which the function will be executed, defaults to the instance
+     *
+     * @return {Broadcaster} The instance itself to allow chaining
+     */
+    Broadcaster.prototype.once = function (event, fn, context) {
+        this._emitter.once(event, fn, context);
 
-            return this;
-        },
+        return this;
+    };
 
-        /**
-         * {@inheritDoc}
-         */
-        once: function (event, fn, $context) {
-            this._emitter.once(event, fn, $context);
+    /**
+     * Removes an existent event listener.
+     * If no fn and context is passed, removes all event listeners of a given name.
+     * If no event is specified, removes all events of all names.
+     *
+     * @param {String}   [event]   The event name
+     * @param {Function} [fn]      The listener
+     * @param {Object}   [context] The context passed to the on() function
+     *
+     * @return {Broadcaster} The instance itself to allow chaining
+     */
+    Broadcaster.prototype.off = function (event, fn, context) {
+        this._emitter.off(event, fn, context);
 
-            return this;
-        },
+        return this;
+    };
 
-        /**
-         * {@inheritDoc}
-         */
-        off: function ($event, $fn, $context) {
-            this._emitter.off($event, $fn, $context);
-
-            return this;
-        },
-
-        /**
-         * {@inheritDoc}
-         */
-        broadcast: function (event, $args) {
-            // If we got no interested subjects, warn that this event was unhandled
-            if (this._emitter.has(event)) {
-                this._emitter.emit.apply(this._emitter, arguments);
-            } else if (has('debug')) {
-                console.warn('Unhandled broadcast event "' + event + '".');
-            }
-
-            return this;
+    /**
+     * Emits a broadcast event.
+     *
+     * @param {String}   event  The event name
+     * @param {...mixed} [args] The arguments to pass to each listener
+     *
+     * @return {Broadcaster} The instance itself to allow chaining
+     */
+    Broadcaster.prototype.broadcast = function (event, args) {
+        // If we got no interested subjects, warn that this event was unhandled
+        if (this._emitter.has(event)) {
+            this._emitter.emit.apply(this._emitter, arguments);
+        } else if (has('debug')) {
+            console.warn('Unhandled broadcast event "' + event + '".');
         }
-    });
+
+        return this;
+    };
 
     return Broadcaster;
 });
