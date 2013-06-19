@@ -16,57 +16,9 @@ define([
     'use strict';
 
     function Controller() {
-        var key,
-            tmp,
-            func,
-            matches,
-            regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp;
-
         Joint.call(this);
 
-        // Clone events object to guarantee unicity among instances
-        this._states = this._states ? mixIn({}, this._states) : {};
-        this._statesParams = {};
-        this._nrStates = size(this._states);
-
-        // Process the states object
-        for (key in this._states) {
-            // Process the params specified in the parentheses
-            matches = key.match(regExp);
-            if (matches) {
-                tmp = key.substr(0, key.indexOf('('));
-                this._states[tmp] = this._states[key];
-                delete this._states[key];
-                key = tmp;
-                this._statesParams[key] = matches[1].split(',');
-            } else {
-                this._statesParams[key] = [];
-            }
-
-            if (has('debug')) {
-                if (!stateRegistry.isValid(key)) {
-                    throw new Error('State name "' + key + '" of "' + this.$name + '" has an invalid format.');
-                }
-                if (key.indexOf('.') !== -1) {
-                    throw new Error('State name "' + key + '" of "' + this.$name + '" must be local (cannot contain dots).');
-                }
-            }
-
-            // Check if it is a string or already a function
-            func = this._states[key];
-            if (typeof func === 'string') {
-                func = this[func];
-                this._states[key] = func;
-            }
-            if (has('debug') && typeof func !== 'function') {
-                throw new Error('State handler "' + key + '" of "' + this.$name + '" references a nonexistent function.');
-            }
-        }
-
-        // Process the default state
-        if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
-            throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
-        }
+        this._parseStates();
     }
 
     Controller.extend = Joint.extend;
@@ -166,6 +118,61 @@ define([
     };
 
     //////////////////////////////////////////////////////////////////
+
+    /**
+     * Parses the controller states.
+     */
+    Controller.prototype._parseStates = function () {
+        var key,
+            tmp,
+            func,
+            matches,
+            regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp;
+
+        // Clone events object to guarantee unicity among instances
+        this._states = this._states ? mixIn({}, this._states) : {};
+        this._statesParams = {};
+        this._nrStates = size(this._states);
+
+        // Process the states object
+        for (key in this._states) {
+            // Process the params specified in the parentheses
+            matches = key.match(regExp);
+            if (matches) {
+                tmp = key.substr(0, key.indexOf('('));
+                this._states[tmp] = this._states[key];
+                delete this._states[key];
+                key = tmp;
+                this._statesParams[key] = matches[1].split(',');
+            } else {
+                this._statesParams[key] = [];
+            }
+
+            if (has('debug')) {
+                if (!stateRegistry.isValid(key)) {
+                    throw new Error('State name "' + key + '" of "' + this.$name + '" has an invalid format.');
+                }
+                if (key.indexOf('.') !== -1) {
+                    throw new Error('State name "' + key + '" of "' + this.$name + '" must be local (cannot contain dots).');
+                }
+            }
+
+            // Check if it is a string or already a function
+            func = this._states[key];
+            if (typeof func === 'string') {
+                func = this[func];
+                this._states[key] = func;
+            }
+            if (has('debug') && typeof func !== 'function') {
+                throw new Error('State handler "' + key + '" of "' + this.$name + '" references a nonexistent function.');
+            }
+        }
+
+        // Process the default state
+        if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
+            throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
+        }
+    },
 
     /**
      * Checks if a given state is the same as the current controller state.
