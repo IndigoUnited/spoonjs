@@ -13,7 +13,7 @@ define([
     'mout/queryString/encode',
     'has',
     'jquery'
-], function (MixableEventsEmitter, State, Route, Events, remove, hasOwn, mixIn, startsWith, decode, encode, has, $) {
+], function (MixableEventsEmitter, State, Route, remove, hasOwn, mixIn, startsWith, decode, encode, has, $) {
 
     'use strict';
 
@@ -42,10 +42,9 @@ define([
      */
     StateRegistry.prototype.setAddress = function (address) {
         this.unsetAddress();
+
         if (address) {
             this._address = address;
-
-            // Listen to the address change
             address.on('change', this._onChange, this);
         }
 
@@ -134,7 +133,7 @@ define([
         delete this._states[state];
 
         if (route) {
-            // Remote if from the routes array
+            // Remote it from the routes array
             remove(this._routes, route);
         }
 
@@ -421,7 +420,7 @@ define([
      * @param {Element} [el]  The link tag
      */
     StateRegistry.prototype._handleLinkClick = function (event, el) {
-        var element = el || Events.getCurrentTarget(event),
+        var element = el || event.currentTarget,
             type = element.getAttribute('data-url-type'),
             url = element.href,
             state,
@@ -472,4 +471,6 @@ define([
         this.unsetAddress();
         this._currentState = null;
     };
+
+    return StateRegistry;
 });

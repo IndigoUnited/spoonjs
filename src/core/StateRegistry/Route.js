@@ -143,4 +143,6 @@ define([
 
     Route._placeholdersRegExp = /\{.+?\}/;
     Route._placeholdersEscapedRegExp = /\\\{.+?\\\}/g;
+
+    return Route;
 });

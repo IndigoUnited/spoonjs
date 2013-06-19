@@ -6,13 +6,13 @@
  * This class provides access to the address as a service.
  */
 define([
+    'app-config',
     'address/AddressHash',
     'address/AddressHTML5',
-    'app-config',
     'mout/string/startsWith',
     'mout/string/endsWith',
     'has'
-], function (AddressHash, AddressHTML5, config, startsWith, endsWith, has) {
+], function (config, AddressHash, AddressHTML5, startsWith, endsWith, has) {
 
     'use strict';
 

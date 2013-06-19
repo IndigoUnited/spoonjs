@@ -5,18 +5,20 @@
 define([
     'events-emitter/EventsEmitter',
     'services/broadcaster',
+    '../util/extend',
     'mout/array/insert',
     'mout/array/remove',
     'has'
-], function (EventsEmitter, broadcaster, insert, remove, has) {
+], function (EventsEmitter, broadcaster, extend, insert, remove, has) {
 
     'use strict';
 
     function Joint() {
         this._downlinks = [];
-        this._destroyed = false;
         this._emitter = new EventsEmitter();
     }
+
+    Joint.extend = extend;
 
     /**
      * Adds a listener for an upcast or broadcast event.
@@ -32,7 +34,7 @@ define([
         context = context || this;
 
         this._emitter.on(event, fn, context);
-        this.constructor._broadcaster.on(event, fn, context);
+        broadcaster.on(event, fn, context);
 
         return this;
     };
@@ -51,7 +53,7 @@ define([
         context = context || this;
 
         this._emitter.once(event, fn, context);
-        this.constructor._broadcaster.once(event, fn, context);
+        broadcaster.once(event, fn, context);
 
         return this;
     };
@@ -69,7 +71,7 @@ define([
         context = context || this;
 
         this._emitter.off(event, fn, context);
-        this.constructor._broadcaster.off(event, fn, context);
+        broadcaster.off(event, fn, context);
 
         return this;
     };
@@ -157,8 +159,6 @@ define([
      * @return {Object} The instance itself to allow chaining
      */
     Joint.prototype._broadcast = function (event, args) {
-        var broadcaster = this.constructor._broadcaster;
-
         broadcaster.broadcast.apply(broadcaster, arguments);
 
         return this;
@@ -171,8 +171,7 @@ define([
      * The default implementation will also destroy any linked joints.
      */
     Joint.prototype._onDestroy = function () {
-        var broadcaster = this.constructor._broadcaster,
-            x,
+        var x,
             curr;
 
         // Remove the listeners from the broadcaster
@@ -197,7 +196,5 @@ define([
         this._downlinks = null;
     };
 
-    ////////////////////////////////////////////////////////////
-
-    Joint._broadcaster = broadcaster;
+    return Joint;
 });

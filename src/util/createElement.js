@@ -1,6 +1,6 @@
 /*jshint regexp:false*/
 
-define(function () {
+define(['jquery'], function ($) {
 
     'use strict';
 
@@ -14,13 +14,12 @@ define(function () {
 
     /**
      * Creates a new element based on a CSS selector.
-     * @credits Luís Couto <lcouto87@gmail.com>
      *
      * @param {String} selector The CSS selector
      *
      * @return {Element} The created element
      */
-    function createElement(selector) {
+    function createFromSelector(selector) {
         var elTagName = selector.match(tagNameRegexp),
             elId = selector.match(idRegexp),
             elClassName,
@@ -66,6 +65,22 @@ define(function () {
         classNameRegexp.lastIndex = attributesRegexp.lastIndex = 0;
 
         return el;
+    }
+
+    function createElement(source) {
+        var element;
+
+        if (typeof source === 'string') {
+            if (source.charAt(0) === '<' && source.charAt(source.length - 1) === '>') {
+                element = source;
+            } else {
+                element = createFromSelector(source);
+            }
+        } else {
+            element = source;
+        }
+
+        return $(element);
     }
 
     return createElement;

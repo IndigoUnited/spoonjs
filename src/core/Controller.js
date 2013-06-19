@@ -6,13 +6,12 @@
 define([
     './Joint',
     'services/state',
-    'mout/lang/isFunction',
-    'mout/lang/isString',
     'mout/string/startsWith',
     'mout/object/size',
+    'mout/object/mixIn',
     'mout/array/find',
     'has'
-], function (Joint, stateRegistry, isFunction, isString, startsWith, size, find, has) {
+], function (Joint, stateRegistry, startsWith, size, mixIn, find, has) {
 
     'use strict';
 
@@ -21,10 +20,13 @@ define([
             tmp,
             func,
             matches,
-            regExp = this.constructor._stateParamsRegExp;
+            regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp;
 
+        Joint.call(this);
+
+        // Clone events object to guarantee unicity among instances
+        this._states = this._states ? mixIn({}, this._states) : {};
         this._statesParams = {};
-        this._states = this._states || {};
         this._nrStates = size(this._states);
 
         // Process the states object
@@ -52,12 +54,12 @@ define([
 
             // Check if it is a string or already a function
             func = this._states[key];
-            if (isString(func)) {
+            if (typeof func === 'string') {
                 func = this[func];
-                if (has('debug') && !isFunction(func)) {
-                    throw new Error('State handler "' + key + '" of "' + this.$name + '" references a nonexistent function.');
-                }
                 this._states[key] = func;
+            }
+            if (has('debug') && typeof func !== 'function') {
+                throw new Error('State handler "' + key + '" of "' + this.$name + '" references a nonexistent function.');
             }
         }
 
@@ -65,10 +67,9 @@ define([
         if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
             throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
         }
-
-        Joint.call(this);
     }
 
+    Controller.extend = Joint.extend;
     Controller.prototype = Object.create(Joint.prototype);
     Controller.prototype.constructor = Controller;
 
@@ -113,7 +114,7 @@ define([
 
         // 1st - Try to make the state transition globally and only proceed if it didn't changed
         //       Also extract the local and full name of the state
-        if (!state || isString(state)) {
+        if (!state || typeof state === 'string') {
             // Resolve to the full name
             fullName = this._resolveFullState(state);
 

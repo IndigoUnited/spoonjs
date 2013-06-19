@@ -9,12 +9,11 @@ define([
     'spoon/core/StateRegistry/StateRegistry',
     'services/address',
     'app-config',
-    'mout/lang/isString',
     'mout/lang/isObject',
     'mout/object/fillIn',
     'mout/object/size',
     'has'
-], function (StateRegistry, address, config, isString, isObject, fillIn, size, has) {
+], function (StateRegistry, address, config, isObject, fillIn, size, has) {
 
     'use strict';
 
@@ -86,7 +85,7 @@ define([
 
                 queue.unshift(value);
             // String -> state has a route
-            } else if (isString(value)) {
+            } else if (typeof value === 'string') {
                 // Add to the array to be sorted later
                 arr.push({
                     state: curr.$state ? curr.$state + '.' + key : key,

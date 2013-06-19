@@ -4,15 +4,13 @@
 define([
     './core/Controller',
     './core/View',
-    './core/BaseView',
     './util/console'
-], function (Controller, View, BaseView) {
+], function (Controller, View) {
 
     'use strict';
 
     return {
         Controller: Controller,
-        View: View,
-        BaseView: BaseView
+        View: View
     };
 });

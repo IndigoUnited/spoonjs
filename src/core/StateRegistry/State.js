@@ -285,7 +285,9 @@ define([
      * @return {Boolean} True if valid, false otherwise
      */
     State.isValid = function (name) {
-        return this.constructor._nameRegExp.test(name);
+        var regExp = this._nameRegExp || State._nameRegExp;
+
+        return regExp.test(name);
     };
 
     return State;
