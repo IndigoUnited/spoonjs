@@ -6,7 +6,7 @@
  * This class provides access to the state registry as a service.
  */
 define([
-    'spoon/core/StateRegistry/StateRegistry',
+    './StateRegistry',
     'services/address',
     'app-config',
     'mout/lang/isObject',

@@ -78,7 +78,7 @@ define([
 
     /**
      * Destroys the instance, releasing all of its resources.
-     * Note that all links to this joint will also be destroyed if no remaining links are found.
+     * Note that all downlinks will also be destroyed.
      */
     Joint.prototype.destroy = function () {
         if (!this._destroyed) {

@@ -1,5 +1,5 @@
 /**
- * Module that returns an object exposing the core.
+ * Module that returns an object exposing the framework.
  */
 define([
     './core/Controller',
