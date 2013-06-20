@@ -32,6 +32,9 @@ define(function () {
             childProto[key] = props[key];
         }
 
+        // Take care of $name
+        childProto.$name = childProto.$name || 'Unnamed';
+
         // Add the static .extend
         child.extend = extend;
 
