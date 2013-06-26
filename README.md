@@ -1,5 +1,4 @@
-spoon.js
----
+# spoon.js [![Build Status](https://secure.travis-ci.org/IndigoUnited/spoon.js.png?branch=master)](http://travis-ci.org/IndigoUnited/spoon.js)
 
 `Eat your spaghetti code with the spoon.`
 
@@ -10,6 +9,8 @@ spoon.js
 Spoon.js is not yet officially released. Until then breaking changes might happen without notice.
 The code is open to gather some attention and for curious people to try it out.
 Besides that our own [site](http://indigounited.com/) is powered by Spoon.js.
+
+
 
 ## Motivation
 
@@ -27,12 +28,9 @@ It's an HMVC framework, the "H" stands for hierarchical. Unlike other frameworks
 
 
 
-
 ## Concept
 
 ### HMVC
-
-
 
 ### Modular projects (the H in HMVC)
 

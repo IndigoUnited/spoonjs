@@ -1,8 +1,10 @@
+/*global describe, it*/
+
 define(['spoon'], function () {
 
     'use strict';
 
-    describe('spoon', function () {
+    describe('console', function () {
         it('should not throw an error executing console.*', function () {
             var methods = [
                 'log',

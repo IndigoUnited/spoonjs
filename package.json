@@ -1,20 +1,17 @@
 {
   "name": "spoon.js",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/IndigoUnited/spoon.js.git"
   },
+  "scripts": {
+    "test": "testem ci --skip chromium"
+  },
   "devDependencies": {
-    "mocha": "~1.7.3",
-    "expect.js": "~0.2.0",
-    "requirejs": "~2.1.2",
-    "phantomjs": "~0.2.3",
-    "mocha-phantomjs": "~1.0.1",
-    "http-server": "~0.5.2",
-    "base-adapter-libs": "git+ssh://git@github.com:IndigoUnited/base-adapter-libs.git"
+    "testem": "~0.2.98"
   },
   "scripts": {
-    "test": "node test/test"
+    "test": "testem ci --skip chromium"
   }
 }
