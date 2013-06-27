@@ -21,7 +21,13 @@ define([
     /**
      * Constructor.
      *
-     * @param {Element} [element] The DOM element for the view, defaults to document.body
+     * All views need an element to work on.
+     * The element could be passed or adopt the _element variable if no one is passed.
+     * The _element variable by default is 'div'.
+     *
+     * Once instantiated the dom events will be automatically added.
+     *
+     * @param {Element} [element] The DOM element for the view.
      */
     function View(element) {
         Joint.call(this);

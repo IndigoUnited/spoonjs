@@ -51,7 +51,7 @@ define([
      *
      * @param {String}   [event]   The event name
      * @param {Function} [fn]      The listener
-     * @param {Object}   [context] The context passed to the on() function
+     * @param {Object}   [context] The context passed to the on() method
      *
      * @return {Broadcaster} The instance itself to allow chaining
      */
