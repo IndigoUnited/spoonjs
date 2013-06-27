@@ -80,7 +80,7 @@ define([
     /**
      * Set the state parameters.
      *
-     * @param {Object} The state parameters
+     * @param {Object} params The state parameters
      *
      * @return {State} The instance itself to allow chaining
      */
@@ -130,6 +130,8 @@ define([
      * Sets the current cursor position.
      *
      * @param {Number} The new position
+     *
+     * @return {State} The instance itself to allow chaining
      */
     State.prototype.setCursor = function (cursor) {
         if (this._cursor > this._nrParts) {
