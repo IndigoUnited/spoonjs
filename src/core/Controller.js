@@ -28,7 +28,7 @@ define([
     /**
      * Get the current state or null if none is set.
      *
-     * @return {StateInterface} The state
+     * @return {State} The state
      */
     Controller.prototype.getState = function () {
         return this._currentState;
@@ -50,9 +50,9 @@ define([
      * Sets the current state.
      * If the state is the same, nothing happens.
      *
-     * @param {Mixed}  [$state]  The state name, the state parameter bag or a state instance
-     * @param {Object} [params]  The state params to be used if the state is a string
-     * @param {Object} [options] The options
+     * @param {...mixed} [state]   The state name, the state parameter bag or a state instance
+     * @param {Object}   [params]  The state params to be used if the state is a string
+     * @param {Object}   [options] The options
      *
      * @return {Controller} The instance itself to allow chaining
      */

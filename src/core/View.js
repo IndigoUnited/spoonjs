@@ -250,7 +250,7 @@ define([
 
     /**
      * Get the controller responsible for the view.
-     * The view will be interpreted as the function context, so call this function with .call(view).
+     * The view will be interpreted as the function context, so call this method with .call(view).
      *
      * @return {Controller} The view's controller
      */
