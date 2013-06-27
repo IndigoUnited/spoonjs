@@ -27,7 +27,7 @@ define([
      *
      * Once instantiated the dom events will be automatically added.
      *
-     * @param {Element} [element] The DOM element for the view.
+     * @param {Element} [element] The DOM element for the view
      */
     function View(element) {
         Joint.call(this);
@@ -154,7 +154,7 @@ define([
     /**
      * Listen to events.
      *
-     * @param {Object} events An object with the events.
+     * @param {Object} events An object with the events
      *
      * @return {Object} The same object
      */
