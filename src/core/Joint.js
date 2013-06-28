@@ -26,9 +26,9 @@ define([
      *
      * @param {String}   event     The event name
      * @param {Function} fn        The handler
-     * @param {Object}   [context] The context to be used to call the handler, defaults to the conector instance
+     * @param {Object}   [context] The context to be used to call the handler, defaults to the joint instance
      *
-     * @return {Object} The instance itself to allow chaining
+     * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.on = function (event, fn, context) {
         context = context || this;
@@ -45,9 +45,9 @@ define([
      *
      * @param {String}   event     The event name
      * @param {Function} fn        The handler
-     * @param {Object}   [context] The context to be used to call the handler, defaults to the conector instance
+     * @param {Object}   [context] The context to be used to call the handler, defaults to the joint instance
      *
-     * @return {Object} The instance itself to allow chaining
+     * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.once = function (event, fn, context) {
         context = context || this;
@@ -63,9 +63,9 @@ define([
      *
      * @param {String}   event     The event name
      * @param {Function} fn        The handler
-     * @param {Object}   [context] The context passed to the on() function
+     * @param {Object}   [context] The context passed to the on() method
      *
-     * @return {Object} The instance itself to allow chaining
+     * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.off = function (event, fn, context) {
         context = context || this;
@@ -115,7 +115,7 @@ define([
      *
      * @param {Joint} joint Another joint to link to this one
      *
-     * @return {Object} The instance itself to allow chaining
+     * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype._unlink = function (joint) {
         remove(this._downlinks, joint);
@@ -134,7 +134,7 @@ define([
      * @param {String}   event  The event name
      * @param {...mixed} [args] The arguments to pass along with the event
      *
-     * @return {Object} The instance itself to allow chaining
+     * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype._upcast = function (event, args) {
         // Check if the event will be handled locally
@@ -156,7 +156,7 @@ define([
      * @param {String}   event  The event name
      * @param {...mixed} [args] The arguments to pass along with the event
      *
-     * @return {Object} The instance itself to allow chaining
+     * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype._broadcast = function (event, args) {
         broadcaster.broadcast.apply(broadcaster, arguments);
