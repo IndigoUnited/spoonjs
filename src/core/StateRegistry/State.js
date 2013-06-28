@@ -192,7 +192,7 @@ define([
      *
      * @param {State} state The state
      *
-     * @return {Boolean} True if the state is fully equal
+     * @return {Boolean} True if the state is fully equal, false otherwise.
      */
     State.prototype.isFullyEqual = function (state) {
         // Strict comparison first
@@ -240,6 +240,9 @@ define([
     /**
      * Compares two objects loosely and not recursively.
      *
+     * @param {Object} obj1 The first object to be compared
+     * @param {Object} obj2 The second object to be compared
+     * 
      * @return {Boolean} True if they are loosely equal, false otherwise
      */
     State.prototype._compareObjects = function (obj1, obj2) {
@@ -282,7 +285,7 @@ define([
     /**
      * Checks if a given state name is valid.
      *
-     * @param {String} state The state
+     * @param {String} name The state name
      *
      * @return {Boolean} True if valid, false otherwise
      */
