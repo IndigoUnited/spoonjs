@@ -195,9 +195,9 @@ define([
      *  - route:   false to not change the address value
      *  - replace: true to replace the address value instead of adding a new history entry
      *
-     * @param {String|State} state The state name or the state object
-     * @param {Object}             [params]  The state parameters if the state was a string
-     * @param {Object}             [options] The options
+     * @param {String|State} state     The state name or the state object
+     * @param {Object}       [params]  The state parameters if the state was a string
+     * @param {Object}       [options] The options
      *
      * @return {Boolean} True if the transition was made, false otherwise
      */
@@ -240,8 +240,8 @@ define([
     /**
      * Check if the current state is the same as the passed one.
      *
-     * @param {String|State} state The state name or the state object
-     * @param {Object}             [$params] The state parameters if the state was a string
+     * @param {String|State} state    The state name or the state object
+     * @param {Object}       [params] The state parameters if the state was a string
      *
      * @return {Boolean} True if it is, false otherwise
      */
@@ -263,9 +263,9 @@ define([
      * Generates an URL for a given state.
      * If no route is associated with the state, a state:// URL will be generated.
      *
-     * @param {String|State} state The state name or the state object
-     * @param {Object}             [params]   The state parameters if the state was a string
-     * @param {Boolean}            [absolute] True to only generate an absolute URL, false otherwise
+     * @param {String|State} state      The state name or the state object
+     * @param {Object}       [params]   The state parameters if the state was a string
+     * @param {Boolean}      [absolute] True to only generate an absolute URL, false otherwise
      *
      * @return {String} The URL for the state or null if unable to generate one
      */
