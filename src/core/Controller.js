@@ -132,6 +132,7 @@ define([
         // Clone events object to guarantee unicity among instances
         this._states = this._states ? mixIn({}, this._states) : {};
         this._statesParams = {};
+        this._statesWildcards = {};
         this._nrStates = size(this._states);
 
         // Process the states object
@@ -143,7 +144,14 @@ define([
                 this._states[tmp] = this._states[key];
                 delete this._states[key];
                 key = tmp;
-                this._statesParams[key] = matches[1].split(',');
+
+                // If user specified state(*), then the state changes every time
+                // even if the params haven't changed
+                if (matches[1] === '*') {
+                    this._statesWildcards[key] = true;
+                } else {
+                    this._statesParams[key] = matches[1].split(',');
+                }
             } else {
                 this._statesParams[key] = [];
             }
@@ -182,33 +190,27 @@ define([
      * @return {Boolean} True if the same, false otherwise
      */
     Controller.prototype._isSameState = function (state) {
+        var params;
+
         if (!this._currentState) {
             return false;
         }
 
-        var tmp,
-            params = this._statesParams[state.getName()],
-            isEqual;
+        // Translate to default state if name is empty
+        if (!state.getName() && this._currentState.getName() === this._defaultState) {
+            state = state.clone();
+            state.setFullName(state.getFullName() + '.' + this._defaultState);
+        }
+
+        // Check if state is a wildcard
+        if (this._statesWildcards[state.getName()]) {
+            return false;
+        }
 
         // Check if equal
-        if (this._currentState.isEqual(state, params)) {
-            return true;
-        }
+        params = this._statesParams[state.getName()];
 
-        // Check if equal when expanding the state to the default one
-        if (!state.getName() && this._currentState.getName() === this._defaultState) {
-            tmp = state.getFullName();
-            params = this._statesParams[this._defaultState];
-            state.setFullName(state.getFullName() + '.' + this._defaultState);
-            isEqual = this._currentState.isEqual(state, params);
-            state.setFullName(tmp);
-
-            if (isEqual) {
-                return true;
-            }
-        }
-
-        return false;
+        return this._currentState.isEqual(state, params);
     };
 
     /**
