@@ -1,5 +1,5 @@
 {
-  "name": "spoon.js",
+  "name": "spoonjs",
   "version": "0.0.0",
   "main": "./src/",
   "dependencies": {

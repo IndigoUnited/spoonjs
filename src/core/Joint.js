@@ -114,7 +114,7 @@ define([
     };
 
     /**
-     * Removes a previously created link between a joint and another one.
+     * Removes a previously created link between this joint and another one.
      *
      * @param {Joint} joint Another joint to link to this one
      *
@@ -168,7 +168,7 @@ define([
     };
 
     /**
-     * Method called after calling destroy().
+     * Function called by destroy().
      * Subclasses should override this method to release additional resources.
      *
      * The default implementation will also destroy any linked joints.
