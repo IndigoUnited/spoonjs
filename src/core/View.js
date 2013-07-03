@@ -21,12 +21,6 @@ define([
     /**
      * Constructor.
      *
-     * All views need an element to work on.
-     * The element could be passed or adopt the _element variable if no one is passed.
-     * The _element variable by default is 'div'.
-     *
-     * Once instantiated the dom events will be automatically added.
-     *
      * @param {Element} [element] The DOM element for the view
      */
     function View(element) {
@@ -112,9 +106,6 @@ define([
 
     /**
      * Renders the declared template with the supplied data.
-     * Note that if this view is not yet linked to its parent, it will make the
-     * view listen to the declared DOM events, and also manage its descendants
-     * uplinked DOM events.
      *
      * @param {Object|Array} [data] The data to pass to the template
      *
@@ -136,7 +127,7 @@ define([
 
     /**
      * Clears the view's element.
-     * Note that you must explicitly call unlisten() to remove the DOM event listeners.
+     * Note that you must explicitly call _unlisten() to remove the DOM event listeners.
      *
      * @return {View} The instance itself to allow chaining
      */

@@ -16,6 +16,7 @@ define([
 
     /**
      * Constructor.
+     *
      * Special parameters can be prefixed with $.
      * Those will not be taken into account in the comparisons.
      *

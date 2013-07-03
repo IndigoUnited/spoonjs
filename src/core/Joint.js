@@ -13,6 +13,9 @@ define([
 
     'use strict';
 
+    /**
+     * Constructor.
+     */
     function Joint() {
         this._downlinks = [];
         this._emitter = new EventsEmitter();

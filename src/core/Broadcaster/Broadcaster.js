@@ -8,6 +8,9 @@ define([
 
     'use strict';
 
+    /**
+     * Constructor.
+     */
     function Broadcaster() {
         this._emitter = new EventsEmitter();
     }

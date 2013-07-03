@@ -15,6 +15,9 @@ define([
 
     'use strict';
 
+    /**
+     * Constructor.
+     */
     function Controller() {
         Joint.call(this);
 
@@ -43,6 +46,7 @@ define([
      * @return {String} The generated URL
      */
     Controller.prototype.generateUrl = function (state, params) {
+        // TODO: allow a state object, state instance similar to setState?
         return stateRegistry.generateUrl(this._resolveFullState(state), params);
     };
 
@@ -341,7 +345,7 @@ define([
         }
 
         if (name && has('debug')) {
-            console.warn('Could not propagate state "' + name + '" to any of the "' + this.$name + '" downlinks.');
+            console.warn('No child controller of "' + this.$name + '" knows how to handle state "' + name + '"');
         }
     };
 
