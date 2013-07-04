@@ -61,7 +61,7 @@ define([
     };
 
     /**
-     * Get the state name (the name imediatly after the current cursor position).
+     * Get the state name (the name immediately after the current cursor position).
      *
      * @return {String} The name
      */
@@ -220,13 +220,9 @@ define([
             key,
             ret;
 
-        // Construct a clone of the parameters, except the special ones
+        // Clone params
         for (key in this._params) {
-            if (key.charAt(0) !== '$') {
-                params[key] = deepClone(this._params[key]);
-            } else {
-                params[key] = this._params[key];
-            }
+            params[key] = deepClone(this._params[key]);
         }
 
         // Create a new state
@@ -243,7 +239,7 @@ define([
      *
      * @param {Object} obj1 The first object to be compared
      * @param {Object} obj2 The second object to be compared
-     * 
+     *
      * @return {Boolean} True if they are loosely equal, false otherwise
      */
     State.prototype._compareObjects = function (obj1, obj2) {

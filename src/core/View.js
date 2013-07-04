@@ -313,7 +313,7 @@ define([
                 value,
                 hash = params.hash;
 
-            state = this[state] ||  state;
+            state = this[state] || state;
 
             for (key in hash) {
                 value = hash[key];

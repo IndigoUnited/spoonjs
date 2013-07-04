@@ -8,10 +8,12 @@ define([
     'services/state',
     'mout/string/startsWith',
     'mout/object/size',
+    'mout/object/pick',
+    'mout/object/fillIn',
     'mout/object/mixIn',
     'mout/array/find',
     'has'
-], function (Joint, stateRegistry, startsWith, size, mixIn, find, has) {
+], function (Joint, stateRegistry, startsWith, size, pick, fillIn, mixIn, find, has) {
 
     'use strict';
 
@@ -40,63 +42,69 @@ define([
     /**
      * Generates an URL for a state.
      *
-     * @param {String} state    The state name
+     * @param {String} name     The state name
      * @param {Object} [params] The state params
      *
      * @return {String} The generated URL
      */
-    Controller.prototype.generateUrl = function (state, params) {
-        // TODO: allow a state object, state instance similar to setState?
-        return stateRegistry.generateUrl(this._resolveFullState(state), params);
+    Controller.prototype.generateUrl = function (name, params) {
+        var state;
+
+        // Resolve the state
+        state = this._resolveFullState(name);
+
+        // Fill in passed in params
+        fillIn(state.params, params);
+
+        return stateRegistry.generateUrl(state.name, state.params);
     };
 
     /**
      * Sets the current state.
      * If the state is the same, nothing happens.
      *
-     * @param {...mixed} [state]   The state name, the state parameter bag or a state instance
-     * @param {Object}   [params]  The state params to be used if the state is a string
-     * @param {Object}   [options] The options
+     * @param {String} [name]    The state name
+     * @param {Object} [params]  The state params
+     * @param {Object} [options] The options
      *
      * @return {Controller} The instance itself to allow chaining
      */
-    Controller.prototype.setState = function (state, params, options) {
-        var name,
-            fullName;
+    Controller.prototype.setState = function (name, params, options) {
+        var state;
 
-        if (!this._nrStates) {
+        // Resolve to the full name
+        state = this._resolveFullState(name);
+        params = fillIn(state.params, params);
+
+        // Change the state globally, and abort if actually changed
+        if (stateRegistry.setCurrent(state.name, state.params, options)) {
             return this;
         }
 
-        // 1st - Try to make the state transition globally and only proceed if it didn't changed
-        //       Also extract the local and full name of the state
-        if (!state || typeof state === 'string') {
-            // Resolve to the full name
-            fullName = this._resolveFullState(state);
-
-            // Change the state globally, and abort if actually changed
-            if (stateRegistry.setCurrent(fullName, params, options)) {
-                return this;
-            }
-
-            name = state;
-        } else {
-            state = state.$info ? state.$info.newState : state;
-
-            // Change the state globally, and abort if actually changed
-            if (stateRegistry.setCurrent(state, options)) {
-                return this;
-            }
-
-            name = state.getName();
-            params = state.getParams();
-        }
-
+        // Update the global state params
         state = stateRegistry.getCurrent();
         state.setParams(params);
 
-        // 2nd - If no name is found check if we got a default state
-        if (!name && !this._defaultState) {
+        return this.delegateState(state);
+    };
+
+    /**
+     * Delegates a state to be handled by the controller.
+     *
+     * @param {Object|State} state The state parameter bag or a state instance
+     *
+     * @return {Controller} The instance itself to allow chaining
+     */
+    Controller.prototype.delegateState = function (state) {
+        var name,
+            params;
+
+        state = state.$info ? state.$info.newState : state;
+        name = state.getName() || this._defaultState;
+        params = state.getParams();
+
+        // If still has no name it means there's no default state define
+        if (!name) {
             if (has('debug')) {
                 console.warn('No default state defined in "' + this.$name + '".');
             }
@@ -104,22 +112,29 @@ define([
             return;
         }
 
-        // 3rd - Check if the state of the controller actually changed
+        // Check if state exists
+        if (!this._states[name]) {
+            if (has('debug')) {
+                console.warn('Unknown state "' + name + '" on controller "' + this.$name + '".');
+            }
+
+            return;
+        }
+
+        // If the current state is not the same, transition to it
         if (!this._isSameState(state)) {
             this._performStateChange(state);
-        // 4th - If not, propagate the state downwards
+        // Otherwise propagate it to child controllers
         } else {
             this._propagateState(state);
         }
 
-        // 5th - Sync up the full state name with the application one
-        //       This is needed because default states might have been translated down the chain
+        // Sync up the full state name with the application one
+        // This is needed because default states might have been translated down the chain
         if (stateRegistry.getCurrent() === state) {
             this._currentState.setFullName(state.getFullName());
         }
-
-        return this;
-    };
+    },
 
     //////////////////////////////////////////////////////////////////
 
@@ -128,36 +143,34 @@ define([
      */
     Controller.prototype._parseStates = function () {
         var key,
-            tmp,
             func,
             matches,
-            regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp;
+            regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp,
+            states = this._states;
 
-        // Clone events object to guarantee unicity among instances
-        this._states = this._states ? mixIn({}, this._states) : {};
-        this._statesParams = {};
-        this._statesWildcards = {};
+        this._states = {};
         this._nrStates = size(this._states);
 
         // Process the states object
-        for (key in this._states) {
+        for (key in states) {
+            func = states[key];
+
             // Process the params specified in the parentheses
             matches = key.match(regExp);
             if (matches) {
-                tmp = key.substr(0, key.indexOf('('));
-                this._states[tmp] = this._states[key];
-                delete this._states[key];
-                key = tmp;
+                key = key.substr(0, key.indexOf('('));
+                this._states[key] = {};
 
                 // If user specified state(*), then the state changes every time
                 // even if the params haven't changed
                 if (matches[1] === '*') {
-                    this._statesWildcards[key] = true;
+                    this._states[key].wildcard = true;
                 } else {
-                    this._statesParams[key] = matches[1].split(',');
+                    this._states[key].params = matches[1].split(/\s*,\s*/);
                 }
             } else {
-                this._statesParams[key] = [];
+                this._states[key] = {};
+                this._states[key].params = [];
             }
 
             if (has('debug')) {
@@ -170,14 +183,16 @@ define([
             }
 
             // Check if it is a string or already a function
-            func = this._states[key];
             if (typeof func === 'string') {
                 func = this[func];
-                this._states[key] = func;
+                this._states[key].fn = func;
             }
+
             if (has('debug') && typeof func !== 'function') {
                 throw new Error('State handler "' + key + '" of "' + this.$name + '" references a nonexistent function.');
             }
+
+            this._states[key].fn = func;
         }
 
         // Process the default state
@@ -189,12 +204,12 @@ define([
     /**
      * Checks if a given state is the same as the current controller state.
      *
-     * @param {StateInterface} state The state
+     * @param {State} state The state
      *
      * @return {Boolean} True if the same, false otherwise
      */
     Controller.prototype._isSameState = function (state) {
-        var params;
+        var stateMeta;
 
         if (!this._currentState) {
             return false;
@@ -206,15 +221,15 @@ define([
             state.setFullName(state.getFullName() + '.' + this._defaultState);
         }
 
+        stateMeta = this._states[state.getName()];
+
         // Check if state is a wildcard
-        if (this._statesWildcards[state.getName()]) {
+        if (stateMeta.wildcard) {
             return false;
         }
 
         // Check if equal
-        params = this._statesParams[state.getName()];
-
-        return this._currentState.isEqual(state, params);
+        return this._currentState.isEqual(state, stateMeta.params);
     };
 
     /**
@@ -227,71 +242,79 @@ define([
      *
      * @param {String} [name] The state name
      *
-     * @return {String} The full state name
+     * @return {Object} The full state name and params
      */
     Controller.prototype._resolveFullState = function (name) {
-        var matches,
-            length,
-            curr,
-            currState,
-            x;
+        var state,
+            ancestor,
+            ancestorState;
 
-        // Empty
-        if (!name) {
-            return '';
-        }
+        name = name || '';
 
         // Absolute
         if (name.charAt(0) === '/') {
-            return name.substr(1);
+            return {
+                name: name.substr(1),
+                params: {}
+            };
         }
+
+        state = {
+            name: name,
+            params: {}
+        };
 
         // Relative
         if (startsWith(name, '../')) {
-            matches = name.split(this.constructor._relativeStateRegExp),
-            length = matches.length,
-            curr = this;
-
-            for (x = 0; x < length - 1; x += 1) {
-                if (has('debug') && (!curr._uplink || !(curr._uplink instanceof Controller))) {
-                    throw new Error('Cannot generate full state from "' + name + '" in "' + this.name + '".');
-                }
-                curr = curr._uplink;
+            if (has('debug') && (!this._uplink || !(this._uplink instanceof Controller))) {
+                throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '".');
             }
 
-            return curr._resolveFullState(matches[length - 1] || null);
+            return this._uplink._resolveFullState(name.substr(3));
         }
 
         // Local
-        curr = this._uplink;
-        while (curr && curr instanceof Controller) {
-            currState = curr.getState();
+        ancestor = this._uplink;
+        while (ancestor && ancestor instanceof Controller) {
+            ancestorState = ancestor.getState();
+
             // If this ancestor controller has no current state
             // and it has states, then something is wrong
-            if (!currState) {
-                if (curr._nrStates && has('debug')) {
-                    throw new Error('Unable to resolve full state: "' + curr.$name + '" has no current state.');
+            if (!ancestorState) {
+                if (ancestor._nrStates && has('debug')) {
+                    throw new Error('Unable to resolve full state: "' + ancestor.$name + '" is not in any state.');
                 }
                 // Break here, the ancestor has no states defined
                 break;
             }
-            name = currState.getName() + (name ? '.' + name : '');
-            curr = curr._uplink;
+
+            // Concatenate name
+            state.name = ancestorState.getName() + (state.name ? '.' + state.name : '');
+            // Mix in relevant params
+            mixIn(state.params, ancestor._currentStateParams);
+
+            ancestor = ancestor._uplink;
         }
 
-        return name;
+        return state;
     };
 
     /**
-     * Performs the state change, calling the state handler if any.
+     * Sets the current state based on the passed in state.
+     * Updates all the necessary properties used internally.
      *
-     * @param {StateInterface} state The state
+     * @param {State} state The state
      */
-    Controller.prototype._performStateChange = function (state) {
+    Controller.prototype._setCurrentState = function (state) {
         var name,
-            fullName;
+            fullName,
+            params,
+            stateMeta;
 
+        // Update current state
         this._currentState = state.clone();
+        params = this._currentState.getParams();
+        params.$info.newState = this._currentState;
 
         // Resolve to default state always
         if (!state.getName() && this._defaultState) {
@@ -301,37 +324,49 @@ define([
         }
 
         name = this._currentState.getName();
+        stateMeta = this._states[name];
+
+        // Update state params being used by this controller
+        this._currentStateParams = pick(params, stateMeta.params);
+    };
+
+    /**
+     * Performs the state change, calling the state handler if any.
+     *
+     * @param {State} state The state
+     */
+    Controller.prototype._performStateChange = function (state) {
+        var stateMeta;
+
+        // Update internal state
+        this._setCurrentState(state);
+
+        // Advance pointer
         state.next();
 
-        if (this._states[name]) {
-            this._states[name].call(this, state.getParams());
-        } else if (has('debug')) {
-            console.warn('Unhandled state "' + name + '" on controller "' + this.$name + '".');
-        }
+        // Execute handler
+        stateMeta = this._states[this._currentState.getName()];
+        stateMeta.fn.call(this, state.getParams());
     };
 
     /**
      * Attempts to propagate the state to one of the downlinks.
      *
-     * @param {StateInterface} state The state
+     * @param {State} state The state
      */
     Controller.prototype._propagateState = function (state) {
         var name,
-            fullName,
             curr,
             length,
             x;
 
-        this._currentState = state.clone();
+        // Update internal state
+        this._setCurrentState(state);
 
-        // Resolve to default state always
-        if (!state.getName() && this._defaultState) {
-            fullName = state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState;
-            this._currentState.setFullName(fullName);
-            stateRegistry.getCurrent().setFullName(fullName); // Update also the state registry one
-        }
-
+        // Advance pointer
         state.next();
+
+        // Find suitable child controller to handle the state
         name = state.getName();
         length = this._downlinks.length;
 
@@ -340,14 +375,14 @@ define([
 
             if (curr instanceof Controller) {
                 if (curr._states[name] || (!name && curr._defaultState)) {
-                    curr.setState(state);
+                    curr.delegateState(state);
                     return;
                 }
             }
         }
 
         if (name && has('debug')) {
-            console.warn('No child controller of "' + this.$name + '" knows how to handle state "' + name + '".');
+            console.warn('No child controller of "' + this.$name + '" declared the "' + name + '" state.');
         }
     };
 
