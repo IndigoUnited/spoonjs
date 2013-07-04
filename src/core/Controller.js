@@ -134,6 +134,8 @@ define([
         if (stateRegistry.getCurrent() === state) {
             this._currentState.setFullName(state.getFullName());
         }
+
+        return this;
     },
 
     //////////////////////////////////////////////////////////////////
