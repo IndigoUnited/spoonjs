@@ -74,6 +74,8 @@ define([
 
         // Resolve to the full name
         state = this._resolveFullState(name);
+        state.name = state.name || this._defaultState;
+
         params = fillIn(state.params, params);
 
         // Change the state globally, and abort if actually changed
@@ -99,13 +101,18 @@ define([
         var name,
             params;
 
-        state = state.$info ? state.$info.newState : state;
-        name = state.getName() || this._defaultState;
+        // Assume app state if not passed
+        if (!state) {
+            state = stateRegistry.getCurrent();
+        }
+
+        state = state && (state.$info ? state.$info.newState : state);
+        name = state && state.getName() || this._defaultState;
         params = state.getParams();
 
         // If still has no name it means there's no default state define
         if (!name) {
-            if (has('debug')) {
+            if (has('debug') && this._nrStates) {
                 console.warn('No default state defined in "' + this.$name + '".');
             }
 
@@ -218,7 +225,7 @@ define([
         }
 
         // Translate to default state if name is empty
-        if (!state.getName() && this._currentState.getName() === this._defaultState) {
+        if (!state.getName()) {
             state = state.clone();
             state.setFullName(state.getFullName() + '.' + this._defaultState);
         }
