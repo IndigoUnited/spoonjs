@@ -72,10 +72,9 @@ define([
     Controller.prototype.setState = function (name, params, options) {
         var state;
 
-        // Resolve to the full name
+        // Resolve the state
         state = this._resolveFullState(name);
         state.name = state.name || this._defaultState;
-
         params = fillIn(state.params, params);
 
         // Change the state globally, and abort if actually changed
