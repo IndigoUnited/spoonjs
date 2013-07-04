@@ -347,7 +347,7 @@ define([
         }
 
         if (name && has('debug')) {
-            console.warn('No child controller of "' + this.$name + '" knows how to handle state "' + name + '"');
+            console.warn('No child controller of "' + this.$name + '" knows how to handle state "' + name + '".');
         }
     };
 

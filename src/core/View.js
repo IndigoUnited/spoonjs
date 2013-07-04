@@ -309,7 +309,18 @@ define([
     // Register handlebar helpers
     if (window.Handlebars) {
         Handlebars.registerHelper('url', function (state, params) {
-            return this.$view._generateUrl(state, params.hash);
+            var key,
+                value,
+                hash = params.hash;
+
+            state = this[state] ||  state;
+
+            for (key in hash) {
+                value = hash[key];
+                hash[key] = this[key] || value;
+            }
+
+            return this.$view._generateUrl(state, hash);
         });
     }
 
