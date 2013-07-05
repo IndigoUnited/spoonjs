@@ -39,7 +39,7 @@ define([
         if (this._placeholderNames) {
             for (x = this._placeholderNames.length - 1; x >= 0; x -= 1) {
                 curr = this._placeholderNames[x].slice(2, -2);
-                tmp = constraints[curr] ? constraints[curr].toString().slice(1, -1) : '.+?';
+                tmp = constraints[curr] ? constraints[curr].toString().slice(1, -1) : '[^\/]+?';
                 regExp = regExp.replace(this._placeholderNames[x], '(' + tmp + ')');
                 this._placeholderNames[x] = curr;
             }
