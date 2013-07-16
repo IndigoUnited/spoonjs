@@ -3,31 +3,31 @@
     <head>
         <title>spoon.js tests</title>
         <meta charset="utf-8">
-        <link rel="stylesheet" href="../components/mocha/mocha.css" />
-        <script src="../components/mocha/mocha.js"></script>
+        <link rel="stylesheet" href="../bower_components/mocha/mocha.css" />
+        <script src="../bower_components/mocha/mocha.js"></script>
         <!-- Testem support -->
         <script type="text/javascript">
         if (location.hash.indexOf('#testem') !== -1) {
             document.write('<script src="/testem.js"></'+'script>');
         }
         </script>
-        <script src="../components/requirejs/require.js"></script>
+        <script src="../bower_components/requirejs/require.js"></script>
         <script>
             mocha.setup('bdd');
 
             require({
                 baseUrl: './',
                 paths: {
-                    'address': '../components/address/src/',
-                    'events-emitter': '../components/events-emitter/src/',
+                    'address': '../bower_components/address/src/',
+                    'events-emitter': '../bower_components/events-emitter/src/',
                     'spoon': '../src/index',
-                    'has': '../components/has/has',
-                    'jquery': '../components/jquery/jquery',
+                    'has': '../bower_components/has/has',
+                    'jquery': '../bower_components/jquery/jquery',
                     'src': '../src',
-                    'mout': '../components/mout/src',
-                    'es5-shim': '../components/es5-shim/es5-shim',
-                    'es5-sham': '../components/es5-shim/es5-sham',
-                    'expect': '../components/expect/expect',
+                    'mout': '../bower_components/mout/src',
+                    'es5-shim': '../bower_components/es5-shim/es5-shim',
+                    'es5-sham': '../bower_components/es5-shim/es5-sham',
+                    'expect': '../bower_components/expect/expect',
 
                     'app-config': './config'
                 },
