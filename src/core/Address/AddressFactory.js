@@ -25,7 +25,7 @@ define([
     config = config || {},
     config = config.address || {};
     options.basePath = config.basePath || '/';
-    options.translate = config.translate;
+    options.translate = location.protocol === 'file:' ? false : config.translate;
 
     // Ensure that the base path starts and ends with a /
     if (!endsWith(options.basePath, '/')) {
