@@ -9,7 +9,7 @@
   ],
   "dependencies": {
     "mout": "~0.6.0",
-    "events-emitter": " ~0.1",
+    "events-emitter": "~0.1",
     "address": "~0.1",
     "has": "*",
     "jquery": "~1.9"
