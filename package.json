@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/IndigoUnited/spoon.js.git"
+    "url": "git://github.com/IndigoUnited/spoonjs.git"
   },
   "scripts": {
     "test": "testem ci --skip chromium"
