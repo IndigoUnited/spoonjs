@@ -30,7 +30,7 @@ define([
         this._events = this._events ? mixIn({}, this._events) : {};
 
         // Assume the element or create one based on the _element property
-        this._element = element ? element : createElement(this._element || 'div');
+        this._element = $(element ? element : createElement(this._element || 'div'));
         this._nativeElement = this._element.get(0);
 
         // Listen to events
