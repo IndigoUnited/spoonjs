@@ -303,7 +303,7 @@ define([
         this._element.remove();
 
         // Null references
-        this._element = this._nativeElement = null;
+        this._element = this._nativeElement = this._controller = null;
     };
 
     // Register handlebar helpers
