@@ -6,10 +6,10 @@
 define([
     'mout/object/keys',
     'mout/object/values',
-    'mout/object/mixIn',
+    'mout/object/deepClone',
     'mout/array/filter',
     'has'
-], function (keys, values, mixIn, filter, has) {
+], function (keys, values, deepClone, filter, has) {
 
     'use strict';
 
@@ -212,13 +212,15 @@ define([
     /**
      * Clones the state.
      *
+     * @param {Boolean} [cloneParams] True to deep clone the params, false otherwise (defaults to false)
+     *
      * @return {State} The cloned state
      */
-    State.prototype.clone = function () {
+    State.prototype.clone = function (cloneParams) {
         var ret;
 
         // Create new state
-        ret = new State(this._name, mixIn({}, this._params));
+        ret = new State(this._name, cloneParams ? deepClone(this._params) : this._params);
         ret._cursor = this._cursor;
 
         return ret;
