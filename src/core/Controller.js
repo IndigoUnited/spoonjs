@@ -102,8 +102,7 @@ define([
      * @return {Controller} The instance itself to allow chaining
      */
     Controller.prototype.delegateState = function (state) {
-        var name,
-            params;
+        var name;
 
         // Assume app state if not passed
         if (!state) {
@@ -112,7 +111,6 @@ define([
 
         state = state && (state.$info ? state.$info.newState : state);
         name = state && state.getName() || this._defaultState;
-        params = state.getParams();
 
         // If still has no name it means there's no default state defined
         if (!name) {
@@ -323,12 +321,10 @@ define([
     Controller.prototype._setCurrentState = function (state) {
         var name,
             fullName,
-            params,
             stateMeta;
 
         // Update current state
         this._currentState = state.clone();
-        params = this._currentState.getParams();
 
         // Resolve to default state always
         if (!state.getName() && this._defaultState) {
@@ -345,7 +341,7 @@ define([
         stateMeta = this._states[name];
 
         // Update state params being used by this controller
-        this._currentStateParams = pick(params, stateMeta.params);
+        this._currentStateParams = pick(this._currentState.getParams(), stateMeta.params);
     };
 
     /**
