@@ -181,7 +181,6 @@ define([
                 }
             } else {
                 this._states[key] = {};
-                this._states[key].params = [];
             }
 
             if (has('debug')) {
@@ -204,6 +203,7 @@ define([
             }
 
             this._states[key].fn = func;
+            this._states[key].params = this._states[key].params || [];
         }
 
         // Process the default state
