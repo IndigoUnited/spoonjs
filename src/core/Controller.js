@@ -52,11 +52,9 @@ define([
 
         // Resolve the state
         state = this._resolveFullState(name);
-
-        // Fill in passed in params
         fillIn(state.params, params);
 
-        return stateRegistry.generateUrl(state.name, state.params);
+        return stateRegistry.generateUrl(state.fullName, state.params);
     };
 
     /**
@@ -74,17 +72,30 @@ define([
 
         // Resolve the state
         state = this._resolveFullState(name);
-        state.name = state.name || this._defaultState;
-        params = fillIn(state.params, params);
+        fillIn(state.params, params);
 
-        // Change the state globally, and abort if actually changed
-        if (stateRegistry.setCurrent(state.name, state.params, options)) {
+        // If the state is global, simply set it on the state registry
+        if (state.name == null) {
+            stateRegistry.setCurrent(state.fullName, state.params, options);
             return this;
         }
 
-        // Update the global state params
-        state = stateRegistry.getCurrent();
-        state.setParams(params);
+        // At this point the state is local
+        // Check if the state is globally registered
+        if (stateRegistry.isRegistered(state.fullName)) {
+            // If so attempt to change the global state, aborting if it succeeded
+            if (stateRegistry.setCurrent(state.fullName, state.params, options)) {
+                return this;
+            }
+
+            // Otherwise the global state is already this one
+            // Just update the global state params
+            state = stateRegistry.getCurrent();
+            state.setParams(params);
+        // Otherwise, the state is meant to be used only by this controller
+        } else {
+            state = stateRegistry._createStateInstance(state.name, state.params);
+        }
 
         return this.delegateState(state);
     };
@@ -142,7 +153,7 @@ define([
         }
 
         return this;
-    },
+    };
 
     //////////////////////////////////////////////////////////////////
 
@@ -207,7 +218,7 @@ define([
         if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
             throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
         }
-    },
+    };
 
     /**
      * Checks if a given state is the same as the current controller state.
@@ -262,15 +273,10 @@ define([
         // Absolute
         if (name.charAt(0) === '/') {
             return {
-                name: name.substr(1),
+                fullName: name.substr(1),
                 params: {}
             };
         }
-
-        state = {
-            name: name,
-            params: {}
-        };
 
         // Relative
         if (startsWith(name, '../')) {
@@ -278,8 +284,17 @@ define([
                 throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '".');
             }
 
-            return this._uplink._resolveFullState(name.substr(3));
+            state = this._uplink._resolveFullState(name.substr(3));
+            delete state.name;  // Remove name because state is not local
+
+            return state;
         }
+
+        state = {
+            name: name,
+            fullName: name,
+            params: {}
+        };
 
         // Local
         ancestor = this._uplink;
@@ -297,12 +312,16 @@ define([
             }
 
             // Concatenate name
-            state.name = ancestorState.getName() + (state.name ? '.' + state.name : '');
+            state.fullName = ancestorState.getName() + (state.fullName ? '.' + state.fullName : '');
             // Mix in relevant params
             mixIn(state.params, ancestor._currentStateParams);
 
             ancestor = ancestor._uplink;
         }
+
+        // Ensure names
+        state.name = state.name || this._defaultState || '';
+        state.fullName = state.fullName || this._defaultState || '';
 
         return state;
     };
@@ -322,7 +341,6 @@ define([
         // Update current state
         this._currentState = state.clone();
         params = this._currentState.getParams();
-        params.$info.newState = this._currentState;
 
         // Resolve to default state always
         if (!state.getName() && this._defaultState) {
@@ -397,7 +415,6 @@ define([
     ////////////////////////////////////////////////////////////////
 
     Controller._stateParamsRegExp = /\((.+?)\)/;
-    Controller._relativeStateRegExp = /\.\.\//;
 
     return Controller;
 });
