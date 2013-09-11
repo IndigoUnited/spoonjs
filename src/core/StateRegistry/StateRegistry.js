@@ -213,7 +213,10 @@ define([
         }
 
         // Set default options and merge them with the user ones
-        options = mixIn({ route: true }, options || {});
+        options = mixIn({
+            route: true,
+            replace: !this._currentState  // Replace URL if it's the first state
+        }, options || {});
 
         // Only change if the current state is not the same
         if (!this.isCurrent(state) || options.force) {
@@ -339,13 +342,6 @@ define([
                 this._address.reset();
             } else {
                 url = route.generateUrl(params);
-
-                // Replace the URL if empty
-                // This solves issues for root URLs of the application
-                if (!hasOwn(options, 'replace')) {
-                    options.replace = url === '/' && url === this._currentUrl;
-                }
-
                 this._address.setValue(url, options);
             }
         }
@@ -386,7 +382,7 @@ define([
         // This can happen because calls to address.setValue() from this class
         // generate a change event (internal)
         if (this._currentUrl === value) {
-           // return;
+            return;
         }
 
         this._currentUrl = value;
