@@ -89,12 +89,6 @@ define([
         // Otherwise, the state is meant to be used only by this controller
         } else {
             state = stateRegistry._createStateInstance(state.name, state.params);
-            state.getParams().$info = {
-                previousState: this._currentState,
-                newState: state,
-                local: true
-            };
-
         }
 
         return this.delegateState(state);
@@ -148,7 +142,7 @@ define([
 
         // Sync up the full state name with the application one
         // This is needed because default states might have been translated down the chain
-        if (params.$info && !params.$info.local && stateRegistry.getCurrent() === state) {
+        if (stateRegistry.getCurrent() === state) {
             this._currentState.setFullName(state.getFullName());
         }
 
@@ -270,20 +264,13 @@ define([
         ancestor = this._uplink;
         while (ancestor && ancestor instanceof Controller) {
             ancestorState = ancestor.getState();
-
-            // If this ancestor controller has no current state
-            // and it has states, then something is wrong
             if (!ancestorState) {
-                if (ancestor._nrStates && has('debug')) {
-                    throw new Error('Unable to resolve full state: "' + ancestor.$name + '" is not in any state.');
-                }
-                // Break here, the ancestor has no states defined
+                // Break here, the ancestor is not in any state
                 break;
             }
 
-            // Concatenate name
+            // Concatenate name & mix in relevant params
             state.fullName = ancestorState.getName() + (state.fullName ? '.' + state.fullName : '');
-            // Mix in relevant params
             mixIn(state.params, ancestor._currentStateParams);
 
             ancestor = ancestor._uplink;
@@ -349,8 +336,8 @@ define([
             this._currentState.setFullName(fullName);
 
             // Update also the state registry one
-            if (params.$info && !params.$info.local) {
-                stateRegistry.getCurrent().setFullName(fullName);
+            if (state === stateRegistry.getCurrent()) {
+                state.setFullName(fullName);
             }
         }
 
