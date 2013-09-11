@@ -60,6 +60,7 @@ define([
         if (this._address) {
             this._address.off('change', this._onChange, this);
             this._address = null;
+            this._currentUrl = null;
         }
     };
 
@@ -211,7 +212,7 @@ define([
             options = params;
         }
 
-        // Set defaul options and merge them with the user ones
+        // Set default options and merge them with the user ones
         options = mixIn({ route: true }, options || {});
 
         // Only change if the current state is not the same
@@ -315,6 +316,7 @@ define([
     StateRegistry.prototype._postChangeHandler = function (previousState, options) {
         var state = this._currentState.getFullName(),
             params = this._currentState.getParams(),
+            url,
             route,
             tmp,
             fullName;
@@ -336,10 +338,19 @@ define([
             if (!route) {
                 this._address.reset();
             } else {
-                this._address.setValue(route.generateUrl(params), options);
+                url = route.generateUrl(params);
+
+                // Replace the URL if empty
+                // This solves issues for root URLs of the application
+                if (!hasOwn(options, 'replace')) {
+                    options.replace = url === '/' && url === this._currentUrl;
+                }
+
+                this._address.setValue(url, options);
             }
         }
 
+        fullName = this._currentState.getFullName();
         this._currentState.setCursor(0);
 
         // Emit the change
@@ -348,7 +359,6 @@ define([
 
         // If the final state name has changed in the process, inform the user
         // This happens if the final state is changed (tipically because of default state translations)
-        fullName = this._currentState.getFullName();
         if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
             console.info('Final state after transition is "' + this._currentState.getFullName() + '".');
         }
@@ -367,23 +377,21 @@ define([
             state,
             params;
 
-        // If the type of change is internal, match against the current state/route
-        // If it's the same ignore, otherwise someone changed the value directly in the address instance
-        if (obj.type === 'internal' && this._currentState) {
-            route = this._states[this._currentState.getFullName()];
-            if (route && route.test(value)) {
-                this._currentState.getParams().$info.address = obj;
-                return;
-            }
-        }
-
-        // Find if there's a matching route for the new address value
         // Ensure that the value starts with a /
-        value = value || '/';
-        if (value.charAt(0) !== '/') {
+        if (!startsWith(value, '/')) {
             value = '/' + value;
         }
 
+        // Ignore if the URL is the same
+        // This can happen because calls to address.setValue() from this class
+        // generate a change event (internal)
+        if (this._currentUrl === value) {
+           // return;
+        }
+
+        this._currentUrl = value;
+
+        // Find if there's a matching route for the new address value
         length = this._routes.length;
         for (x = 0; x < length; x += 1) {
             route = this._routes[x];
@@ -469,7 +477,7 @@ define([
         $(document.body).off('click', 'a', this._handleLinkClick);
 
         this.unsetAddress();
-        this._currentState = null;
+        this._currentState = this._currenUrl = null;
     };
 
     return StateRegistry;

@@ -9,11 +9,10 @@ define([
     'mout/string/startsWith',
     'mout/object/size',
     'mout/object/pick',
-    'mout/object/fillIn',
     'mout/object/mixIn',
     'mout/array/find',
     'has'
-], function (Joint, stateRegistry, startsWith, size, pick, fillIn, mixIn, find, has) {
+], function (Joint, stateRegistry, startsWith, size, pick, mixIn, find, has) {
 
     'use strict';
 
@@ -52,7 +51,7 @@ define([
 
         // Resolve the state
         state = this._resolveFullState(name);
-        fillIn(state.params, params);
+        mixIn(state.params, params);
 
         return stateRegistry.generateUrl(state.fullName, state.params);
     };
@@ -72,7 +71,7 @@ define([
 
         // Resolve the state
         state = this._resolveFullState(name);
-        fillIn(state.params, params);
+        mixIn(state.params, params);
 
         // If the state is global, simply set it on the state registry
         if (state.name == null) {
@@ -87,14 +86,15 @@ define([
             if (stateRegistry.setCurrent(state.fullName, state.params, options)) {
                 return this;
             }
-
-            // Otherwise the global state is already this one
-            // Just update the global state params
-            state = stateRegistry.getCurrent();
-            state.setParams(params);
         // Otherwise, the state is meant to be used only by this controller
         } else {
             state = stateRegistry._createStateInstance(state.name, state.params);
+            state.getParams().$info = {
+                previousState: this._currentState,
+                newState: state,
+                local: true
+            };
+
         }
 
         return this.delegateState(state);
@@ -120,7 +120,7 @@ define([
         name = state && state.getName() || this._defaultState;
         params = state.getParams();
 
-        // If still has no name it means there's no default state define
+        // If still has no name it means there's no default state defined
         if (!name) {
             if (has('debug') && this._nrStates) {
                 console.warn('No default state defined in "' + this.$name + '".');
@@ -148,7 +148,7 @@ define([
 
         // Sync up the full state name with the application one
         // This is needed because default states might have been translated down the chain
-        if (stateRegistry.getCurrent() === state) {
+        if (params.$info && !params.$info.local && stateRegistry.getCurrent() === state) {
             this._currentState.setFullName(state.getFullName());
         }
 
@@ -220,36 +220,6 @@ define([
         }
     };
 
-    /**
-     * Checks if a given state is the same as the current controller state.
-     *
-     * @param {State} state The state
-     *
-     * @return {Boolean} True if the same, false otherwise
-     */
-    Controller.prototype._isSameState = function (state) {
-        var stateMeta;
-
-        if (!this._currentState) {
-            return false;
-        }
-
-        // Translate to default state if name is empty
-        if (!state.getName()) {
-            state = state.clone();
-            state.setFullName(state.getFullName() + '.' + this._defaultState);
-        }
-
-        stateMeta = this._states[state.getName()];
-
-        // Check if state is a wildcard
-        if (stateMeta.wildcard) {
-            return false;
-        }
-
-        // Check if equal
-        return this._currentState.isEqual(state, stateMeta.params);
-    };
 
     /**
      * Resolves a full state name.
@@ -327,6 +297,37 @@ define([
     };
 
     /**
+     * Checks if a given state is the same as the current controller state.
+     *
+     * @param {State} state The state
+     *
+     * @return {Boolean} True if the same, false otherwise
+     */
+    Controller.prototype._isSameState = function (state) {
+        var stateMeta;
+
+        if (!this._currentState) {
+            return false;
+        }
+
+        // Translate to default state if name is empty
+        if (!state.getName()) {
+            state = state.clone();
+            state.setFullName(state.getFullName() + '.' + this._defaultState);
+        }
+
+        stateMeta = this._states[state.getName()];
+
+        // Check if state is a wildcard
+        if (stateMeta.wildcard) {
+            return false;
+        }
+
+        // Check if equal
+        return this._currentState.isEqual(state, stateMeta.params);
+    };
+
+    /**
      * Sets the current state based on the passed in state.
      * Updates all the necessary properties used internally.
      *
@@ -346,7 +347,11 @@ define([
         if (!state.getName() && this._defaultState) {
             fullName = state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState;
             this._currentState.setFullName(fullName);
-            stateRegistry.getCurrent().setFullName(fullName); // Update also the state registry one
+
+            // Update also the state registry one
+            if (params.$info && !params.$info.local) {
+                stateRegistry.getCurrent().setFullName(fullName);
+            }
         }
 
         name = this._currentState.getName();
