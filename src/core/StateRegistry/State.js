@@ -6,7 +6,7 @@
 define([
     'mout/object/keys',
     'mout/object/values',
-    'mout/object/deepClone',
+    'mout/lang/deepClone',
     'mout/array/filter',
     'has'
 ], function (keys, values, deepClone, filter, has) {
