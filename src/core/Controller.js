@@ -86,7 +86,10 @@ define([
             if (stateRegistry.setCurrent(state.fullName, state.params, options)) {
                 return this;
             }
-        // Otherwise, the state is meant to be used only by this controller
+            
+            // Since the global state is equal, grab it to avoid creating unnecessary
+            // state objects.
+            state = stateRegistry.getCurrent();
         } else {
             state = stateRegistry._createStateInstance(state.name, state.params);
         }
