@@ -9,11 +9,10 @@ define([
     'mout/string/startsWith',
     'mout/object/size',
     'mout/object/pick',
-    'mout/object/fillIn',
     'mout/object/mixIn',
     'mout/array/find',
     'has'
-], function (Joint, stateRegistry, startsWith, size, pick, fillIn, mixIn, find, has) {
+], function (Joint, stateRegistry, startsWith, size, pick, mixIn, find, has) {
 
     'use strict';
 
@@ -52,11 +51,9 @@ define([
 
         // Resolve the state
         state = this._resolveFullState(name);
+        mixIn(state.params, params);
 
-        // Fill in passed in params
-        fillIn(state.params, params);
-
-        return stateRegistry.generateUrl(state.name, state.params);
+        return stateRegistry.generateUrl(state.fullName, state.params);
     };
 
     /**
@@ -74,17 +71,28 @@ define([
 
         // Resolve the state
         state = this._resolveFullState(name);
-        state.name = state.name || this._defaultState;
-        params = fillIn(state.params, params);
+        mixIn(state.params, params);
 
-        // Change the state globally, and abort if actually changed
-        if (stateRegistry.setCurrent(state.name, state.params, options)) {
+        // If the state is global, simply set it on the state registry
+        if (state.name == null) {
+            stateRegistry.setCurrent(state.fullName, state.params, options);
             return this;
         }
 
-        // Update the global state params
-        state = stateRegistry.getCurrent();
-        state.setParams(params);
+        // At this point the state is local
+        // Check if the state is globally registered
+        if (stateRegistry.isRegistered(state.fullName)) {
+            // If so attempt to change the global state, aborting if it succeeded
+            if (stateRegistry.setCurrent(state.fullName, state.params, options)) {
+                return this;
+            }
+            
+            // Since the global state is equal, grab it to avoid creating unnecessary
+            // state objects.
+            state = stateRegistry.getCurrent();
+        } else {
+            state = stateRegistry._createStateInstance(state.name, state.params);
+        }
 
         return this.delegateState(state);
     };
@@ -97,8 +105,7 @@ define([
      * @return {Controller} The instance itself to allow chaining
      */
     Controller.prototype.delegateState = function (state) {
-        var name,
-            params;
+        var name;
 
         // Assume app state if not passed
         if (!state) {
@@ -107,9 +114,8 @@ define([
 
         state = state && (state.$info ? state.$info.newState : state);
         name = state && state.getName() || this._defaultState;
-        params = state.getParams();
 
-        // If still has no name it means there's no default state define
+        // If still has no name it means there's no default state defined
         if (!name) {
             if (has('debug') && this._nrStates) {
                 console.warn('No default state defined in "' + this.$name + '".');
@@ -142,7 +148,7 @@ define([
         }
 
         return this;
-    },
+    };
 
     //////////////////////////////////////////////////////////////////
 
@@ -178,7 +184,6 @@ define([
                 }
             } else {
                 this._states[key] = {};
-                this._states[key].params = [];
             }
 
             if (has('debug')) {
@@ -201,13 +206,83 @@ define([
             }
 
             this._states[key].fn = func;
+            this._states[key].params = this._states[key].params || [];
         }
 
         // Process the default state
         if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
             throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
         }
-    },
+    };
+
+
+    /**
+     * Resolves a full state name.
+     *
+     * If name starts with a / then state is absolute.
+     * If name starts with ../ then state is relative.
+     * If empty will try to map to the default state.
+     * Otherwise the full state name will be resolved from the local name.
+     *
+     * @param {String} [name] The state name
+     *
+     * @return {Object} The full state name and params
+     */
+    Controller.prototype._resolveFullState = function (name) {
+        var state,
+            ancestor,
+            ancestorState;
+
+        name = name || '';
+
+        // Absolute
+        if (name.charAt(0) === '/') {
+            return {
+                fullName: name.substr(1),
+                params: {}
+            };
+        }
+
+        // Relative
+        if (startsWith(name, '../')) {
+            if (has('debug') && (!this._uplink || !(this._uplink instanceof Controller))) {
+                throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '".');
+            }
+
+            state = this._uplink._resolveFullState(name.substr(3));
+            delete state.name;  // Remove name because state is not local
+
+            return state;
+        }
+
+        state = {
+            name: name,
+            fullName: name,
+            params: {}
+        };
+
+        // Local
+        ancestor = this._uplink;
+        while (ancestor && ancestor instanceof Controller) {
+            ancestorState = ancestor.getState();
+            if (!ancestorState) {
+                // Break here, the ancestor is not in any state
+                break;
+            }
+
+            // Concatenate name & mix in relevant params
+            state.fullName = ancestorState.getName() + (state.fullName ? '.' + state.fullName : '');
+            mixIn(state.params, ancestor._currentStateParams);
+
+            ancestor = ancestor._uplink;
+        }
+
+        // Ensure names
+        state.name = state.name || this._defaultState || '';
+        state.fullName = state.fullName || this._defaultState || '';
+
+        return state;
+    };
 
     /**
      * Checks if a given state is the same as the current controller state.
@@ -241,73 +316,6 @@ define([
     };
 
     /**
-     * Resolves a full state name.
-     *
-     * If name starts with a / then state is absolute.
-     * If name starts with ../ then state is relative.
-     * If empty will try to map to the default state.
-     * Otherwise the full state name will be resolved from the local name.
-     *
-     * @param {String} [name] The state name
-     *
-     * @return {Object} The full state name and params
-     */
-    Controller.prototype._resolveFullState = function (name) {
-        var state,
-            ancestor,
-            ancestorState;
-
-        name = name || '';
-
-        // Absolute
-        if (name.charAt(0) === '/') {
-            return {
-                name: name.substr(1),
-                params: {}
-            };
-        }
-
-        state = {
-            name: name,
-            params: {}
-        };
-
-        // Relative
-        if (startsWith(name, '../')) {
-            if (has('debug') && (!this._uplink || !(this._uplink instanceof Controller))) {
-                throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '".');
-            }
-
-            return this._uplink._resolveFullState(name.substr(3));
-        }
-
-        // Local
-        ancestor = this._uplink;
-        while (ancestor && ancestor instanceof Controller) {
-            ancestorState = ancestor.getState();
-
-            // If this ancestor controller has no current state
-            // and it has states, then something is wrong
-            if (!ancestorState) {
-                if (ancestor._nrStates && has('debug')) {
-                    throw new Error('Unable to resolve full state: "' + ancestor.$name + '" is not in any state.');
-                }
-                // Break here, the ancestor has no states defined
-                break;
-            }
-
-            // Concatenate name
-            state.name = ancestorState.getName() + (state.name ? '.' + state.name : '');
-            // Mix in relevant params
-            mixIn(state.params, ancestor._currentStateParams);
-
-            ancestor = ancestor._uplink;
-        }
-
-        return state;
-    };
-
-    /**
      * Sets the current state based on the passed in state.
      * Updates all the necessary properties used internally.
      *
@@ -316,26 +324,27 @@ define([
     Controller.prototype._setCurrentState = function (state) {
         var name,
             fullName,
-            params,
             stateMeta;
 
         // Update current state
         this._currentState = state.clone();
-        params = this._currentState.getParams();
-        params.$info.newState = this._currentState;
 
         // Resolve to default state always
         if (!state.getName() && this._defaultState) {
             fullName = state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState;
             this._currentState.setFullName(fullName);
-            stateRegistry.getCurrent().setFullName(fullName); // Update also the state registry one
+
+            // Update also the state registry one
+            if (state === stateRegistry.getCurrent()) {
+                state.setFullName(fullName);
+            }
         }
 
         name = this._currentState.getName();
         stateMeta = this._states[name];
 
         // Update state params being used by this controller
-        this._currentStateParams = pick(params, stateMeta.params);
+        this._currentStateParams = pick(this._currentState.getParams(), stateMeta.params);
     };
 
     /**
@@ -397,7 +406,6 @@ define([
     ////////////////////////////////////////////////////////////////
 
     Controller._stateParamsRegExp = /\((.+?)\)/;
-    Controller._relativeStateRegExp = /\.\.\//;
 
     return Controller;
 });

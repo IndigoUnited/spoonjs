@@ -6,11 +6,10 @@
 define([
     'mout/object/keys',
     'mout/object/values',
-    'mout/object/mixIn',
     'mout/lang/deepClone',
-    'mout/array/remove',
+    'mout/array/filter',
     'has'
-], function (keys, values, mixIn, deepClone, remove, has) {
+], function (keys, values, deepClone, filter, has) {
 
     'use strict';
 
@@ -213,20 +212,15 @@ define([
     /**
      * Clones the state.
      *
+     * @param {Boolean} [cloneParams] True to deep clone the params, false otherwise (defaults to false)
+     *
      * @return {State} The cloned state
      */
-    State.prototype.clone = function () {
-        var params = {},
-            key,
-            ret;
+    State.prototype.clone = function (cloneParams) {
+        var ret;
 
-        // Clone params
-        for (key in this._params) {
-            params[key] = deepClone(this._params[key]);
-        }
-
-        // Create a new state
-        ret = new State(this._name, params);
+        // Create new state
+        ret = new State(this._name, cloneParams ? deepClone(this._params) : this._params);
         ret._cursor = this._cursor;
 
         return ret;
@@ -249,11 +243,12 @@ define([
             x;
 
         // Remove special keys
-        for (x = keys1.length - 1; x >= 0; x -= 1) {
-            if (keys1[x].charAt(0) === '$') {
-                keys1.splice(x, 1);
-            }
-        }
+        keys1 = filter(keys1, function (key) {
+            return key.charAt(0) !== '$';
+        });
+        keys2 = filter(keys2, function (key) {
+            return key.charAt(0) !== '$';
+        });
 
         // Compare the objects
         // We first compare the first with the second and then the second with the first

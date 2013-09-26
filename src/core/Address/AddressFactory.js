@@ -22,7 +22,7 @@ define([
         pos,
         tmp;
 
-    config = config || {},
+    config = config || {};
     config = config.address || {};
     options.basePath = config.basePath || '/';
     options.translate = location.protocol === 'file:' ? false : config.translate;

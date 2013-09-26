@@ -21,7 +21,7 @@
     "plusplus": true,
     "regexp": true,
     "undef": true,
-    "unused": true,
+    "unused": "vars",
     "quotmark": "single",
     "strict": true,
     "trailing": true,
