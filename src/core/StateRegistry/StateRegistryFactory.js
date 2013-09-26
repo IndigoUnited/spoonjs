@@ -12,8 +12,9 @@ define([
     'mout/lang/isObject',
     'mout/object/fillIn',
     'mout/object/size',
+    'mout/array/sort',
     'has'
-], function (StateRegistry, address, config, isObject, fillIn, size, has) {
+], function (StateRegistry, address, config, isObject, fillIn, size, sort, has) {
 
     'use strict';
 
@@ -109,7 +110,8 @@ define([
     }
 
     // Sort the array according to the priority
-    arr.sort(function (val1, val2) {
+    // We use mout's sort because it's stable!
+    sort(arr, function (val1, val2) {
         if (val1.priority === val2.priority) {
             return 0;
         }
