@@ -18,6 +18,19 @@ define([
 
     'use strict';
 
+    /* Remove replacer to avoid memory leaks */
+    function remove() {
+        /*jshint validthis:true*/
+        var view = this.data('_spoon_view');
+
+        if (view) {
+            view.destroy();
+        }
+
+        // Just to be sure
+        $.fn.remove.call(this);
+    }
+
     /**
      * Constructor.
      *
@@ -32,6 +45,11 @@ define([
         // Assume the element or create one based on the _element property
         this._element = $(element ? element : createElement(this._element || 'div'));
         this._nativeElement = this._element.get(0);
+
+        // Replace remove function to avoid memory leaks if the user
+        // removes the element via jquery
+        this._element.data('_spoon_view', this);
+        this._element.remove = remove;
 
         // Listen to events
         this._listen();
@@ -138,6 +156,10 @@ define([
         this._element.innerHTML = '';
 
         return this;
+    };
+
+    View.fromElement = function (element) {
+        return $(element).data('_spoon_view');
     };
 
     ////////////////////////////////////////////////////////////
@@ -252,18 +274,21 @@ define([
      * @return {Controller} The view's controller
      */
     View.prototype._getController = function () {
+        var uplink;
+
         // Return the cached controller if any
         if (this._controller) {
             return this._controller;
         }
 
         // Search for it in the uplink ancestors
-        if (this._uplink) {
-            this._controller = this._uplink instanceof Controller ?
-                this._uplink :
-                this._uplink._getController();
+        uplink = this._uplink;
+        while (uplink) {
+            if (uplink instanceof Controller) {
+                return uplink;
+            }
 
-            return this._controller;
+            uplink = uplink._uplink;
         }
 
         return null;
@@ -300,6 +325,7 @@ define([
         Joint.prototype._onDestroy.call(this);
 
         // Destroy view element
+        this._element.remove = $.fn.remove;
         this._element.remove();
 
         // Null references
