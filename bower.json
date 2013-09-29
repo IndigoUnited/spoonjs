@@ -8,7 +8,7 @@
     "bower_components"
   ],
   "dependencies": {
-    "mout": "~0.6.0",
+    "mout": "~0.7.0",
     "events-emitter": "~0",
     "address": "~0",
     "has": "*",
