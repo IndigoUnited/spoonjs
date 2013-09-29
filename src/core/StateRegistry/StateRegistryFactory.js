@@ -84,7 +84,7 @@ define([
                 value.$pattern = curr.$fullPattern || patternJoin(curr.$pattern, value.$pattern || key);
                 value.$constraints = fillIn(value.$constraints || {}, curr.$constraints);
 
-                queue.unshift(value);
+                queue.push(value);
             // String -> state has a route
             } else if (typeof value === 'string') {
                 // Add to the array to be sorted later

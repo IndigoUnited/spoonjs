@@ -86,7 +86,7 @@ define([
             if (stateRegistry.setCurrent(state.fullName, state.params, options)) {
                 return this;
             }
-            
+
             // Since the global state is equal, grab it to avoid creating unnecessary
             // state objects.
             state = stateRegistry.getCurrent();
@@ -327,6 +327,7 @@ define([
             stateMeta;
 
         // Update current state
+        this._previousState = this._currentState;
         this._currentState = state.clone();
 
         // Resolve to default state always

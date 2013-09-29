@@ -340,6 +340,7 @@ define([
             route = this._states[state];
             if (!route) {
                 this._address.reset();
+                this._currentUrl = null;
             } else {
                 url = route.generateUrl(params);
                 this._address.setValue(url, options);
