@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Improve your cooking and become a true web app chef",
   "keywords": ["framework", "client-side", "modular", "hmvc"],
+  "homepage": "http://indigounited.github.io/spoonjs",
   "main": "./src/",
   "ignore": [
     "**/.*",
