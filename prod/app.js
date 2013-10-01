@@ -14291,7 +14291,7 @@ define('../app/config/config',['./states'], function (states) {
     return {
         // Address configuration
         address: {
-            basePath: '/spoonjs',
+            basePath: '/',
             html5: false,     // Disable HTML5 address because it needs the correct base path and mod rewrite activated
             translate: true   // Translate from HTML5 URLs to hash automatically (and vice-versa)
         },
@@ -14357,10 +14357,11 @@ define('../app/config/config_prod',['./config', 'mout/object/merge'], function (
 
     return merge(config, {
         env: 'prod',
-        version: 1,
+        version: 3,
 
         // Address overrides
         address: {
+            basePath: '/spoonjs',
             html5: true         // Setup prettier URLs by enabling HTML5
                                 // If changed to true, the server needs to be able to rewrite URLs to the front controller
         }

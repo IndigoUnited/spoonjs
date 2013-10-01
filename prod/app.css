@@ -355,7 +355,7 @@ table {
 .document h1 ~ h2:before,
 .document h1:before {
     content: '';
-    background: url('src/Common/assets/img/hr.png?2') top left no-repeat;
+    background: url('src/Common/assets/img/hr.png?4') top left no-repeat;
     position: absolute;
     top: -5px;
     height: 19px;
