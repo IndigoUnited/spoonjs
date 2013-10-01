@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>SpoonJS</title>
+        <meta name="description" content="SpoonJS framework">
+        <meta name="viewport" content="width=device-width">
+        <script type="text/javascript">
+        var require = {
+            // Fix cache issues
+            urlArgs: (new Date()).getTime()
+        };
+        </script>
+        <script data-main="/dev/app/loader" src="/dev/bower_components/requirejs/require.js"></script>
+    </head>
+    <body>
+        <script>
+            require(['../app/bootstrap']);
+        </script>
+    </body>
+</html>
