@@ -14357,12 +14357,12 @@ define('../app/config/config_prod',['./config', 'mout/object/merge'], function (
 
     return merge(config, {
         env: 'prod',
-        version: 3,
+        version: 4,
 
         // Address overrides
         address: {
             basePath: '/spoonjs',
-            html5: true         // Setup prettier URLs by enabling HTML5
+            html5: false        // Setup prettier URLs by enabling HTML5
                                 // If changed to true, the server needs to be able to rewrite URLs to the front controller
         }
     });
@@ -15323,9 +15323,9 @@ define('../bower_components/spoonjs/src/core/Address/AddressFactory',[
         options.basePath = '/' + options.basePath;
     }
 
-    console.log(config);
     useHTML5 = !!config.html5;
 
+    console.log(options);
     if (useHTML5 && AddressHTML5.isCompatible()) {
         address = AddressHTML5.getInstance(options);
 
