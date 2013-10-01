@@ -14357,7 +14357,7 @@ define('../app/config/config_prod',['./config', 'mout/object/merge'], function (
 
     return merge(config, {
         env: 'prod',
-        version: 4,
+        version: 5,
 
         // Address overrides
         address: {
@@ -15325,7 +15325,6 @@ define('../bower_components/spoonjs/src/core/Address/AddressFactory',[
 
     useHTML5 = !!config.html5;
 
-    console.log(options);
     if (useHTML5 && AddressHTML5.isCompatible()) {
         address = AddressHTML5.getInstance(options);
 
