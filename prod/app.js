@@ -15323,6 +15323,7 @@ define('../bower_components/spoonjs/src/core/Address/AddressFactory',[
         options.basePath = '/' + options.basePath;
     }
 
+    console.log(config);
     useHTML5 = !!config.html5;
 
     if (useHTML5 && AddressHTML5.isCompatible()) {
