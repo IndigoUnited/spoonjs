@@ -11,11 +11,11 @@
     "bower_components"
   ],
   "dependencies": {
-    "mout": "~0.7.0",
-    "events-emitter": "~0",
-    "address": "~0",
+    "mout": "^0.7",
+    "events-emitter": "^0",
+    "address": "^0",
     "has": "*",
-    "jquery": "~1.9||~2"
+    "jquery": "^1.9||^2.0"
   },
   "devDependencies": {
     "expect": "~0.2.0",
