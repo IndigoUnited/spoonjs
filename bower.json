@@ -12,8 +12,8 @@
   ],
   "dependencies": {
     "mout": "^0.7",
-    "events-emitter": "^0",
-    "address": "^0",
+    "events-emitter": "^0.1",
+    "address": "^0.1",
     "has": "*",
     "jquery": "^1.9||^2.0"
   },
