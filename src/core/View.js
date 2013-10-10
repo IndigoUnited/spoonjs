@@ -162,7 +162,7 @@ define([
         return $(element).data('_spoon_view');
     };
 
-    ////////////////////////////////////////////////////////////
+    // --------------------------------------------
 
     /**
      * Listen to events.
@@ -351,6 +351,16 @@ define([
     }
 
     View._eventsSplitter = /^(\S+)\s*(.*)$/;
+
+    // --------------------------------------------
+
+    // Instruct the extend to merge events
+    View.extend = function (parent, props, merge) {
+        merge = merge || [];
+        merge.push('_events');
+
+        return Joint.extend.call(this, parent, props, merge);
+    };
 
     return View;
 });

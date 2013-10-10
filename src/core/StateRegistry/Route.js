@@ -139,7 +139,7 @@ define([
         return url;
     };
 
-    ////////////////////////////////////////////////////////
+    // --------------------------------------------
 
     Route._placeholdersRegExp = /\{.+?\}/;
     Route._placeholdersEscapedRegExp = /\\\{.+?\\\}/g;
