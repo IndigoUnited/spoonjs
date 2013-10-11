@@ -72,13 +72,12 @@ define([
         state = this._resolveFullState(name);
         mixIn(state.params, params);
 
-        // If the state is global, simply set it on the state registry
+        // If the state is absolute, simply set it on the state registry
         if (state.name == null) {
             stateRegistry.setCurrent(state.fullName, state.params, options);
             return this;
         }
 
-        // At this point the state is local
         // Check if the state is globally registered
         if (stateRegistry.isRegistered(state.fullName)) {
             // If so attempt to change the global state, aborting if it succeeded
@@ -87,7 +86,7 @@ define([
             }
 
             // Since the global state is equal, grab it to avoid creating unnecessary
-            // state objects.
+            // state objects
             state = stateRegistry.getCurrent();
         } else {
             state = stateRegistry._createStateInstance(state.name, state.params);
