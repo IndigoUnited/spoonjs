@@ -338,10 +338,7 @@ define([
         // Set address value
         if (this._address && options.route) {
             route = this._states[state];
-            if (!route) {
-                this._address.reset();
-                this._currentUrl = null;
-            } else {
+            if (route) {
                 url = route.generateUrl(params);
                 this._address.setValue(url, options);
             }
