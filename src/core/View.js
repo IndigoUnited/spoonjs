@@ -18,19 +18,6 @@ define([
 
     'use strict';
 
-    /* Remove replacer to avoid memory leaks */
-    function remove() {
-        /*jshint validthis:true*/
-        var view = this.data('_spoon_view');
-
-        if (view) {
-            view.destroy();
-        }
-
-        // Just to be sure
-        $.fn.remove.call(this);
-    }
-
     /**
      * Constructor.
      *
@@ -134,7 +121,7 @@ define([
     /**
      * Renders the declared template with the supplied data.
      *
-     * @param {Object|Array} [data] The data to pass to the template
+     * @param {Mixed} [data] The data to pass to the template
      *
      * @return {View} The instance itself to allow chaining
      */
@@ -146,7 +133,7 @@ define([
                 throw new Error('Expected _template to be a compiled template (function).');
             }
 
-            this._element.html(this._template(this._fillHelpers(data || {})));
+            this._element.html(this._renderTemplate(this._template, data));
         }
 
         return this;
@@ -324,27 +311,30 @@ define([
     };
 
     /**
-     * Fills a target with helpers to be used in the templates.
+     * Renders a template, setting up helpers.
      *
-     * @param {Object|Array} target The target to be filled
+     * @param {Function} tmpl   The template function
+     * @param {Mixed}    [data] The template data
      *
-     * @return {Object|Array} The same target with the filled helpers
+     * @return {String} The rendered HTML
      */
-    View.prototype._fillHelpers = function (target) {
-        if (has('debug') && !isPlainObject(target) && !isArray(target)) {
-            throw new Error('Expected a plain object or an array to be passed to the template.');
-        }
+    View.prototype._renderTemplate = function (tmpl, data) {
+        var that = this,
+            helpers = View.helpers,
+            rendered;
 
-        // Only needed for handlebars
-        if (window.Handlebars) {
-            target.$view = this;
-        }
+        // Set helpers that are contextually related to the view
+        helpers.url = function (state, params) {
+            return that._generateUrl(state, params);
+        };
 
-        target.$url = function (state, params) {
-            return this._generateUrl(state, params);
-        }.bind(this);
+        // Render
+        rendered = tmpl.call(helpers, data);
 
-        return target;
+        // Restore helpers
+        helpers.url = urlHelper;
+
+        return rendered;
     };
 
     /**
@@ -361,7 +351,44 @@ define([
         this._element = this._nativeElement = this._controller = null;
     };
 
-    // Register handlebar helpers
+    View._eventsSplitter = /^(\S+)\s*(.*)$/;
+
+    // --------------------------------------------
+
+    // Remove replacer to avoid memory leaks
+    function remove() {
+        /*jshint validthis:true*/
+        var view = this.data('_spoon_view');
+
+        if (view) {
+            view.destroy();
+        }
+
+        // Just to be sure
+        $.fn.remove.call(this);
+    }
+
+    // Default url helper
+    function urlHelper() {
+        throw new Error('Attempted to use "url" helper without calling "_renderTemplate".');
+    }
+
+    // Custom helpers can be added here
+    View.helpers = {
+        url: urlHelper
+    };
+
+    // Instruct the extend to merge events
+    View.extend = function (parent, props, merge) {
+        merge = merge || [];
+        merge.push('_events');
+
+        return Joint.extend.call(this, parent, props, merge);
+    };
+
+    // ------------------------------------------
+
+    // Register handlebars helper
     if (window.Handlebars) {
         Handlebars.registerHelper('url', function (state, params) {
             var key,
@@ -375,21 +402,12 @@ define([
                 hash[key] = this[key] || value;
             }
 
-            return this.$view._generateUrl(state, hash);
+            return View.helpers.url(state, params);
         });
     }
 
-    View._eventsSplitter = /^(\S+)\s*(.*)$/;
-
-    // --------------------------------------------
-
-    // Instruct the extend to merge events
-    View.extend = function (parent, props, merge) {
-        merge = merge || [];
-        merge.push('_events');
-
-        return Joint.extend.call(this, parent, props, merge);
-    };
+    // Expose globals for those weird template engines..
+    window.spoonViewHelpers = View.helpers;
 
     return View;
 });
