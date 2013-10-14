@@ -205,12 +205,10 @@ define([
      * @param {String}   event  The event name
      * @param {...mixed} [args] The arguments to pass along with the event
      *
-     * @return {Joint} The instance itself to allow chaining
+     * @return {Boolean} True if it was handled, false otherwise
      */
     Joint.prototype._broadcast = function (event, args) {
-        broadcaster.broadcast.apply(broadcaster, arguments);
-
-        return this;
+        return broadcaster.broadcast.apply(broadcaster, arguments);
     };
 
     /**

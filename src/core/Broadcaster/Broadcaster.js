@@ -70,17 +70,20 @@ define([
      * @param {String}   event  The event name
      * @param {...mixed} [args] The arguments to pass to each listener
      *
-     * @return {Broadcaster} The instance itself to allow chaining
+     * @return {Boolean} True if it was handled, false otherwise
      */
     Broadcaster.prototype.broadcast = function (event, args) {
         // If we got no interested subjects, warn that this event was unhandled
         if (this._emitter.has(event)) {
             this._emitter.emit.apply(this._emitter, arguments);
-        } else if (has('debug')) {
+            return true;
+        }
+
+        if (has('debug')) {
             console.warn('Unhandled broadcast event "' + event + '".');
         }
 
-        return this;
+        return false;
     };
 
     return Broadcaster;
