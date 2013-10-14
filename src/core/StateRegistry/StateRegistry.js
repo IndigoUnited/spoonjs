@@ -319,7 +319,6 @@ define([
     StateRegistry.prototype._postChangeHandler = function (previousState, options) {
         var state = this._currentState.getFullName(),
             params = this._currentState.getParams(),
-            url,
             route,
             tmp,
             fullName;
@@ -339,8 +338,8 @@ define([
         if (this._address && options.route) {
             route = this._states[state];
             if (route) {
-                url = route.generateUrl(params);
-                this._address.setValue(url, options);
+                this._currentUrl = route.generateUrl(params);
+                this._address.setValue(this._currentUrl, options);
             }
         }
 
