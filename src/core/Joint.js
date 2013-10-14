@@ -132,25 +132,71 @@ define([
     };
 
     /**
-     * Fires an event upwards the chain.
+     * Fires an event upwards the chain, starting in this Joint.
      *
      * @param {String}   event  The event name
      * @param {...mixed} [args] The arguments to pass along with the event
      *
-     * @return {Joint} The instance itself to allow chaining
+     * @return {Boolean} True if it was handled, false otherwise
      */
     Joint.prototype._upcast = function (event, args) {
         // Check if the event will be handled locally
-        // Otherwise we will keep upcasting upwards the chain
         if (this._emitter.has(event)) {
             this._emitter.emit.apply(this._emitter, arguments);
-        } else if (this._uplink) {
-            this._uplink._upcast.apply(this._uplink, arguments);
-        } else if (has('debug')) {
+            return true;
+        }
+
+        // Otherwise we will keep upcasting upwards the chain
+        if (this._uplink) {
+            return this._uplink._upcast.apply(this._uplink, arguments);
+        }
+
+        if (has('debug')) {
             console.warn('Unhandled upcast event "' + event + '".');
         }
 
-        return this;
+        return false;
+    };
+
+    /**
+     * Fires an event downwards the chain, starting in this Joint.
+     *
+     * @param {String}   event  The event name
+     * @param {...mixed} [args] The arguments to pass along with the event
+     *
+     * @return {Boolean} True if it was handled, false otherwise
+     */
+    Joint.prototype._downcast = function (event, args) {
+        var x,
+            length,
+            last,
+            curr,
+            currHandled,
+            handled = false;
+
+        // Check if the event will be handled locally
+        if (this._emitter.has(event)) {
+            this._emitter.emit.apply(this._emitter, arguments);
+            return true;
+        }
+
+        // Cycle each downlink
+        length = this._downlinks.length;
+        for (x = 0; x < length; x += 1) {
+            curr = this._downlinks[x];
+
+            // Protect against triggered events that cause the destruction of links
+            if (!curr || curr === last) {
+                continue;
+            }
+
+            currHandled = curr._downcast.apply(curr, arguments);
+            if (currHandled) {
+                handled = true;
+            }
+        }
+
+        return handled;
     };
 
     /**
