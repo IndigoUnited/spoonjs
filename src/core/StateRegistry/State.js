@@ -92,7 +92,7 @@ define([
 
     /**
      * Advance the cursor position.
-     * Note that the cursor is allowed to move forward to the last position, so that getName() returns null.
+     * Note that the cursor is allowed to move after the last position, so that getName() returns null.
      *
      * @return {State} The instance itself to allow chaining
      */
@@ -106,11 +106,12 @@ define([
 
     /**
      * Recede the cursor position.
+     * Note that the cursor is allowed to move behind to the first position, so that getName() returns null.
      *
      * @return {State} The instance itself to allow chaining
      */
     State.prototype.previous = function () {
-        if (this._cursor > 1) {
+        if (this._cursor >= 0) {
             this._cursor -= 1;
         }
 
@@ -124,6 +125,33 @@ define([
      */
     State.prototype.getCursor = function () {
         return this._cursor;
+    };
+
+
+    /**
+     * Seeks the cursor position to the part that matches a name.
+     * Starts looking from the last position.
+     *
+     * @param {String} name The name to seek
+     *
+     * @return {State} The instance itself to allow chaining
+     */
+    State.prototype.seekTo = function (name) {
+        var currName;
+
+        // Go to last position
+        this.setCursor(this._nrParts - 1);
+
+        // Search it until we reach the head
+        while ((currName = this.getName())) {
+            if (currName === name) {
+                break;
+            }
+
+            this.previous();
+        }
+
+        return this;
     };
 
     /**

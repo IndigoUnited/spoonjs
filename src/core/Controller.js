@@ -66,30 +66,31 @@ define([
      * @return {Controller} The instance itself to allow chaining
      */
     Controller.prototype.setState = function (name, params, options) {
-        var state;
+        var stateMeta,
+            state;
 
         // Resolve the state
-        state = this._resolveFullState(name);
-        mixIn(state.params, params);
+        stateMeta = this._resolveFullState(name);
+        mixIn(stateMeta.params, params);
 
         // If the state is absolute, simply set it on the state registry
-        if (state.name == null) {
-            stateRegistry.setCurrent(state.fullName, state.params, options);
+        if (stateMeta.name == null) {
+            stateRegistry.setCurrent(stateMeta.fullName, stateMeta.params, options);
             return this;
         }
 
         // Check if the state is globally registered
-        if (stateRegistry.isRegistered(state.fullName)) {
+        if (stateRegistry.isRegistered(stateMeta.fullName)) {
             // If so attempt to change the global state, aborting if it succeeded
-            if (stateRegistry.setCurrent(state.fullName, state.params, options)) {
+            if (stateRegistry.setCurrent(stateMeta.fullName, stateMeta.params, options)) {
                 return this;
             }
 
             // Since the global state is equal, grab it to avoid creating unnecessary
             // state objects
-            state = stateRegistry.getCurrent();
+            state = stateRegistry.getCurrent().seekTo(stateMeta.name);
         } else {
-            state = stateRegistry._createStateInstance(state.name, state.params);
+            state = stateRegistry._createStateInstance(stateMeta.name, stateMeta.params);
         }
 
         return this.delegateState(state);
