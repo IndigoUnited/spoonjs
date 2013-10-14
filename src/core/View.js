@@ -43,16 +43,7 @@ define([
         this._events = this._events ? mixIn({}, this._events) : {};
 
         // Assume the element or create one based on the _element property
-        this._element = $(element ? element : createElement(this._element || 'div'));
-        this._nativeElement = this._element.get(0);
-
-        // Replace remove function to avoid memory leaks if the user
-        // removes the element via jquery
-        this._element.data('_spoon_view', this);
-        this._element.remove = remove;
-
-        // Listen to events
-        this._listen();
+        this._setupElement(element ? element : createElement(this._element || 'div'));
     }
 
     View.extend = Joint.extend;
@@ -66,6 +57,24 @@ define([
      */
     View.prototype.getElement = function () {
         return this._element;
+    };
+
+    /**
+     * Sets the view element.
+     * The previous element will be removed.
+     *
+     * @param {Element} element The view's element
+     *
+     * @return {View} The instance itself to allow chaining
+     */
+    View.prototype.setElement = function (element) {
+        // Clear and remove old element
+        this._unlisten();
+        delete this._element.remove;
+        this._element.remove();
+
+        // Setup new element
+        this._setupElement(element);
     };
 
     /**
@@ -165,6 +174,24 @@ define([
     // --------------------------------------------
 
     /**
+     * Setups the view's element.
+     *
+     * @param {Element} element The element
+     */
+    View.prototype._setupElement = function (element) {
+        this._element = $(element);
+        this._nativeElement = this._element.get(0);
+
+        // Replace remove function to avoid memory leaks if the user
+        // removes the element via jquery
+        this._element.data('_spoon_view', this);
+        this._element.remove = remove;
+
+        // Listen to events
+        this._listen();
+    };
+
+    /**
      * Listen to events.
      *
      * @param {Object} events An object with the events
@@ -191,13 +218,14 @@ define([
             }
 
             // Skip if already listening
-            if (fn._listening) {
+            if (fn._fn) {
                 return;
             }
 
             events[key] = function (event) {
                 fn.call(that, event, $(this));
             };
+            events[key]._fn = fn;
 
             matches = key.match(eventsSplitter);
             eventType = matches[1];
@@ -233,11 +261,12 @@ define([
                 throw new Error('Event handler for "' + key + '" references an unknown function.');
             }
 
-            if (!fn._listening) {
+            if (!fn._fn) {
                 continue;
             }
 
-            delete fn._listening;
+            this._events[key] = this._events[key]._fn;
+            delete fn._fn;
 
             matches = key.match(eventsSplitter);
             eventType = matches[1];
