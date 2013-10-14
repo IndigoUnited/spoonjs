@@ -4,12 +4,12 @@
  * State class.
  */
 define([
-    'mout/object/keys',
-    'mout/object/values',
     'mout/lang/deepClone',
-    'mout/array/filter',
+    'mout/object/filter',
+    'mout/object/deepEquals',
+    'mout/array/difference',
     'has'
-], function (keys, values, deepClone, filter, has) {
+], function (deepClone, filter, deepEquals, difference, has) {
 
     'use strict';
 
@@ -265,37 +265,25 @@ define([
      * @return {Boolean} True if they are loosely equal, false otherwise
      */
     State.prototype._compareObjects = function (obj1, obj2) {
-        var keys1 = keys(obj1),
-            keys2 = keys(obj2),
-            key,
-            x;
-
         // Remove special keys
-        keys1 = filter(keys1, function (key) {
+        obj1 = filter(obj1, function (value, key) {
             return key.charAt(0) !== '$';
         });
-        keys2 = filter(keys2, function (key) {
+        obj2 = filter(obj2, function (value, key) {
             return key.charAt(0) !== '$';
         });
 
-        // Compare the objects
-        // We first compare the first with the second and then the second with the first
-        for (x = keys1.length - 1; x >= 0; x -= 1) {
-            key = keys1[x];
+        return deepEquals(obj1, obj2, function (a, b) {
+            if (Array.isArray(a) && Array.isArray(b)) {
+                if (a.length !== b.length) {
+                    return false;
+                }
 
-            if (obj1[key] != obj2[key]) {
-                return false;
+                return !difference(a, b).length;
             }
-        }
-        for (x = keys2.length - 1; x >= 0; x -= 1) {
-            key = keys2[x];
 
-            if (obj2[key] != obj1[key]) {
-                return false;
-            }
-        }
-
-        return true;
+            return a == b;
+        });
     };
 
     State._nameRegExp = /^([a-z0-9_\-]+(\.[a-z0-9_\-]+)*)?$/i;
