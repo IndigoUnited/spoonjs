@@ -390,19 +390,8 @@ define([
 
     // Register handlebars helper
     if (window.Handlebars) {
-        Handlebars.registerHelper('url', function (state, params) {
-            var key,
-                value,
-                hash = params.hash;
-
-            state = this[state] || state;
-
-            for (key in hash) {
-                value = hash[key];
-                hash[key] = this[key] || value;
-            }
-
-            return View.helpers.url(state, params);
+        Handlebars.registerHelper('url', function (state, options) {
+            return View.helpers.url(state, options.hash);
         });
     }
 
