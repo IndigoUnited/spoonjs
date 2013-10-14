@@ -62,6 +62,8 @@ define([
 
         // Setup new element
         this._setupElement(element);
+
+        return this;
     };
 
     /**
@@ -154,6 +156,13 @@ define([
         return this;
     };
 
+    /**
+     * Returns the view's instance associated with an element.
+     *
+     * @param  {Element} element The element
+     *
+     * @return {View} The associated view or null if there's no view associated
+     */
     View.fromElement = function (element) {
         return $(element).data('_spoon_view');
     };
