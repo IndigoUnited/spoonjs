@@ -175,7 +175,7 @@ define([
      * @param {Element} element The element
      */
     View.prototype._setupElement = function (element) {
-        this._element = $(element);
+        this._element = $(element).eq(0);
         this._nativeElement = this._element.get(0);
 
         // Replace remove function to avoid memory leaks if the user
@@ -365,13 +365,17 @@ define([
     // --------------------------------------------
 
     // Remove replacer to avoid memory leaks
-    function remove() {
+    function remove(selector, keepData) {
         /*jshint validthis:true*/
-        var view = this.data('_spoon_view');
+        var view;
 
-        if (view) {
-            view.destroy();
+        if (keepData) {
+            return $.fn.remove.call(this, selector, keepData);
         }
+
+        // Destroy view
+        view = this.data('_spoon_view');
+        view && view.destroy();
 
         // Just to be sure
         $.fn.remove.call(this);
