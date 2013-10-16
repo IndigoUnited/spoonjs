@@ -162,7 +162,7 @@ define([
             states = this._states;
 
         this._states = {};
-        this._nrStates = size(this._states);
+        this._nrStates = size(states);
 
         // Process the states object
         for (key in states) {
