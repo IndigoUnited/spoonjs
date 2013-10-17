@@ -132,6 +132,23 @@ define([
     };
 
     /**
+     * Fires an event.
+     *
+     * @param {String}   event  The event name
+     * @param {...mixed} [args] The arguments to pass along with the event
+     *
+     * @return {Boolean} True if it was handled, false otherwise
+     */
+    Joint.prototype._emit = function (event, args) {
+        if (this._emitter.has(event)) {
+            this._emitter.emit.apply(this._emitter, arguments);
+            return true;
+        }
+
+        return false;
+    };
+
+    /**
      * Fires an event upwards the chain, starting in this Joint.
      *
      * @param {String}   event  The event name
