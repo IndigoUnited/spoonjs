@@ -34,8 +34,6 @@ define([
      * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.on = function (event, fn, context) {
-        context = context || this;
-
         this._emitter.on(event, fn, context);
         broadcaster.on(event, fn, context);
 
@@ -53,13 +51,13 @@ define([
      * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.once = function (event, fn, context) {
-        context = context || this;
-
         this._emitter.once(event, fn, context);
         broadcaster.once(event, fn, context);
 
         return this;
     };
+
+    Joint.prototype.one = Joint.prototype.once;
 
     /**
      * Removes a previously added listener.
@@ -71,8 +69,6 @@ define([
      * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.off = function (event, fn, context) {
-        context = context || this;
-
         this._emitter.off(event, fn, context);
         broadcaster.off(event, fn, context);
 
