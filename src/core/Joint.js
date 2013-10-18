@@ -101,7 +101,7 @@ define([
      */
     Joint.prototype._link = function (joint) {
         if (has('debug') && joint._uplink && joint._uplink !== this) {
-            throw new Error('"' + joint._uplink.$name + '" is already linked to other joint');
+            throw new Error('"' + joint.$name + '" is already linked to other joint');
         }
 
         if (joint._uplink !== this) {
