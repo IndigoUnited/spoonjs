@@ -234,11 +234,12 @@ define([
         var x,
             curr;
 
-        // Remove the listeners from the broadcaster
-        this._emitter.forEach(broadcaster.off, broadcaster);
-
-        // Clear the listeners
-        this._emitter.off();
+        // Foreach downlink, automatically destroy
+        for (x = this._downlinks.length - 1; x >= 0; x -= 1) {
+            curr = this._downlinks[x];
+            curr.destroy();
+        }
+        this._downlinks = null;
 
         // Foreach uplink, automatically unlink this instance
         if (this._uplink) {
@@ -246,14 +247,11 @@ define([
             this._uplink = null;
         }
 
-        // Foreach downlink, automatically unlink it and destroy
-        for (x = this._downlinks.length - 1; x >= 0; x -= 1) {
-            curr = this._downlinks[x];
-            this._unlink(curr);
-            curr.destroy();
-        }
+        // Remove the listeners from the broadcaster
+        this._emitter.forEach(broadcaster.off, broadcaster);
 
-        this._downlinks = null;
+        // Clear the listeners
+        this._emitter.off();
     };
 
     return Joint;
