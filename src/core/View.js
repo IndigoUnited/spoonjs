@@ -121,6 +121,17 @@ define([
     };
 
     /**
+     * Convenience method to detach a view's element from the DOM.
+     *
+     * @return {View} The instance itself to allow chaining
+     */
+    View.prototype.detach = function () {
+        this._element.detach();
+
+        return this;
+    };
+
+    /**
      * Renders the declared template with the supplied data.
      *
      * @param {Mixed} [data] The data to pass to the template
