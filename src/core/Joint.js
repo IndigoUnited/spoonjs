@@ -81,8 +81,8 @@ define([
      */
     Joint.prototype.destroy = function () {
         if (!this._destroyed) {
-            this._onDestroy();
             this._destroyed = true;
+            this._onDestroy();
         }
     };
 
