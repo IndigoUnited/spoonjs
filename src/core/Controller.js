@@ -161,7 +161,7 @@ define([
      * Parses the controller states.
      */
     Controller.prototype._parseStates = function () {
-        var key,ge
+        var key,
             func,
             matches,
             regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp,
