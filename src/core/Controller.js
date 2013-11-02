@@ -323,11 +323,21 @@ define([
     Controller.prototype._setCurrentState = function (state) {
         var name,
             fullName,
-            stateMeta;
+            stateMeta,
+            params;
 
         // Update current state
         this._previousState = this._currentState;
         this._currentState = state.clone();
+
+        // If the state is local, the $info metadata was not generated
+        params = this._currentState.getParams();
+        if (!params.$info || !params.$info.newState) {
+            params.$info = mixIn(params.$info || {}, {
+                newState: this._currentState,
+                previousState: this._previousState
+            });
+        }
 
         // Resolve to default state always
         if (!state.getName() && this._defaultState) {
