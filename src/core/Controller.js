@@ -91,6 +91,12 @@ define([
             state = stateRegistry.getCurrent().seekTo(stateMeta.name);
         } else {
             state = stateRegistry._createStateInstance(stateMeta.name, stateMeta.params);
+            
+            // Generate local metadata
+            state.getParams().$info = {
+                newState: state,
+                previousState: this._previousState
+            };
         }
 
         return this.delegateState(state);
@@ -155,7 +161,7 @@ define([
      * Parses the controller states.
      */
     Controller.prototype._parseStates = function () {
-        var key,
+        var key,ge
             func,
             matches,
             regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp,
@@ -323,21 +329,11 @@ define([
     Controller.prototype._setCurrentState = function (state) {
         var name,
             fullName,
-            stateMeta,
-            params;
+            stateMeta;
 
         // Update current state
         this._previousState = this._currentState;
         this._currentState = state.clone();
-
-        // If the state is local, the $info metadata was not generated
-        params = this._currentState.getParams();
-        if (!params.$info || !params.$info.newState) {
-            params.$info = mixIn(params.$info || {}, {
-                newState: this._currentState,
-                previousState: this._previousState
-            });
-        }
 
         // Resolve to default state always
         if (!state.getName() && this._defaultState) {
