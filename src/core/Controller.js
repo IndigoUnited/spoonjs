@@ -91,6 +91,12 @@ define([
             state = stateRegistry.getCurrent().seekTo(stateMeta.name);
         } else {
             state = stateRegistry._createStateInstance(stateMeta.name, stateMeta.params);
+            
+            // Generate local metadata
+            state.getParams().$info = {
+                newState: state,
+                previousState: this._previousState
+            };
         }
 
         return this.delegateState(state);
