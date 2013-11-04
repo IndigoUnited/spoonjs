@@ -186,7 +186,13 @@ define([
      * @param {Element} element The element
      */
     View.prototype._setupElement = function (element) {
-        this._element = $(element).eq(0);
+        element = $(element);
+
+        if (has('debug') && element.data('_spoon_view')) {
+            throw new Error('A view is already instantiated for the same element.');
+        }
+
+        this._element = element;
         this._nativeElement = this._element.get(0);
 
         // Replace remove function to avoid memory leaks if the user
