@@ -237,7 +237,7 @@ define([
         // Foreach downlink, automatically destroy
         for (x = this._downlinks.length - 1; x >= 0; x -= 1) {
             curr = this._downlinks[x];
-            curr.destroy();
+            curr && curr.destroy();  // We need to check if it still exists
         }
         this._downlinks = null;
 
