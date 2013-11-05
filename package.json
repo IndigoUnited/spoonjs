@@ -9,9 +9,6 @@
     "test": "testem ci --skip chromium"
   },
   "devDependencies": {
-    "testem": "~0.2.98"
-  },
-  "scripts": {
-    "test": "testem ci --skip chromium"
+    "testem": "~0.5.0"
   }
 }

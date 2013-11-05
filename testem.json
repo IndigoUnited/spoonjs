@@ -1,6 +1,6 @@
 {
   "framework": "mocha",
-  "test_page": "test/test.html",
+  "test_page": "test/test.html#testem",
   "src_files": [
     "src/**/*",
     "test/**/*"
