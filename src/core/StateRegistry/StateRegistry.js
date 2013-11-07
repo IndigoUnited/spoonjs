@@ -188,7 +188,7 @@ define([
 
     /**
      * Sets the current state.
-     * If the state is not the same, the change event will be emited.
+     * If the state is not the same, the change event will be emitted.
      * Also if the state has a route associated and the routing is enabled, the browser URL will be updated accordingly.
      *
      * The default implementation should handle these options:
