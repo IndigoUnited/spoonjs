@@ -76,6 +76,15 @@ define([
     };
 
     /**
+     * Checks if the instance is destroyed.
+     *
+     * @return {Boolean} True if it is, false otherwise
+     */
+    Joint.prototype.isDestroyed = function () {
+        return !!this._destroyed;
+    };
+
+    /**
      * Destroys the instance, releasing all of its resources.
      * Note that all downlinks will also be destroyed.
      */
