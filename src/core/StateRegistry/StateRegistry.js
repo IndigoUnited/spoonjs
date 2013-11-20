@@ -417,11 +417,10 @@ define([
     /**
      * Handles the click event on links.
      *
-     * @param {Event}   event The click event
-     * @param {Element} [el]  The link tag
+     * @param {Event} event The click event
      */
-    StateRegistry.prototype._handleLinkClick = function (event, el) {
-        var element = el || event.currentTarget,
+    StateRegistry.prototype._handleLinkClick = function (event) {
+        var element = event.currentTarget,
             type = element.getAttribute('data-url-type'),
             url = element.href,
             state,
