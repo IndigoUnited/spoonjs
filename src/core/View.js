@@ -186,6 +186,8 @@ define([
      * @param {Element} element The element
      */
     View.prototype._setupElement = function (element) {
+        var that = this;
+
         element = $(element);
 
         if (has('debug') && element.data('_spoon_view')) {
@@ -195,10 +197,13 @@ define([
         this._element = element;
         this._nativeElement = this._element.get(0);
 
-        // Replace remove function to avoid memory leaks if the user
-        // removes the element via jquery
+        // Listen to the special "destroy" event that we specially craft
+        // to avoid memory leaks when the element is removed externally via
+        // .remove(), .html() or equivalents
         this._element.data('_spoon_view', this);
-        this._element.remove = remove;
+        this._element.on('destroyed', function () {
+            that.destroy();
+        });
 
         // Listen to events
         this._listen();
@@ -370,7 +375,7 @@ define([
         Joint.prototype._onDestroy.call(this);
 
         // Destroy view element
-        this._element.remove = $.fn.remove;
+        this._element.off();
         this._element.remove();
 
         // Null references
@@ -381,22 +386,15 @@ define([
 
     // --------------------------------------------
 
-    // Remove replacer to avoid memory leaks
-    function remove(selector, keepData) {
-        /*jshint validthis:true*/
-        var view;
-
-        if (keepData) {
-            return $.fn.remove.call(this, selector, keepData);
+    // Add a special destroy event so that "remove" is called when jquery
+    // removes the element
+    // This allows to call the view's destroy() method when the element is
+    // removed externally, see: http://stackoverflow.com/a/10172676
+    $.event.special.destroyed = {
+        remove: function (o) {
+            o.handler && o.handler();
         }
-
-        // Destroy view
-        view = this.data('_spoon_view');
-        view && view.destroy();
-
-        // Just to be sure
-        $.fn.remove.call(this);
-    }
+    };
 
     // Default url helper
     function urlHelper() {
