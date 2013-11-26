@@ -10,9 +10,10 @@ define([
     'mout/object/size',
     'mout/object/pick',
     'mout/object/mixIn',
+    'mout/object/fillIn',
     'mout/array/find',
     'has'
-], function (Joint, stateRegistry, startsWith, size, pick, mixIn, find, has) {
+], function (Joint, stateRegistry, startsWith, size, pick, mixIn, fillIn, find, has) {
 
     'use strict';
 
@@ -263,7 +264,7 @@ define([
         state = {
             name: name,
             fullName: name,
-            params: {}
+            params: this._currentState ? mixIn({}, this._currentState.getParams()) : {}
         };
 
         // Local
@@ -277,7 +278,7 @@ define([
 
             // Concatenate name & mix in relevant params
             state.fullName = ancestorState.getName() + (state.fullName ? '.' + state.fullName : '');
-            mixIn(state.params, ancestor._currentStateParams);
+            fillIn(state.params, ancestorState.getParams());
 
             ancestor = ancestor._uplink;
         }
@@ -348,9 +349,6 @@ define([
 
         name = this._currentState.getName();
         stateMeta = this._states[name];
-
-        // Update state params being used by this controller
-        this._currentStateParams = pick(this._currentState.getParams(), stateMeta.params);
     };
 
     /**
