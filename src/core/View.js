@@ -139,14 +139,22 @@ define([
      * @return {View} The instance itself to allow chaining
      */
     View.prototype.render = function (data) {
+        var type;
+
         if (this._template) {
             this.clear();
 
-            if (has('debug') && typeof this._template !== 'function') {
-                throw new Error('Expected _template to be a compiled template (function).');
+            type = typeof this._template;
+
+            if (has('debug') && typeof this._template !== 'string' && typeof this._template !== 'function') {
+                throw new Error('Expected _template to be a string or compiled template (function).');
             }
 
-            this._element.html(this._renderTemplate(this._template, data));
+            if (type === 'string') {
+                this._element.html(this._template);
+            } else {
+                this._element.html(this._renderTemplate(this._template, data));
+            }
         }
 
         return this;
