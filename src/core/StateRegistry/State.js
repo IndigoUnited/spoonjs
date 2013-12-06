@@ -26,6 +26,8 @@ define([
         this._nrParts = 0;
         this._cursor = 0;
 
+        this._filterSpecial = this.constructor.filterSpecial || State.filterSpecial;
+
         this.setFullName(name);
         this.setParams(params);
     }
@@ -266,12 +268,8 @@ define([
      */
     State.prototype._compareObjects = function (obj1, obj2) {
         // Remove special keys
-        obj1 = filter(obj1, function (value, key) {
-            return key.charAt(0) !== '$';
-        });
-        obj2 = filter(obj2, function (value, key) {
-            return key.charAt(0) !== '$';
-        });
+        obj1 = this._filterSpecial(obj1);
+        obj2 = this._filterSpecial(obj2);
 
         return deepEquals(obj1, obj2, function (a, b) {
             if (Array.isArray(a) && Array.isArray(b)) {
@@ -301,6 +299,19 @@ define([
         var regExp = this._nameRegExp || State._nameRegExp;
 
         return regExp.test(name);
+    };
+
+    /**
+     * Filters special params from a object.
+     *
+     * @param {Object} params The params to filter
+     *
+     * @return {Object} The filtered params
+     */
+    State.filterSpecial = function (params) {
+        return filter(params, function (value, key) {
+            return key.charAt(0) !== '$';
+        });
     };
 
     return State;

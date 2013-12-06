@@ -274,10 +274,16 @@ define([
      * @return {String} The URL for the state or null if unable to generate one
      */
     StateRegistry.prototype.generateUrl = function (state, params, absolute) {
-        var route = this._states[state],
+        var route,
             url;
 
+        if (typeof state !== 'string') {
+            state = state.getFullName();
+        }
+
+        route = this._routes[state];
         if (!route || !this._address) {
+            params = State.filterSpecial(params);
             return 'state://' + state + '/' + encode(params);
         }
 
