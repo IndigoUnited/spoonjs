@@ -281,7 +281,7 @@ define([
             state = state.getFullName();
         }
 
-        route = this._routes[state];
+        route = this._states[state];
         if (!route || !this._address) {
             params = State.filterSpecial(params);
             return 'state://' + state + '/' + encode(params);
