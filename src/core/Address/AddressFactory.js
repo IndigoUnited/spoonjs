@@ -51,7 +51,7 @@ define([
         // If no address is compatible we return null
         if (!AddressHash.isCompatible()) {
             if (has('debug')) {
-                console.warn('No address compatible with the current browser.');
+                console.warn('[spoonjs] No address compatible with the current browser.');
             }
             address = null;
         } else {

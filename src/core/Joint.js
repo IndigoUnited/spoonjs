@@ -174,7 +174,7 @@ define([
         }
 
         if (has('debug')) {
-            console.warn('Unhandled upcast event "' + event + '".');
+            console.warn('[spoonjs] Unhandled upcast event "' + event + '".');
         }
 
         return false;

@@ -330,9 +330,9 @@ define([
             fullName;
 
         if (has('debug')) {
-            console.info('State changed to "' + state + '".');
+            console.info('[spoonjs] State changed to "' + state + '".');
             if (!this.isRegistered(state)) {
-                console.warn('State "' + state + '" is not registered.');
+                console.warn('[spoonjs] State "' + state + '" is not registered.');
             }
         }
 
@@ -359,7 +359,7 @@ define([
         // If the final state name has changed in the process, inform the user
         // This happens if the final state is changed (tipically because of default state translations)
         if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
-            console.info('Final state after transition is "' + this._currentState.getFullName() + '".');
+            console.info('[spoonjs] Final state after transition is "' + this._currentState.getFullName() + '".');
         }
     };
 
@@ -416,7 +416,7 @@ define([
         }
 
         if (has('debug')) {
-            console.warn('No state matched the URL "' + value + '".');
+            console.warn('[spoonjs] No state matched the URL "' + value + '".');
         }
     };
 
@@ -457,7 +457,7 @@ define([
 
                 this.setCurrent(state, params, options);
             } else if (has('debug')) {
-                console.info('Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
+                console.info('[spoonjs] Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
             }
         }
     };

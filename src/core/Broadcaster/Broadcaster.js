@@ -80,7 +80,7 @@ define([
         }
 
         if (has('debug')) {
-            console.warn('Unhandled broadcast event "' + event + '".');
+            console.warn('[spoonjs] Unhandled broadcast event "' + event + '".');
         }
 
         return false;
