@@ -111,7 +111,8 @@ define([
      * @return {Controller} The instance itself to allow chaining
      */
     Controller.prototype.delegateState = function (state) {
-        var name;
+        var name,
+            changed;
 
         // Assume app state if not passed
         if (!state) {
@@ -124,7 +125,7 @@ define([
         // If still has no name it means there's no default state defined
         if (!name) {
             if (has('debug') && this._nrStates) {
-                console.warn('No default state defined in "' + this.$name + '".');
+                console.warn('[spoonjs] No default state defined in "' + this.$name + '".');
             }
 
             return;
@@ -133,7 +134,7 @@ define([
         // Check if state exists
         if (!this._states[name]) {
             if (has('debug')) {
-                console.warn('Unknown state "' + name + '" on controller "' + this.$name + '".');
+                console.warn('[spoonjs] Unknown state "' + name + '" on controller "' + this.$name + '".');
             }
 
             return;
@@ -141,15 +142,15 @@ define([
 
         // If the current state is not the same, transition to it
         if (!this._isSameState(state)) {
-            this._performStateChange(state);
+            changed = this._performStateChange(state);
         // Otherwise propagate it to child controllers
         } else {
-            this._propagateState(state);
+            changed = this._propagateState(state);
         }
 
         // Sync up the full state name with the application one
         // This is needed because default states might have been translated down the chain
-        if (stateRegistry.getCurrent() === state) {
+        if (changed !== false && stateRegistry.getCurrent() === state) {
             this._currentState.setFullName(state.getFullName());
         }
 
@@ -293,14 +294,17 @@ define([
     /**
      * Checks if a given state is the same as the current controller state.
      *
-     * @param {State} state The state
+     * @param {State} state       The state
+     * @param {State} [baseState] The state to compare against, defaults to the current state
      *
      * @return {Boolean} True if the same, false otherwise
      */
-    Controller.prototype._isSameState = function (state) {
+    Controller.prototype._isSameState = function (state, baseState) {
         var stateMeta;
 
-        if (!this._currentState) {
+        baseState = baseState || this._currentState;
+
+        if (!baseState) {
             return false;
         }
 
@@ -318,7 +322,7 @@ define([
         }
 
         // Check if equal
-        return this._currentState.isEqual(state, stateMeta.params);
+        return baseState.isEqual(state, stateMeta.params);
     };
 
     /**
@@ -355,6 +359,8 @@ define([
      * Performs the state change, calling the state handler if any.
      *
      * @param {State} state The state
+     *
+     * @return {Boolean} True if it changed state, false otherwise
      */
     Controller.prototype._performStateChange = function (state) {
         var stateMeta;
@@ -368,12 +374,16 @@ define([
         // Execute handler
         stateMeta = this._states[this._currentState.getName()];
         stateMeta.fn.call(this, state.getParams());
+
+        return true;
     };
 
     /**
      * Attempts to propagate the state to one of the downlinks.
      *
      * @param {State} state The state
+     *
+     * @param {Boolean} True if it changed state, false otherwise
      */
     Controller.prototype._propagateState = function (state) {
         var name,
@@ -403,8 +413,10 @@ define([
         }
 
         if (name && has('debug')) {
-            console.warn('No child controller of "' + this.$name + '" declared the "' + name + '" state.');
+            console.warn('[spoonjs] No child controller of "' + this.$name + '" declared the "' + name + '" state.');
         }
+
+        return true;
     };
 
     Controller._stateParamsRegExp = /\((.+?)\)/;
