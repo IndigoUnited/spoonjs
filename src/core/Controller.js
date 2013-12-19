@@ -24,6 +24,7 @@ define([
         Joint.call(this);
 
         this._parseStates();
+        this._parseDefaultState();
     }
 
     Controller.prototype = Object.create(Joint.prototype);
@@ -120,7 +121,7 @@ define([
         }
 
         state = state && (state.$info ? state.$info.newState : state);
-        name = state && state.getName() || this._defaultState;
+        name = (state && state.getName()) || (this._defaultState && this._defaultState.name);
 
         // If still has no name it means there's no default state defined
         if (!name) {
@@ -215,13 +216,29 @@ define([
             this._states[key].fn = func;
             this._states[key].params = this._states[key].params || [];
         }
-
-        // Process the default state
-        if (has('debug') && this._defaultState && !this._states[this._defaultState]) {
-            throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
-        }
     };
 
+    /**
+     * Parse the default state.
+     */
+    Controller.prototype._parseDefaultState = function () {
+        // Convert default state as a string to an object
+        if (typeof this._defaultState === 'string') {
+            this._defaultState = {
+                name: this._defaultState,
+                params: {}
+            };
+        }
+
+        if (has('debug') && this._defaultState) {
+            if (!this._defaultState.name) {
+                throw new Error('The default state of "' + this.$name + '" cannot be empty.');
+            }
+            if (!this._states[this._defaultState.name]) {
+                throw new Error('The default state of "' + this.$name + '" points to an nonexistent state.');
+            }
+        }
+    },
 
     /**
      * Resolves a full state name.
@@ -284,9 +301,12 @@ define([
             ancestor = ancestor._uplink;
         }
 
-        // Ensure names
-        state.name = state.name || this._defaultState || '';
-        state.fullName = state.fullName || this._defaultState || '';
+        // If no state name is set, use default state
+        if (!state.name && this._defaultState) {
+            state.name = this._defaultState.name;
+            state.fullName = state.fullName || this._defaultState.name;
+            mixIn(state.params, this._defaultState.params);
+        }
 
         return state;
     };
@@ -309,12 +329,12 @@ define([
         }
 
         // Translate to default state if name is empty
-        if (!state.getName()) {
+        if (!state.getName() && this._defaultState) {
             state = state.clone();
-            state.setFullName(state.getFullName() + '.' + this._defaultState);
+            state.setFullName(state.getFullName() + '.' + this._defaultState.name);
         }
 
-        stateMeta = this._states[state.getName()];
+        stateMeta = this._states[state.getName()] || {};
 
         // Check if state is a wildcard
         if (stateMeta.wildcard) {
@@ -333,6 +353,7 @@ define([
      */
     Controller.prototype._setCurrentState = function (state) {
         var name,
+            defaultStateName,
             fullName,
             stateMeta;
 
@@ -342,7 +363,8 @@ define([
 
         // Resolve to default state always
         if (!state.getName() && this._defaultState) {
-            fullName = state.getFullName() ? state.getFullName() + '.' + this._defaultState : this._defaultState;
+            defaultStateName = this._defaultState.name;
+            fullName = fullName = state.getFullName() ? state.getFullName() + '.' + defaultStateName : defaultStateName;
             this._currentState.setFullName(fullName);
 
             // Update also the state registry one
