@@ -69,6 +69,7 @@ define([
      * If no route is passed, the current address value is used.
      * If a state is found for the route and is different from the current one, a transition
      * will occur and the change event will be emitted.
+     * If not state is found, a unknown event will be fired instead.
      *
      * This function is handy to kick-off the state registry.
      *
@@ -85,7 +86,7 @@ define([
             type: 'external'
         };
 
-        return this._analyzeAddress(obj);
+        return this._onChange(obj);
     };
 
     /**
@@ -363,26 +364,13 @@ define([
 
     /**
      * Handles the address change event.
-     *
-     * @param {Object} obj The address object containing the change details
-     */
-    StateRegistry.prototype._onChange = function (obj) {
-        var matched = this._analyzeAddress(obj);
-
-        if (!matched) {
-            this._emit('unknown', obj);
-        }
-    };
-
-    /**
-     * Analyses an address object, searching for a matching state.
      * Note that this function returns null if the URL is the same as the previous one.
      *
      * @param {Object} obj The address object containing the change details
      *
      * @return {Boolean} True if it matched a registered state, false otherwise
      */
-    StateRegistry.prototype._analyzeAddress = function (obj) {
+    StateRegistry.prototype._onChange = function (obj) {
         var x,
             value = obj.newValue,
             length,
@@ -433,8 +421,10 @@ define([
             console.warn('[spoonjs] No state matched the URL "' + value + '".');
         }
 
+        this._emit('unknown', value);
+
         return false;
-    },
+    };
 
     /**
      * Handles the click event on links.
