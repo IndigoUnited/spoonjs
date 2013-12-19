@@ -74,7 +74,7 @@ define([
      *
      * @param {String} [route] The route (URL fragment)
      *
-     * @return {StateRegistry} The instance itself to allow chaining
+     * @return {Boolean} True if it changed state, false otherwise
      */
     StateRegistry.prototype.parse = function (route) {
         // Manually call the change handler with the passed route
@@ -85,9 +85,7 @@ define([
             type: 'external'
         };
 
-        this._onChange(obj);
-
-        return this;
+        return this._analyzeAddress(obj);
     };
 
     /**
@@ -369,6 +367,22 @@ define([
      * @param {Object} obj The address object containing the change details
      */
     StateRegistry.prototype._onChange = function (obj) {
+        var matched = this._analyzeAddress(obj);
+
+        if (!matched) {
+            this._emit('unknown', obj);
+        }
+    };
+
+    /**
+     * Analyses an address object, searching for a matching state.
+     * Note that this function returns null if the URL is the same as the previous one.
+     *
+     * @param {Object} obj The address object containing the change details
+     *
+     * @return {Boolean} True if it matched a registered state, false otherwise
+     */
+    StateRegistry.prototype._analyzeAddress = function (obj) {
         var x,
             value = obj.newValue,
             length,
@@ -385,7 +399,7 @@ define([
         // This can happen because calls to address.setValue() from this class
         // generate a change event (internal)
         if (this._currentUrl === value) {
-            return;
+            return null;
         }
 
         this._currentUrl = value;
@@ -411,14 +425,16 @@ define([
 
                 // Finally change to the state
                 this.setCurrent(state);
-                return;
+                return true;
             }
         }
 
         if (has('debug')) {
             console.warn('[spoonjs] No state matched the URL "' + value + '".');
         }
-    };
+
+        return false;
+    },
 
     /**
      * Handles the click event on links.
