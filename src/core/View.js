@@ -141,6 +141,11 @@ define([
     View.prototype.render = function (data) {
         var type;
 
+        if (has('debug') && this._rendered) {
+            console.warn('Calling render on "' + this.$name + '" when it is already rendered.');
+            console.warn('Some views might not be prepared for double rendering, consider creating an "update" method.');
+        }
+
         if (this._template) {
             this.clear();
 
@@ -157,6 +162,8 @@ define([
             }
         }
 
+        this._rendered = true;
+
         return this;
     };
 
@@ -171,6 +178,7 @@ define([
 
         children.remove();
         this._element.innerHTML = '';
+        this._rendered = false;
 
         return this;
     };
@@ -204,6 +212,7 @@ define([
 
         this._element = element;
         this._nativeElement = this._element.get(0);
+        this._rendered = false;
 
         // Listen to the special "destroy" event that we specially craft
         // to avoid memory leaks when the element is removed externally via
