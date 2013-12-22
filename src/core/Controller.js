@@ -112,8 +112,7 @@ define([
      * @return {Controller} The instance itself to allow chaining
      */
     Controller.prototype.delegateState = function (state) {
-        var name,
-            changed;
+        var name;
 
         // Assume app state if not passed
         if (!state) {
@@ -143,16 +142,10 @@ define([
 
         // If the current state is not the same, transition to it
         if (!this._isSameState(state)) {
-            changed = this._performStateChange(state);
+            this._performStateChange(state);
         // Otherwise propagate it to child controllers
         } else {
-            changed = this._propagateState(state);
-        }
-
-        // Sync up the full state name with the application one
-        // This is needed because default states might have been translated down the chain
-        if (changed !== false && stateRegistry.getCurrent() === state) {
-            this._currentState.setFullName(state.getFullName());
+            this._propagateState(state);
         }
 
         return this;
@@ -381,8 +374,6 @@ define([
      * Performs the state change, calling the state handler if any.
      *
      * @param {State} state The state
-     *
-     * @return {Boolean} True if it changed state, false otherwise
      */
     Controller.prototype._performStateChange = function (state) {
         var stateMeta;
@@ -396,8 +387,6 @@ define([
         // Execute handler
         stateMeta = this._states[this._currentState.getName()];
         stateMeta.fn.call(this, state.getParams());
-
-        return true;
     };
 
     /**
