@@ -112,7 +112,8 @@ define([
      * @return {Controller} The instance itself to allow chaining
      */
     Controller.prototype.delegateState = function (state) {
-        var name;
+        var name,
+            currentState;
 
         // Assume app state if not passed
         if (!state) {
@@ -146,6 +147,15 @@ define([
         // Otherwise propagate it to child controllers
         } else {
             this._propagateState(state);
+        }
+
+        // Sync up the full state name with the application one
+        // This is needed because default states might have been translated down the chain
+        // Note that the current state might not be set or be changed meanwhile if the user
+        // override "_performStateChange()" or "_propagateState()"
+        currentState = this._currentState;
+        if (stateRegistry.getCurrent() === state && currentState && currentState.getName() === name) {
+            this._currentState.setFullName(state.getFullName());
         }
 
         return this;
@@ -393,8 +403,6 @@ define([
      * Attempts to propagate the state to one of the downlinks.
      *
      * @param {State} state The state
-     *
-     * @param {Boolean} True if it changed state, false otherwise
      */
     Controller.prototype._propagateState = function (state) {
         var name,
@@ -426,8 +434,6 @@ define([
         if (name && has('debug')) {
             console.warn('[spoonjs] No child controller of "' + this.$name + '" declared the "' + name + '" state.');
         }
-
-        return true;
     };
 
     Controller._stateParamsRegExp = /\((.+?)\)/;
