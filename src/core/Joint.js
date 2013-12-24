@@ -154,6 +154,61 @@ define([
     };
 
     /**
+     * Fires an event upwards the chain.
+     *
+     * @param {String}   event  The event name
+     * @param {...mixed} [args] The arguments to pass along with the event
+     *
+     * @return {Boolean} True if it was handled, false otherwise
+     */
+    Joint.prototype._bubbleUp = function (event, args) {
+        if (this._uplink) {
+            return this._uplink._upcast(event, args);
+        }
+
+        if (has('debug')) {
+            console.warn('[spoonjs] Unhandled upcast event "' + event + '".');
+        }
+
+        return false;
+    };
+
+    /**
+     * Fires an event downwards the chain.
+     *
+     * @param {String}   event  The event name
+     * @param {...mixed} [args] The arguments to pass along with the event
+     *
+     * @return {Boolean} True if it was handled, false otherwise
+     */
+    Joint.prototype._bubbleDown = function (event, args) {
+        var x,
+            length,
+            last,
+            curr,
+            currHandled,
+            handled = false;
+
+        // Cycle each downlink
+        length = this._downlinks.length;
+        for (x = 0; x < length; x += 1) {
+            curr = this._downlinks[x];
+
+            // Protect against triggered events that cause the destruction of links
+            if (!curr || curr === last) {
+                continue;
+            }
+
+            currHandled = curr._downcast.apply(curr, arguments);
+            if (currHandled) {
+                handled = true;
+            }
+        }
+
+        return handled;
+    };
+
+    /**
      * Fires an event upwards the chain, starting in this Joint.
      *
      * @param {String}   event  The event name
