@@ -1,4 +1,4 @@
-# spoon.js [![Build Status](https://secure.travis-ci.org/IndigoUnited/spoon.js.png?branch=master)](http://travis-ci.org/IndigoUnited/spoon.js)
+# spoon.js [![Build Status](https://secure.travis-ci.org/IndigoUnited/spoon.js.png?branch=master)](http://travis-ci.org/IndigoUnited/spoon.js) [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/IndigoUnited/spoonjs/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
 `Eat your spaghetti code with the spoon.`
 
