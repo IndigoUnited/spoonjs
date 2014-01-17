@@ -257,8 +257,8 @@ define([
                 return;
             }
 
-            events[key] = function (event) {
-                fn.call(that, event, $(this));
+            events[key] = function (event, data) {
+                fn.call(that, event, $(this), data);
             };
             events[key]._fn = fn;
 
