@@ -161,6 +161,18 @@ define([
         return this;
     };
 
+    /**
+     * Instruct the extend to merge states.
+     *
+     * {@inheritDoc}
+     */
+    Controller.extend = function (parent, props, merge) {
+        merge = merge || [];
+        merge.push('_states');
+
+        return Joint.extend.call(this, parent, props, merge);
+    };
+
     // --------------------------------------------
 
     /**
@@ -437,16 +449,6 @@ define([
     };
 
     Controller._stateParamsRegExp = /\((.+?)\)/;
-
-    // --------------------------------------------
-
-    // Instruct the extend to merge states
-    Controller.extend = function (parent, props, merge) {
-        merge = merge || [];
-        merge.push('_states');
-
-        return Joint.extend.call(this, parent, props, merge);
-    };
 
     return Controller;
 });

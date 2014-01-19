@@ -18,6 +18,11 @@ define([
 
     'use strict';
 
+    // Default url helper
+    function urlHelper() {
+        throw new Error('Attempted to use "url" helper without calling "_renderTemplate".');
+    }
+
     /**
      * Constructor.
      *
@@ -192,6 +197,53 @@ define([
      */
     View.fromElement = function (element) {
         return $(element).data('_spoon_view');
+    };
+
+    /**
+     * Returns the view's instance associated with an element or the closest
+     * ancestor (similar to jQuery).
+     *
+     * @param  {Element} element The element
+     *
+     * @return {View} The associated view or null if there's no view associated
+     */
+    View.closest = function (element) {
+        var view;
+
+        element = $(element);
+
+        do {
+            // Break if we are at the root or if there's no element
+            if (!element.length || element[0] === document.body) {
+                break;
+            }
+
+            view = element.data('_spoon_view');
+            if (view) {
+                break;
+            }
+
+            element = element.parent();
+        } while (true);
+
+        return view;
+    };
+
+    /**
+     * Instruct the extend to merge events.
+     *
+     * {@inheritDoc}
+     */
+    View.extend = function (parent, props, merge) {
+        merge = merge || [];
+        merge.push('_events');
+
+        return Joint.extend.call(this, parent, props, merge);
+    };
+
+    // Custom helpers can be added here
+    View.helpers = {
+        url: urlHelper
     };
 
     // --------------------------------------------
@@ -412,26 +464,6 @@ define([
             o.handler && o.handler();
         }
     };
-
-    // Default url helper
-    function urlHelper() {
-        throw new Error('Attempted to use "url" helper without calling "_renderTemplate".');
-    }
-
-    // Custom helpers can be added here
-    View.helpers = {
-        url: urlHelper
-    };
-
-    // Instruct the extend to merge events
-    View.extend = function (parent, props, merge) {
-        merge = merge || [];
-        merge.push('_events');
-
-        return Joint.extend.call(this, parent, props, merge);
-    };
-
-    // ------------------------------------------
 
     // Register handlebars helper
     if (window.Handlebars) {
