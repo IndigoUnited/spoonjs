@@ -368,19 +368,20 @@ define([
     /**
      * Generates an URL.
      *
-     * @param {String} state    The state name
-     * @param {Object} [params] The state params
+     * @param {String}  state      The state name
+     * @param {Object}  [params]   The state params
+     * @param {Boolean} [absolute] True to generate an absolute URL, false otherwise
      *
      * @return {String} The generated URL
      */
-    View.prototype._generateUrl = function (state, params) {
+    View.prototype._generateUrl = function (state, params, absolute) {
         var controller = this._getController();
 
         if (has('debug') && !controller) {
             throw new Error('Could not find the controller responsible for "' + this.$name + '".');
         }
 
-        return controller.generateUrl(state, params);
+        return controller.generateUrl(state, params, absolute);
     };
 
     /**

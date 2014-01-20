@@ -42,19 +42,20 @@ define([
     /**
      * Generates an URL for a state.
      *
-     * @param {String} name     The state name
-     * @param {Object} [params] The state params
+     * @param {String}  name       The state name
+     * @param {Object}  [params]   The state params
+     * @param {Boolean} [absolute] True to generate an absolute URL, false otherwise
      *
      * @return {String} The generated URL
      */
-    Controller.prototype.generateUrl = function (name, params) {
+    Controller.prototype.generateUrl = function (name, params, absolute) {
         var state;
 
         // Resolve the state
         state = this._resolveFullState(name);
         mixIn(state.params, params);
 
-        return stateRegistry.generateUrl(state.fullName, state.params);
+        return stateRegistry.generateUrl(state.fullName, state.params, absolute);
     };
 
     /**
