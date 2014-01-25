@@ -191,7 +191,7 @@ define([
     /**
      * Returns the view's instance associated with an element.
      *
-     * @param  {Element} element The element
+     * @param {Element} element The element
      *
      * @return {View} The associated view or null if there's no view associated
      */
@@ -203,7 +203,7 @@ define([
      * Returns the view's instance associated with an element or the closest
      * ancestor (similar to jQuery).
      *
-     * @param  {Element} element The element
+     * @param {Element} element The element
      *
      * @return {View} The associated view or null if there's no view associated
      */
