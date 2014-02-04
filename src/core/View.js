@@ -62,7 +62,6 @@ define([
     View.prototype.setElement = function (element) {
         // Clear and remove old element
         this._unlisten();
-        delete this._element.remove;
         this._element.remove();
 
         // Setup new element
