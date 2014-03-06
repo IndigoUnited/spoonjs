@@ -118,7 +118,7 @@ define([
                 target = $(target);
             }
 
-            target.append(this._element);
+            target.preppend(this._element);
         }
 
         return this;
