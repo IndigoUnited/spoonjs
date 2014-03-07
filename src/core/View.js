@@ -62,7 +62,6 @@ define([
     View.prototype.setElement = function (element) {
         // Clear and remove old element
         this._unlisten();
-        delete this._element.remove;
         this._element.remove();
 
         // Setup new element
@@ -119,7 +118,7 @@ define([
                 target = $(target);
             }
 
-            target.append(this._element);
+            target.prepend(this._element);
         }
 
         return this;
@@ -342,7 +341,7 @@ define([
         events = events || this._events;
 
         for (key in events) {
-            fn = this._events[key];
+            fn = events[key];
 
             if (has('debug') && !fn) {
                 throw new Error('Event handler for "' + key + '" references an unknown function.');
@@ -352,7 +351,7 @@ define([
                 continue;
             }
 
-            this._events[key] = this._events[key]._fn;
+            events[key] = events[key]._fn;
             delete fn._fn;
 
             matches = key.match(eventsSplitter);
