@@ -73,11 +73,12 @@ define([
      *
      * This function is handy to kick-off the state registry.
      *
-     * @param {String} [route] The route (URL fragment)
+     * @param {String} [route]   The route (URL fragment)
+     * @param {Object} [options] The options, see StateRegistry#setCurrent
      *
      * @return {Boolean} True if it changed state, false otherwise
      */
-    StateRegistry.prototype.parse = function (route) {
+    StateRegistry.prototype.parse = function (route, options) {
         // Manually call the change handler with the passed route
         // or the address value (if available)
         var obj = {
@@ -86,7 +87,7 @@ define([
             type: 'external'
         };
 
-        return this._onChange(obj);
+        return this._onChange(obj, options);
     };
 
     /**
@@ -194,6 +195,7 @@ define([
      *  - force:   true to force the value to be changed even if the value is the same
      *  - route:   false to not change the address value
      *  - replace: true to replace the address value instead of adding a new history entry
+     *  - silent:  true to silently change the state, without emitting an event
      *
      * @param {String|State} state     The state name or the state object
      * @param {Object}       [params]  The state parameters if the state was a string
@@ -203,6 +205,7 @@ define([
      */
     StateRegistry.prototype.setCurrent = function (state, params, options) {
         var previousState;
+
 
         // Handle args
         if (typeof state === 'string') {
@@ -352,13 +355,15 @@ define([
         this._currentState.setCursor(0);
 
         // Emit the change
-        tmp = this._currentState;
-        this._emit('change', this._currentState, previousState);
+        if (!options.silent) {
+            tmp = this._currentState;
+            this._emit('change', this._currentState, previousState);
 
-        // If the final state name has changed in the process, inform the user
-        // This happens if the final state is changed (tipically because of default state translations)
-        if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
-            console.info('[spoonjs] Final state after transition is "' + this._currentState.getFullName() + '".');
+            // If the final state name has changed in the process, inform the user
+            // This happens if the final state is changed (tipically because of default state translations)
+            if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
+                console.info('[spoonjs] Final state after transition is "' + this._currentState.getFullName() + '".');
+            }
         }
     };
 
@@ -366,11 +371,12 @@ define([
      * Handles the address change event.
      * Note that this function returns null if the URL is the same as the previous one.
      *
-     * @param {Object} obj The address object containing the change details
+     * @param {Object} obj       The address object containing the change details
+     * @param {Object} [options] The options to be used
      *
      * @return {Boolean} True if it matched a registered state, false otherwise
      */
-    StateRegistry.prototype._onChange = function (obj) {
+    StateRegistry.prototype._onChange = function (obj, options) {
         var x,
             value = obj.newValue,
             length,
@@ -412,7 +418,7 @@ define([
                 params.$info.address = obj;
 
                 // Finally change to the state
-                this.setCurrent(state);
+                this.setCurrent(state, options);
                 return true;
             }
         }
