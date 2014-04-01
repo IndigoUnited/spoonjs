@@ -424,8 +424,8 @@ define([
             rendered;
 
         // Set helpers that are contextually related to the view
-        helpers.url = function (state, params) {
-            return that._generateUrl(state, params);
+        helpers.url = function (state, params, absolute) {
+            return that._generateUrl(state, params, absolute);
         };
 
         // Render
