@@ -119,10 +119,14 @@ define([
         // Assume app state if not passed
         if (!state) {
             state = stateRegistry.getCurrent();
+        } else if (state.$info) {
+            state = state.$info.newState;
         }
 
-        state = state && (state.$info ? state.$info.newState : state);
-        name = (state && state.getName()) || (this._defaultState && this._defaultState.name);
+        // Ensure state is filled with the defaults
+        this._fillStateIfEmpty(state);
+
+        name = state.getName();
 
         // If still has no name it means there's no default state defined
         if (!name) {
@@ -175,6 +179,24 @@ define([
     };
 
     // --------------------------------------------
+
+    /**
+     * Fills the state object with the default state if it's name is empty.
+     *
+     * @param {State} state The state
+     */
+    Controller.prototype._fillStateIfEmpty = function (state) {
+        if (!this._defaultState) {
+            return;
+        }
+
+        if (state.getName() === this._defaultState.name) {
+            fillIn(state.getParams(), this._defaultState.params);
+        } else if (!state.getName()) {
+            state.setFullName(state.getFullName() + '.' + this._defaultState.name);
+            fillIn(state.getParams(), this._defaultState.params);
+        }
+    };
 
     /**
      * Parses the controller states.
@@ -344,12 +366,6 @@ define([
             return false;
         }
 
-        // Translate to default state if name is empty
-        if (!state.getName() && this._defaultState) {
-            state = state.clone();
-            state.setFullName(state.getFullName() + '.' + this._defaultState.name);
-        }
-
         stateMeta = this._states[state.getName()] || {};
 
         // Check if state is a wildcard
@@ -369,24 +385,15 @@ define([
      */
     Controller.prototype._setCurrentState = function (state) {
         var name,
-            defaultStateName,
-            fullName,
             stateMeta;
 
         // Update current state
         this._previousState = this._currentState;
         this._currentState = state.clone();
 
-        // Resolve to default state always
-        if (!state.getName() && this._defaultState) {
-            defaultStateName = this._defaultState.name;
-            fullName = fullName = state.getFullName() ? state.getFullName() + '.' + defaultStateName : defaultStateName;
-            this._currentState.setFullName(fullName);
-
-            // Update also the state registry one
-            if (state === stateRegistry.getCurrent()) {
-                state.setFullName(fullName);
-            }
+        // Update the state registry one
+        if (state === stateRegistry.getCurrent() && state.getFullName() !== this._currentState.getFullName()) {
+            state.setFullName(this._currentState.getFullName());
         }
 
         name = this._currentState.getName();
