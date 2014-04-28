@@ -443,11 +443,20 @@ define([
         for (x = 0; x < length; x += 1) {
             curr = this._downlinks[x];
 
-            if (curr instanceof Controller) {
-                if (curr._states[name] || (!name && curr._defaultState)) {
+            if (!(curr instanceof Controller)) {
+                continue;
+            }
+
+            // If the state has no name, check if this child has a registered default state
+            if (!name) {
+                if (curr._defaultState && stateRegistry.isRegistered(state.getFullName() + '.' + curr._defaultState.name)) {
                     curr.delegateState(state);
                     return;
                 }
+            // Otherwise check if this child has the wanted state
+            } else if (curr._states[name]) {
+                curr.delegateState(state);
+                return;
             }
         }
 
