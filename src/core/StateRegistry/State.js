@@ -62,6 +62,25 @@ define([
     };
 
     /**
+     * Get the leading state name (all parts before the cursor).
+     *
+     * @return {String} The leading name
+     */
+    State.prototype.getLeadingName = function () {
+        return this._parts.slice(0, this._cursor).join('.');
+    };
+
+    /**
+     * Get the trainling state name (all parts after the cursor).
+     *
+     * @return {String} The trailing name
+     */
+    State.prototype.getTraliningName = function () {
+        return this._parts.slice(this._cursor + 1).join('.');
+    };
+
+
+    /**
      * Get the state name (the name immediately after the current cursor position).
      *
      * @return {String} The name

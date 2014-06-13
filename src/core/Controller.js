@@ -426,6 +426,7 @@ define([
      */
     Controller.prototype._propagateState = function (state) {
         var name,
+            leadingName,
             curr,
             length,
             x;
@@ -438,6 +439,7 @@ define([
 
         // Find suitable child controller to handle the state
         name = state.getName();
+        leadingName = state.getLeadingName();
         length = this._downlinks.length;
 
         for (x = 0; x < length; x += 1) {
@@ -454,14 +456,14 @@ define([
                     return;
                 }
             // Otherwise check if this child has the wanted state
-            } else if (curr._states[name]) {
+            } else if (curr._currentState && curr._currentState.getLeadingName() === leadingName) {
                 curr.delegateState(state);
                 return;
             }
         }
 
         if (name && has('debug')) {
-            console.warn('[spoonjs] No child controller of "' + this.$name + '" declared the "' + name + '" state.');
+            console.warn('[spoonjs] No child controller of "' + this.$name + '" can handle the "' + name + '" state.');
         }
     };
 
