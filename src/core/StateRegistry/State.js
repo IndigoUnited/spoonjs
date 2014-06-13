@@ -242,15 +242,13 @@ define([
     /**
      * Clones the state.
      *
-     * @param {Boolean} [cloneParams] True to deep clone the params, false otherwise (defaults to false)
-     *
      * @return {State} The cloned state
      */
-    State.prototype.clone = function (cloneParams) {
+    State.prototype.clone = function () {
         var ret;
 
         // Create new state
-        ret = new State(this._name, cloneParams ? deepClone(this._params) : this._params);
+        ret = new State(this._name, deepClone(this._params));
         ret._cursor = this._cursor;
 
         return ret;
