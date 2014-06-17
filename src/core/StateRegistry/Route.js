@@ -25,7 +25,7 @@ define([
 
         constraints = constraints || {};
 
-        var regExp = escapeRegExp(pattern),
+        var regExp = pattern.replace(/\//, '\\/'),
             x,
             curr,
             tmp;
@@ -35,10 +35,10 @@ define([
         this._constraints = constraints;
 
         // Extract the placeholder names
-        this._placeholderNames = regExp.match(this.constructor._placeholdersEscapedRegExp);
+        this._placeholderNames = this._pattern.match(this.constructor._placeholdersRegExp);
         if (this._placeholderNames) {
             for (x = this._placeholderNames.length - 1; x >= 0; x -= 1) {
-                curr = this._placeholderNames[x].slice(2, -2);
+                curr = this._placeholderNames[x].slice(1, -1);
                 tmp = constraints[curr] ? constraints[curr].toString().slice(1, -1) : '[^\/]+?';
                 regExp = regExp.replace(this._placeholderNames[x], '(' + tmp + ')');
                 this._placeholderNames[x] = curr;
@@ -132,7 +132,7 @@ define([
                 }
 
                 // Replace it in the URL
-                url = url.replace(this.constructor._placeholdersRegExp, placeholderValue);
+                url = url.replace(this.constructor._placeholdersRegExpReplace, placeholderValue);
             }
         }
 
@@ -141,8 +141,8 @@ define([
 
     // --------------------------------------------
 
-    Route._placeholdersRegExp = /\{.+?\}/;
-    Route._placeholdersEscapedRegExp = /\\\{.+?\\\}/g;
+    Route._placeholdersRegExp = /\{[^\}]+?\}/g;
+    Route._placeholdersRegExpReplace = /\{[^\}]+?\}/;
 
     return Route;
 });
