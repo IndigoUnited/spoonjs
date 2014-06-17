@@ -150,9 +150,9 @@ define([
             console.warn('Some views might not be prepared for double rendering, consider creating an "update" method.');
         }
 
-        if (this._template) {
-            this.clear();
+        this._element.children().remove();
 
+        if (this._template) {
             type = typeof this._template;
 
             if (has('debug') && typeof this._template !== 'string' && typeof this._template !== 'function') {
@@ -167,22 +167,6 @@ define([
         }
 
         this._rendered = true;
-
-        return this;
-    };
-
-    /**
-     * Clears the view's element.
-     * Note that you must explicitly call _unlisten() to remove the DOM event listeners.
-     *
-     * @return {View} The instance itself to allow chaining
-     */
-    View.prototype.clear = function () {
-        var children = this._element.children();
-
-        children.remove();
-        this._element.innerHTML = '';
-        this._rendered = false;
 
         return this;
     };
