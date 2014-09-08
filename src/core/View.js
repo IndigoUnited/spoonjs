@@ -29,6 +29,8 @@ define([
      * @param {Element} [element] The DOM element for the view
      */
     function View(element) {
+        var template;
+
         Joint.call(this);
 
         // Clone events object to guarantee unicity among instances
@@ -36,6 +38,11 @@ define([
 
         // Assume the element or create one based on the _element property
         this._setupElement(element ? element : createElement(this._element || 'div'));
+
+        // Convert template strings to functions
+        if (typeof template === 'string') {
+            this._template = function () { return template; };
+        }
     }
 
     View.extend = Joint.extend;
@@ -143,8 +150,6 @@ define([
      * @return {View} The instance itself to allow chaining
      */
     View.prototype.render = function (data) {
-        var type;
-
         if (has('debug') && this._rendered) {
             console.warn('Calling render on "' + this.$name + '" when it is already rendered.');
             console.warn('Some views might not be prepared for double rendering, consider creating an "update" method.');
@@ -153,17 +158,11 @@ define([
         this._element.children().remove();
 
         if (this._template) {
-            type = typeof this._template;
-
             if (has('debug') && typeof this._template !== 'string' && typeof this._template !== 'function') {
                 throw new Error('Expected _template to be a string or compiled template (function).');
             }
 
-            if (type === 'string') {
-                this._element.html(this._template);
-            } else {
-                this._element.html(this._renderTemplate(this._template, data));
-            }
+            this._element.html(this._renderTemplate(this._template, data));
         }
 
         this._rendered = true;
