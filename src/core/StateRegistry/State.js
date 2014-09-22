@@ -5,11 +5,11 @@
  */
 define([
     'mout/lang/deepClone',
+    'mout/lang/deepEquals',
     'mout/object/filter',
-    'mout/object/deepEquals',
     'mout/array/difference',
     'has'
-], function (deepClone, filter, deepEquals, difference, has) {
+], function (deepClone, deepEquals, filter, difference, has) {
 
     'use strict';
 
@@ -288,17 +288,7 @@ define([
         obj1 = this._filterSpecial(obj1);
         obj2 = this._filterSpecial(obj2);
 
-        return deepEquals(obj1, obj2, function (a, b) {
-            if (Array.isArray(a) && Array.isArray(b)) {
-                if (a.length !== b.length) {
-                    return false;
-                }
-
-                return !difference(a, b).length;
-            }
-
-            return a == b;
-        });
+        return deepEquals(obj1, obj2);
     };
 
     State._nameRegExp = /^[a-z0-9_\-]+(\.[a-z0-9_\-]+)*$/i;
