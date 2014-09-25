@@ -252,7 +252,7 @@ define([
         // to avoid memory leaks when the element is removed externally via
         // .remove(), .html() or equivalents
         this._element.data('_spoon_view', this);
-        this._element.on('destroyed', function () {
+        this._element.on('destroy', function () {
             that.destroy();
         });
 
@@ -442,7 +442,7 @@ define([
     // removes the element
     // This allows to call the view's destroy() method when the element is
     // removed externally, see: http://stackoverflow.com/a/10172676
-    $.event.special.destroyed = {
+    $.event.special.destroy = {
         remove: function (o) {
             o.handler && o.handler();
         }
