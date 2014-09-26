@@ -41,6 +41,7 @@ define([
         this._setupElement(element ? element : createElement(this._element || 'div'));
 
         // Convert template strings to functions
+        template = this._template;
         if (typeof template === 'string') {
             this._template = function () { return template; };
         }
