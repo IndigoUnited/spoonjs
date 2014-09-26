@@ -1,6 +1,6 @@
 {
   "name": "spoonjs",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Improve your cooking and become a true web app chef",
   "keywords": ["framework", "client-side", "modular", "hmvc"],
   "homepage": "http://indigounited.github.io/spoonjs",
@@ -15,7 +15,8 @@
     "events-emitter": "^1.0",
     "address": "^1.0",
     "has": "*",
-    "jquery": "^1.9||^2.0"
+    "jquery": "^1.9||^2.0",
+    "jquery-destroy-event": "^0.1.0"
   },
   "devDependencies": {
     "expect": "~0.2.0",

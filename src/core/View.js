@@ -13,7 +13,8 @@ define([
     'mout/lang/isArray',
     'mout/lang/isPlainObject',
     'has',
-    'jquery'
+    'jquery',
+    'jquery-destroy-event'
 ], function (Joint, Controller, createElement, stateRegistry, mixIn, forOwn, isArray, isPlainObject, has, $) {
 
     'use strict';
@@ -248,8 +249,7 @@ define([
         this._nativeElement = this._element.get(0);
         this._rendered = false;
 
-        // Listen to the special "destroy" event that we specially craft
-        // to avoid memory leaks when the element is removed externally via
+        // Listen to the special "destroy" event when the element is removed externally via
         // .remove(), .html() or equivalents
         this._element.data('_spoon_view', this);
         this._element.on('destroy', function () {
@@ -437,16 +437,6 @@ define([
     View._eventsSplitter = /^(\S+)\s*(.*)$/;
 
     // --------------------------------------------
-
-    // Add a special destroy event so that "remove" is called when jquery
-    // removes the element
-    // This allows to call the view's destroy() method when the element is
-    // removed externally, see: http://stackoverflow.com/a/10172676
-    $.event.special.destroy = {
-        remove: function (o) {
-            o.handler && o.handler();
-        }
-    };
 
     // Register handlebars helper
     if (window.Handlebars) {
