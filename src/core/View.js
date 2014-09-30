@@ -253,7 +253,7 @@ define([
         // Listen to the special "destroy" event when the element is removed externally via
         // .remove(), .html() or equivalents
         this._element.data('_spoon_view', this);
-        this._element.on('destroy', function () {
+        this._element.on('destroy._spoon_view', function () {
             that.destroy();
         });
 
@@ -428,7 +428,7 @@ define([
         Joint.prototype._onDestroy.call(this);
 
         // Destroy view element
-        this._element.off();
+        this._element.off('._spoon_view');  // Avoid "destroy" recursion
         this._element.remove();
 
         // Null references
