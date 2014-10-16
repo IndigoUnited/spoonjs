@@ -49,6 +49,7 @@ define([
 
         if (address) {
             this._address = address;
+            this._address.enable();
             address.on('change', this._onAddressChange, this);
         }
 
@@ -62,6 +63,7 @@ define([
      */
     StateRegistry.prototype.unsetAddress = function () {
         if (this._address) {
+            this._address.enable();
             this._address.off('change', this._onAddressChange, this);
             this._address = null;
             this._currentUrl = null;
