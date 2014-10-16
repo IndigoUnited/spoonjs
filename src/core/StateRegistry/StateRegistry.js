@@ -227,7 +227,7 @@ define([
 
         // Only change if the current state is not the same
         if (!this.isCurrent(state) || options.force) {
-            this._executeInterceptors(!options.interceptors, function (advance) {
+            this._executeInterceptors(!options.interceptors, state, function (advance) {
                 if (!advance) {
                     that._emit('cancel', state);
                 } else {
