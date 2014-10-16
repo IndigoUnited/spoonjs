@@ -1,3 +1,5 @@
+/*jshint loopfunc:true*/
+
 /**
  * StateRegistry class.
  */
@@ -5,6 +7,7 @@ define([
     'events-emitter/MixableEventsEmitter',
     './State',
     './Route',
+    'mout/array/findIndex',
     'mout/array/remove',
     'mout/object/hasOwn',
     'mout/object/mixIn',
@@ -13,7 +16,7 @@ define([
     'mout/queryString/encode',
     'has',
     'jquery'
-], function (MixableEventsEmitter, State, Route, remove, hasOwn, mixIn, startsWith, decode, encode, has, $) {
+], function (MixableEventsEmitter, State, Route, findIndex, remove, hasOwn, mixIn, startsWith, decode, encode, has, $) {
 
     'use strict';
 
@@ -23,6 +26,7 @@ define([
     function StateRegistry() {
         this._states = {};
         this._routes = [];
+        this._interceptors = [];
         this._destroyed = false;
 
         // Replace all functions that need to be bound
@@ -45,7 +49,7 @@ define([
 
         if (address) {
             this._address = address;
-            address.on('change', this._onChange, this);
+            address.on('change', this._onAddressChange, this);
         }
 
         return this;
@@ -58,7 +62,7 @@ define([
      */
     StateRegistry.prototype.unsetAddress = function () {
         if (this._address) {
-            this._address.off('change', this._onChange, this);
+            this._address.off('change', this._onAddressChange, this);
             this._address = null;
             this._currentUrl = null;
         }
@@ -87,7 +91,7 @@ define([
             type: 'external'
         };
 
-        return this._onChange(obj, options);
+        return this._onAddressChange(obj, options);
     };
 
     /**
@@ -201,11 +205,11 @@ define([
      * @param {Object}       [params]  The state parameters if the state was a string
      * @param {Object}       [options] The options
      *
-     * @return {Boolean} True if the transition was made, false otherwise
+     * @return {Boolean} True if the transition will be made, false otherwise
      */
     StateRegistry.prototype.setCurrent = function (state, params, options) {
-        var previousState;
-
+        var previousState,
+            that = this;
 
         // Handle args
         if (typeof state === 'string') {
@@ -217,17 +221,23 @@ define([
         // Set default options and merge them with the user ones
         options = mixIn({
             route: true,
-            replace: !this._currentState  // Replace URL if it's the first state
+            replace: !this._currentState,  // Replace URL if it's the first state
+            interceptors: true
         }, options || {});
 
         // Only change if the current state is not the same
         if (!this.isCurrent(state) || options.force) {
-            previousState = this._currentState;
-            this._currentState = state;
+            this._executeInterceptors(!options.interceptors, function (advance) {
+                if (!advance) {
+                    that._emit('cancel', state);
+                } else {
+                    previousState = that._currentState;
+                    that._currentState = state;
 
-            // Handle after change stuff
-            this._postChangeHandler(previousState, options);
-
+                    // Handle after change stuff
+                    that._postChangeHandler(previousState, options);
+                }
+            });
             return true;
         }
 
@@ -292,6 +302,41 @@ define([
         url = route.generateUrl(params);
 
         return this._address ? this._address.generateUrl(url, absolute) : url;
+    };
+
+    /**
+     * Configures a interceptor that will be run before actually changing the state.
+     * This easily allows use cases such as "are you sure you want to quit".
+     *
+     * @param {Function} fn  The interceptor
+     * @param {Object}   ctx The context
+     *
+     * @return {StateRegistry} The instance itself to allow chaining
+     */
+    StateRegistry.prototype.addInterceptor = function (fn, ctx) {
+        this.removeInterceptor(fn, ctx);
+        this._interceptors.push({ fn: fn, ctx: ctx });
+
+        return this;
+    };
+
+    /**
+     * Removes a previously added interceptor.
+     *
+     * @param {Function} fn The interceptor
+     *
+     * @return {StateRegistry} The instance itself to allow chaining
+     */
+    StateRegistry.prototype.removeInterceptor = function (fn, ctx) {
+        var index = findIndex(this._interceptors, function (obj) {
+            return obj.fn === fn && obj.ctx === ctx;
+        });
+
+        if (index !== -1) {
+            this._interceptors.splice(index, 1);
+        }
+
+        return this;
     };
 
     /**
@@ -376,7 +421,7 @@ define([
      *
      * @return {Boolean} True if it matched a registered state, false otherwise
      */
-    StateRegistry.prototype._onChange = function (obj, options) {
+    StateRegistry.prototype._onAddressChange = function (obj, options) {
         var x,
             value = obj.newValue,
             length,
@@ -419,6 +464,19 @@ define([
 
                 // Finally change to the state
                 this.setCurrent(state, options);
+
+                // Restore the old address value if any interceptor canceled
+                // the state transition
+                if (this._address) {
+                    this.on('cancel.state_registry_address', function () {
+                        this.off('.state_registry_address');
+                        this._address && this._address.setValue(obj.oldValue, { silent: true });
+                    }, this);
+                    this.on('change.state_registry_address', function () {
+                        this.off('.state_registry_address');
+                    }, this);
+                }
+
                 return true;
             }
         }
@@ -472,6 +530,66 @@ define([
                 console.info('[spoonjs] Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
             }
         }
+    };
+
+    /**
+     * Runs all the intercepts in series.
+     * If the state changed between, the process will be aborted.
+     *
+     * The intercepts will be reseted if the state changed.
+     *
+     * @param {Boolean}  skip     True to skip the functions themselves
+     * @param {State}    state    The state object
+     * @param {Function} callback The callback to call when done
+     */
+    StateRegistry.prototype._executeInterceptors = function (skip, state, callback) {
+        var interceptors = this._interceptors,
+            length = interceptors.length,
+            that = this;
+
+        if (has('debug') && this._interceptors.running) {
+            throw new Error('Cannot change state while running interceptors');
+        }
+
+        // Do not proceed if there are no interceptors
+        if (!length) {
+            return callback(true);
+        }
+
+        if (skip) {
+            that._interceptors = [];
+            return callback(true);
+        }
+
+        function iterator(index) {
+            var interceptor;
+
+            if (index === length) {
+                // Re-enable address & reset interceptors
+                that._address && that._address.enable();
+                that._interceptors = [];
+
+                return callback(true);
+            }
+
+            interceptor = interceptors[index];
+            interceptor.fn.call(interceptor.ctx, state, function (advance) {
+                if (advance === false) {
+                    that._address && that._address.enable();
+                    that._interceptors.running = false;
+
+                    return callback(false);
+                }
+
+                iterator(index + 1);
+            });
+        }
+
+        // Disable address & mark as running
+        this._address && this._address.disable();
+        this._interceptors.running = true;
+
+        iterator(0);
     };
 
     /**
