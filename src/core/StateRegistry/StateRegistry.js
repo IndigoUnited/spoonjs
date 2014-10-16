@@ -562,8 +562,9 @@ define([
             length = interceptors.length,
             that = this;
 
-        if (has('debug') && this._interceptors.running) {
-            throw new Error('Cannot change state while running interceptors');
+        if (this._interceptors.running) {
+            has('debug') && console.warn('[spoonjs] Cannot change state while running interceptors');
+            return;
         }
 
         // Do not proceed if there are no interceptors
