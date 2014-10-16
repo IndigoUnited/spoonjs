@@ -228,8 +228,18 @@ define([
         // Only change if the current state is not the same
         if (!this.isCurrent(state) || options.force) {
             this._executeInterceptors(!options.interceptors, state, function (advance) {
+                var url;
+
+                // If the user canceled the transition in an interceptor,
+                // restore current state url and emit a 'cancel' event
                 if (!advance) {
+                    if (that._address) {
+                        url = that._currentState && that._getStateUrl(that._currentState);
+                        that._address.setValue(url);
+                    }
+
                     that._emit('cancel', state);
+                // Otherwise proceed to change..
                 } else {
                     previousState = that._currentState;
                     that._currentState = state;
@@ -238,6 +248,7 @@ define([
                     that._postChangeHandler(previousState, options);
                 }
             });
+
             return true;
         }
 
@@ -286,22 +297,21 @@ define([
      * @return {String} The URL for the state or null if unable to generate one
      */
     StateRegistry.prototype.generateUrl = function (state, params, absolute) {
-        var route,
-            url;
+        var url;
 
         if (typeof state !== 'string') {
-            state = state.getFullName();
+            absolute = params;
+        } else {
+            state = this._createStateInstance(state, params);
         }
 
-        route = this._states[state];
-        if (!route || !this._address) {
-            params = State.filterSpecial(params);
-            return 'state://' + state + '/' + encode(params);
+        url = this._getStateUrl(state);
+        if (!url || !this._address) {
+            params = State.filterSpecial(state.getParams());
+            return 'state://' + state.getFullName() + '/' + encode(params);
         }
 
-        url = route.generateUrl(params);
-
-        return this._address ? this._address.generateUrl(url, absolute) : url;
+        return this._address.generateUrl(url, absolute);
     };
 
     /**
@@ -372,7 +382,7 @@ define([
     StateRegistry.prototype._postChangeHandler = function (previousState, options) {
         var state = this._currentState.getFullName(),
             params = this._currentState.getParams(),
-            route,
+            url,
             tmp,
             fullName;
 
@@ -389,10 +399,10 @@ define([
 
         // Set address value
         if (this._address && options.route) {
-            route = this._states[state];
-            if (route) {
-                this._currentUrl = route.generateUrl(params);
-                this._address.setValue(this._currentUrl, options);
+            url = this._getStateUrl(this._currentState);
+            if (url) {
+                this._currentUrl = url;
+                this._address.setValue(url, options);
             }
         }
 
@@ -465,18 +475,6 @@ define([
                 // Finally change to the state
                 this.setCurrent(state, options);
 
-                // Restore the old address value if any interceptor canceled
-                // the state transition
-                if (this._address) {
-                    this.on('cancel.state_registry_address', function () {
-                        this.off('.state_registry_address');
-                        this._address && this._address.setValue(obj.oldValue, { silent: true });
-                    }, this);
-                    this.on('change.state_registry_address', function () {
-                        this.off('.state_registry_address');
-                    }, this);
-                }
-
                 return true;
             }
         }
@@ -530,6 +528,23 @@ define([
                 console.info('[spoonjs] Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
             }
         }
+    };
+
+    /**
+     * Get the URL associated to a state.
+     *
+     * @param {State} state The state object
+     *
+     * @return {String} The URL
+     */
+    StateRegistry.prototype._getStateUrl = function (state) {
+        var route = this._states[state.getFullName()];
+
+        if (!route) {
+            return null;
+        }
+
+        return route.generateUrl(state.getParams());
     };
 
     /**
