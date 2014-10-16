@@ -226,33 +226,34 @@ define([
         }, options || {});
 
         // Only change if the current state is not the same
-        if (!this.isCurrent(state) || options.force) {
-            this._executeInterceptors(!options.interceptors, state, function (advance) {
-                var url;
-
-                // If the user canceled the transition in an interceptor,
-                // restore current state url and emit a 'cancel' event
-                if (!advance) {
-                    if (that._address) {
-                        url = that._currentState && that._getStateUrl(that._currentState);
-                        that._address.setValue(url);
-                    }
-
-                    that._emit('cancel', state);
-                // Otherwise proceed to change..
-                } else {
-                    previousState = that._currentState;
-                    that._currentState = state;
-
-                    // Handle after change stuff
-                    that._postChangeHandler(previousState, options);
-                }
-            });
-
-            return true;
+        if (this.isCurrent(state) && !options.force) {
+            return false;
         }
 
-        return false;
+        // Run interceptors before changing the state
+        this._executeInterceptors(!options.interceptors, state, function (advance) {
+            var url;
+
+            // If the user canceled the state in an interceptor,
+            // restore current state url and emit a 'cancel' event
+            if (!advance) {
+                if (that._address) {
+                    url = that._currentState && that._getStateUrl(that._currentState);
+                    that._address.setValue(url);
+                }
+
+                that._emit('cancel', state);
+            // Otherwise proceed to change..
+            } else {
+                previousState = that._currentState;
+                that._currentState = state;
+
+                // Handle after change stuff
+                that._postChangeHandler(previousState, options);
+            }
+        });
+
+        return true;
     };
 
     /**
@@ -548,10 +549,10 @@ define([
     };
 
     /**
-     * Runs all the intercepts in series.
-     * If the state changed between, the process will be aborted.
+     * Runs all the interceptor in series.
+     * The interceptors will be reseted if the state changed.
      *
-     * The intercepts will be reseted if the state changed.
+     * While the interceptors are being run, the address will be disabled.
      *
      * @param {Boolean}  skip     True to skip the functions themselves
      * @param {State}    state    The state object
@@ -572,6 +573,7 @@ define([
             return callback(true);
         }
 
+        // Just reset if the user decided to skip the interceptors
         if (skip) {
             that._interceptors = [];
             return callback(true);
