@@ -7,6 +7,7 @@
  */
 define([
     './StateRegistry',
+    './Route',
     'services/address',
     'app-config',
     'mout/lang/isObject',
@@ -14,7 +15,7 @@ define([
     'mout/object/size',
     'mout/array/sort',
     'has'
-], function (StateRegistry, address, config, isObject, fillIn, size, sort, has) {
+], function (StateRegistry, Route, address, config, isObject, fillIn, size, sort, has) {
 
     'use strict';
 
@@ -92,6 +93,7 @@ define([
                     state: curr.$state ? curr.$state + '.' + key : key,
                     pattern: patternJoin(curr.$pattern, value),
                     constraints: curr.$constraints,
+                    options: curr.$options,
                     priority: curr.$priority || 0
                 });
             } else if (has('debug')) {
@@ -104,6 +106,7 @@ define([
                 state: curr.$state,
                 pattern: curr.$fullPattern || curr.$pattern,
                 constraints: curr.$constraints,
+                options: curr.$options,
                 priority: curr.$priority || 0
             });
         }
@@ -127,7 +130,7 @@ define([
     length = arr.length;
     for (x = 0; x < length; x += 1) {
         curr = arr[x];
-        registry.register(curr.state, curr.pattern, curr.constraints);
+        registry.register(curr.state, curr.pattern ? new Route(curr.state, curr.pattern, curr.constraints) : null, curr.options);
     }
 
     // Inject the address if the routing is enabled

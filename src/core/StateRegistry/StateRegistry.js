@@ -97,26 +97,26 @@ define([
     };
 
     /**
-     * Registers a map between a state and a route.
-     * The pattern can have placeholders which will be used to fill a parameters object.
-     * The constraints object is a simple key value object in which the keys are the placeholder names and the values are regular expressions.
+     * Registers a state with a route and default options.
+     *
      * An error will be thrown if the state being registered already exists.
      *
-     * @param {String} state         The state
-     * @param {String} [pattern]     The route pattern
-     * @param {Object} [constraints] The route contraints
+     * @param {String} state     The state
+     * @param {Route}  [route]   The route associated to the state
+     * @param {Object} [options] The default options of the state
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
-    StateRegistry.prototype.register = function (state, pattern, constraints) {
+    StateRegistry.prototype.register = function (state, route, options) {
         if (has('debug') && this._states[state]) {
             throw new Error('State "' + state + '" is already registered.');
         }
 
-        var route = pattern != null ? new Route(state, pattern, constraints) : null;
-
         // Add to the states object
-        this._states[state] = route;
+        this._states[state] = {
+            route: route,
+            options: options
+        };
 
         // Add to the routes array
         if (route) {
@@ -134,14 +134,14 @@ define([
      * @return {StateRegistry} The instance itself to allow chaining
      */
     StateRegistry.prototype.unregister = function (state) {
-        var route = this._states[state];
+        var registered = this._states[state];
 
         // Remove it from the states object
         delete this._states[state];
 
-        if (route) {
+        if (registered.route) {
             // Remote it from the routes array
-            remove(this._routes, route);
+            remove(this._routes, registered.route);
         }
 
         return this;
@@ -178,7 +178,9 @@ define([
      * @return {Boolean} True if it is, false otherwise
      */
     StateRegistry.prototype.isRoutable = function (state) {
-        return !!this._states[state];
+        var registered = this._states[state];
+
+        return !!(registered && registered.route);
     };
 
     /**
@@ -198,10 +200,11 @@ define([
      * Also if the state has a route associated and the routing is enabled, the browser URL will be updated accordingly.
      *
      * The default implementation should handle these options:
-     *  - force:   true to force the value to be changed even if the value is the same
-     *  - route:   false to not change the address value
-     *  - replace: true to replace the address value instead of adding a new history entry
-     *  - silent:  true to silently change the state, without emitting an event
+     *  - force:        true to force the value to be changed even if the value is the same
+     *  - route:        false to not change the address value
+     *  - replace:      true to replace the address value instead of adding a new history entry
+     *  - silent:       true to silently change the state, without emitting an event
+     *  - interceptors: 'run' will run them, 'skip' will skip and maintain them, 'reset' will skip and reset them
      *
      * @param {String|State} state     The state name or the state object
      * @param {Object}       [params]  The state parameters if the state was a string
@@ -211,6 +214,7 @@ define([
      */
     StateRegistry.prototype.setCurrent = function (state, params, options) {
         var previousState,
+            registered,
             that = this;
 
         // Handle args
@@ -220,12 +224,14 @@ define([
             options = params;
         }
 
+        registered = this._states[state.getFullName()];
+
         // Set default options and merge them with the user ones
         options = mixIn({
             route: true,
             replace: !this._currentState,  // Replace URL if it's the first state
-            interceptors: true
-        }, options || {});
+            interceptors: 'run'
+        }, registered && registered.options, options);
 
         // Only change if the current state is not the same
         if (this.isCurrent(state) && !options.force) {
@@ -233,7 +239,7 @@ define([
         }
 
         // Run interceptors before changing the state
-        this._executeInterceptors(!options.interceptors, state, function (advance) {
+        this._executeInterceptors(options.interceptors, state, function (advance) {
             var url;
 
             // If the user canceled the state in an interceptor,
@@ -541,7 +547,8 @@ define([
      * @return {String} The URL
      */
     StateRegistry.prototype._getStateUrl = function (state) {
-        var route = this._states[state.getFullName()];
+        var registered = this._states[state.getFullName()],
+            route = registered.route;
 
         if (!route) {
             return null;
@@ -556,11 +563,11 @@ define([
      *
      * While the interceptors are being run, the address will be disabled.
      *
-     * @param {Boolean}  skip     True to skip the functions themselves
+     * @param {String}   behavior The behavior to apply
      * @param {State}    state    The state object
      * @param {Function} callback The callback to call when done
      */
-    StateRegistry.prototype._executeInterceptors = function (skip, state, callback) {
+    StateRegistry.prototype._executeInterceptors = function (behavior, state, callback) {
         var interceptors = this._interceptors,
             length = interceptors.length,
             that = this;
@@ -570,14 +577,19 @@ define([
             return;
         }
 
-        // Do not proceed if there are no interceptors
-        if (!length) {
+        // Skip behavior
+        if (behavior === 'skip') {
             return callback(true);
         }
 
-        // Just reset if the user decided to skip the interceptors
-        if (skip) {
+        // Reset behavior
+        if (behavior === 'reset') {
             that._interceptors = [];
+            return callback(true);
+        }
+
+        // Do not proceed if there are no interceptors
+        if (!length) {
             return callback(true);
         }
 
