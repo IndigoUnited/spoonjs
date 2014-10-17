@@ -204,7 +204,7 @@ define([
      *  - route:        false to not change the address value
      *  - replace:      true to replace the address value instead of adding a new history entry
      *  - silent:       true to silently change the state, without emitting an event
-     *  - interceptors: 'run' will run them, 'skip' will skip and maintain them, 'reset' will skip and reset them
+     *  - interceptors: 'run' will run them, 'skip(x)' will skip and maintain them "x" times, 'reset' will skip and reset them
      *
      * @param {String|State} state     The state name or the state object
      * @param {Object}       [params]  The state parameters if the state was a string
@@ -238,8 +238,8 @@ define([
             return false;
         }
 
-        // Run interceptors before changing the state
-        this._executeInterceptors(options.interceptors, state, function (advance) {
+        // Handle interceptors before changing the state
+        this._handleInterceptors(options.interceptors, state, function (advance) {
             var url;
 
             // If the user canceled the state in an interceptor,
@@ -567,7 +567,7 @@ define([
      * @param {State}    state    The state object
      * @param {Function} callback The callback to call when done
      */
-    StateRegistry.prototype._executeInterceptors = function (behavior, state, callback) {
+    StateRegistry.prototype._handleInterceptors = function (behavior, state, callback) {
         var interceptors = this._interceptors,
             length = interceptors.length,
             that = this;
@@ -577,14 +577,23 @@ define([
             return;
         }
 
-        // Skip behavior
-        if (behavior === 'skip') {
-            return callback(true);
-        }
-
         // Reset behavior
         if (behavior === 'reset') {
             that._interceptors = [];
+            that._interceptorsSkipCount = 0;
+            return callback(true);
+        }
+
+
+        // Skip behavior
+        if (!behavior.indexOf('skip')) {
+            this._interceptorsSkipCount = Number(behavior.match(/^skip(?:\s*\((\d+)\))?/)[1] || 1) - 1;
+            return callback(true);
+        }
+
+        // Handle skip count
+        if (this._interceptorsSkipCount > 0) {
+            this._interceptorsSkipCount -= 1;
             return callback(true);
         }
 
@@ -637,7 +646,7 @@ define([
         $(document.body).off('click', 'a', this._handleLinkClick);
 
         this.unsetAddress();
-        this._currentState = this._currenUrl = null;
+        this._currentState = this._currentUrl = null;
     };
 
     return StateRegistry;
