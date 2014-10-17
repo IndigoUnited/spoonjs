@@ -327,6 +327,8 @@ define([
      * Configures a interceptor that will be run before actually changing the state.
      * This easily allows use cases such as "are you sure you want to quit".
      *
+     * The interceptor will be added to the start of the interceptors array.
+     *
      * @param {Function} fn  The interceptor
      * @param {Object}   ctx The context
      *
@@ -338,7 +340,7 @@ define([
         }
 
         this.removeInterceptor(fn, ctx);
-        this._interceptors.push({ fn: fn, ctx: ctx });
+        this._interceptors.unshift({ fn: fn, ctx: ctx });
 
         return this;
     };
@@ -526,6 +528,11 @@ define([
 
             // If the link is internal, then we just prevent default behaviour
             if (type !== 'internal') {
+                // Ignore if we have interceptors running (equivalent to address is disabled)
+                if (this._interceptors.running) {
+                    return;
+                }
+
                 pos = url.lastIndexOf('/');
                 // Extract the name and the params
                 if (pos === -1) {
@@ -581,10 +588,6 @@ define([
             length = interceptors.length,
             that = this;
 
-        if (this._interceptors.running) {
-            throw new Error('Cannot change state while running interceptors');
-        }
-
         // Reset behavior
         if (behavior === 'reset') {
             that._interceptors = [];
@@ -592,6 +595,9 @@ define([
             return callback(true);
         }
 
+        if (this._interceptors.running) {
+            throw new Error('Cannot change state while running interceptors');
+        }
 
         // Skip behavior
         if (behavior === 'skip') {
