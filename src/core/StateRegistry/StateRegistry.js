@@ -27,7 +27,6 @@ define([
         this._states = {};
         this._routes = [];
         this._interceptors = [];
-        this._destroyed = false;
 
         // Replace all functions that need to be bound
         this._handleLinkClick = this._handleLinkClick.bind(this);
@@ -204,7 +203,9 @@ define([
      *  - route:        false to not change the address value
      *  - replace:      true to replace the address value instead of adding a new history entry
      *  - silent:       true to silently change the state, without emitting an event
-     *  - interceptors: 'run' will run them, 'skip(x)' will skip and maintain them "x" times, 'reset' will skip and reset them
+     *  - interceptors: 'run' will run them,
+     *                  'skip' will skip initially and keep skiping if switching to the previous state,
+     *                  'reset' will skip and reset them
      *
      * @param {String|State} state     The state name or the state object
      * @param {Object}       [params]  The state parameters if the state was a string
@@ -213,8 +214,7 @@ define([
      * @return {Boolean} True if the transition will be made, false otherwise
      */
     StateRegistry.prototype.setCurrent = function (state, params, options) {
-        var previousState,
-            registered,
+        var registered,
             that = this;
 
         // Handle args
@@ -253,11 +253,11 @@ define([
                 that._emit('cancel', state);
             // Otherwise proceed to change..
             } else {
-                previousState = that._currentState;
+                that._previousState = that._currentState;
                 that._currentState = state;
 
                 // Handle after change stuff
-                that._postChangeHandler(previousState, options);
+                that._postChangeHandler(options);
             }
         });
 
@@ -395,10 +395,9 @@ define([
     /**
      * Handles stuff after the state has changed.
      *
-     * @param {State}  previousState The previous state
-     * @param {Object} options       The options
+     * @param {Object} options The options
      */
-    StateRegistry.prototype._postChangeHandler = function (previousState, options) {
+    StateRegistry.prototype._postChangeHandler = function (options) {
         var state = this._currentState.getFullName(),
             params = this._currentState.getParams(),
             url,
@@ -414,7 +413,7 @@ define([
 
         params.$info = params.$info || {};
         params.$info.newState = this._currentState;
-        params.$info.previousState = previousState;
+        params.$info.previousState = this._previousState;
 
         // Set address value
         if (this._address && options.route) {
@@ -431,7 +430,7 @@ define([
         // Emit the change
         if (!options.silent) {
             tmp = this._currentState;
-            this._emit('change', this._currentState, previousState);
+            this._emit('change', this._currentState, this._previousState);
 
             // If the final state name has changed in the process, inform the user
             // This happens if the final state is changed (tipically because of default state translations)
@@ -589,25 +588,25 @@ define([
         // Reset behavior
         if (behavior === 'reset') {
             that._interceptors = [];
-            that._interceptorsSkipCount = 0;
+            that._skipInterceptors = false;
             return callback(true);
         }
 
 
         // Skip behavior
-        if (!behavior.indexOf('skip')) {
-            this._interceptorsSkipCount = Number(behavior.match(/^skip(?:\s*\((\d+)\))?/)[1] || 1) - 1;
+        if (behavior === 'skip') {
+            this._skipInterceptors = true;
             return callback(true);
         }
 
-        // Handle skip count
-        if (this._interceptorsSkipCount > 0) {
-            this._interceptorsSkipCount -= 1;
+        // Handle skip flag
+        if (this._skipInterceptors && this._previousState && this._previousState.isFullyEqual(state)) {
             return callback(true);
         }
 
         // Do not proceed if there are no interceptors
         if (!length) {
+            this._skipInterceptors = false;
             return callback(true);
         }
 
@@ -618,6 +617,7 @@ define([
                 // Re-enable address & reset interceptors
                 that._address && that._address.enable();
                 that._interceptors = [];
+                that._skipInterceptors = false;
 
                 return callback(true);
             }
@@ -655,7 +655,7 @@ define([
         $(document.body).off('click', 'a', this._handleLinkClick);
 
         this.unsetAddress();
-        this._currentState = this._currentUrl = null;
+        this._currentState = null;
     };
 
     return StateRegistry;
