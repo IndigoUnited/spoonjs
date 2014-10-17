@@ -333,6 +333,10 @@ define([
      * @return {StateRegistry} The instance itself to allow chaining
      */
     StateRegistry.prototype.addInterceptor = function (fn, ctx) {
+        if (this._interceptors.running) {
+            throw new Error('Cannot add interceptor while running them');
+        }
+
         this.removeInterceptor(fn, ctx);
         this._interceptors.push({ fn: fn, ctx: ctx });
 
@@ -347,7 +351,13 @@ define([
      * @return {StateRegistry} The instance itself to allow chaining
      */
     StateRegistry.prototype.removeInterceptor = function (fn, ctx) {
-        var index = findIndex(this._interceptors, function (obj) {
+        var index;
+
+        if (this._interceptors.running) {
+            throw new Error('Cannot remove interceptor while running them');
+        }
+
+        index = findIndex(this._interceptors, function (obj) {
             return obj.fn === fn && obj.ctx === ctx;
         });
 
@@ -573,8 +583,7 @@ define([
             that = this;
 
         if (this._interceptors.running) {
-            has('debug') && console.warn('[spoonjs] Cannot change state while running interceptors');
-            return;
+            throw new Error('Cannot change state while running interceptors');
         }
 
         // Reset behavior
