@@ -139,7 +139,7 @@ define([
         // Remove it from the states object
         delete this._states[state];
 
-        if (registered.route) {
+        if (registered && registered.route) {
             // Remote it from the routes array
             remove(this._routes, registered.route);
         }
@@ -548,7 +548,7 @@ define([
      */
     StateRegistry.prototype._getStateUrl = function (state) {
         var registered = this._states[state.getFullName()],
-            route = registered.route;
+            route = registered && registered.route;
 
         if (!route) {
             return null;
