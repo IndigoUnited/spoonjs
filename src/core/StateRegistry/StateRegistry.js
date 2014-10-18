@@ -247,7 +247,11 @@ define([
             if (!advance) {
                 if (that._address) {
                     url = that._currentState && that._getStateUrl(that._currentState);
-                    that._address.setValue(url);
+
+                    if (url) {
+                        that._currentUrl = url;
+                        that._address.setValue(url);
+                    }
                 }
 
                 that._emit('cancel', state);
