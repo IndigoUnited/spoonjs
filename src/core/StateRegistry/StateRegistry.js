@@ -7,6 +7,7 @@ define([
     'events-emitter/MixableEventsEmitter',
     './State',
     './Route',
+    'mout/array/find',
     'mout/array/findIndex',
     'mout/array/remove',
     'mout/object/hasOwn',
@@ -16,7 +17,7 @@ define([
     'mout/queryString/encode',
     'has',
     'jquery'
-], function (MixableEventsEmitter, State, Route, findIndex, remove, hasOwn, mixIn, startsWith, decode, encode, has, $) {
+], function (MixableEventsEmitter, State, Route, find, findIndex, remove, hasOwn, mixIn, startsWith, decode, encode, has, $) {
 
     'use strict';
 
@@ -440,10 +441,41 @@ define([
 
             // If the final state name has changed in the process, inform the user
             // This happens if the final state is changed (tipically because of default state translations)
-            if (has('debug') && tmp === this._currentState && fullName !== this._currentState.getFullName()) {
-                console.info('[spoonjs] Final state after transition is "' + this._currentState.getFullName() + '".');
+            if (tmp === this._currentState && fullName !== this._currentState.getFullName()) {
+                this._checkFinalState(fullName, this._currentState.getFullName());
             }
         }
+    };
+
+    /**
+     * Checks the final state after the transition.
+     * If the final state is not registered, it will be registered.
+     *
+     * @param {String} initialState The initial state
+     * @param {String} finalState   The final state
+     */
+    StateRegistry.prototype._checkFinalState = function (initialState, finalState) {
+        var route;
+
+        // Abort if already registered
+        if (!this._states[initialState] || this._states[finalState]) {
+            has('debug') && console.info('[spoonjs] Final state after transition is "' + this._currentState.getFullName() + '".');
+            return;
+        }
+
+        has('debug') && console.info('[spoonjs] Registering final state after transition, which is "' + finalState + '",');
+
+        // Grab the route
+        route = find(this._routes, function (route) {
+            return route.getName() === initialState;
+        }),
+
+        // Finally add it.. note that we don't need to push
+        // to the routes array because he is already there..
+        this._states[finalState] = {
+            route: route,
+            options: this._states[initialState].options
+        };
     };
 
     /**
