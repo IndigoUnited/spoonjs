@@ -96,6 +96,13 @@ define([
                     options: curr.$options,
                     priority: curr.$priority || 0
                 });
+               arr.push({
+                    state: curr.$state ? curr.$state + '.' + key + '.index': key + '.index',
+                    pattern: patternJoin(curr.$pattern, value),
+                    constraints: curr.$constraints,
+                    options: curr.$options,
+                    priority: curr.$priority || 0
+                });
             } else if (has('debug')) {
                 throw new Error('Unexpected "' + key + '" while parsing states.');
             }
