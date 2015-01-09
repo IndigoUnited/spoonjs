@@ -163,7 +163,7 @@ define([
      */
     Joint.prototype._bubbleUp = function (event, args) {
         if (this._uplink) {
-            return this._uplink._upcast(event, args);
+            return this._uplink._upcast.apply(this._uplink, arguments);
         }
 
         if (has('debug')) {
