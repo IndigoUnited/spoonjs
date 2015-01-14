@@ -148,7 +148,6 @@ define([
         return this._cursor;
     };
 
-
     /**
      * Seeks the cursor position to the part that matches a name.
      * Starts looking from the last position.
@@ -276,12 +275,12 @@ define([
     // --------------------------------------------
 
     /**
-     * Compares two objects loosely and not recursively.
+     * Compares two objects.
      *
      * @param {Object} obj1 The first object to be compared
      * @param {Object} obj2 The second object to be compared
      *
-     * @return {Boolean} True if they are loosely equal, false otherwise
+     * @return {Boolean} True if they are equal, false otherwise
      */
     State.prototype._compareObjects = function (obj1, obj2) {
         // Remove special keys

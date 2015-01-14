@@ -384,20 +384,22 @@ define([
      * @param {State} state The state
      */
     Controller.prototype._setCurrentState = function (state) {
-        var name,
-            stateMeta;
+        var params;
 
         // Update current state
         this._previousState = this._currentState;
         this._currentState = state.clone();
 
+        // Ensure $info gets up to date
+        params = this._currentState.getParams();
+        if (params.$info) {
+            params.$info.newState = this._currentState;
+        }
+
         // Update the state registry one
         if (state === stateRegistry.getCurrent() && state.getFullName() !== this._currentState.getFullName()) {
             state.setFullName(this._currentState.getFullName());
         }
-
-        name = this._currentState.getName();
-        stateMeta = this._states[name];
     };
 
     /**
