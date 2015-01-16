@@ -444,6 +444,25 @@ define([
         leadingName = state.getLeadingName();
         length = this._downlinks.length;
 
+        // The first cycle on the down links are more strict to ensure we
+        // don't match the wrong child
+        for (x = 0; x < length; x += 1) {
+            curr = this._downlinks[x];
+
+            if (!(curr instanceof Controller)) {
+                continue;
+            }
+
+            if (!name) {
+                if (curr._defaultState && stateRegistry.isRegistered(state.getFullName() + '.' + curr._defaultState.name)) {
+                    return curr.delegateState(state);
+                }
+            } else if (curr._currentState && curr._currentState.getLeadingName() === leadingName) {
+                return curr.delegateState(state);
+            }
+        }
+
+        // The second cycle is loose
         for (x = 0; x < length; x += 1) {
             curr = this._downlinks[x];
 
@@ -452,15 +471,8 @@ define([
             }
 
             // If the state has no name, check if this child has a registered default state
-            if (!name) {
-                if (curr._defaultState && stateRegistry.isRegistered(state.getFullName() + '.' + curr._defaultState.name)) {
-                    curr.delegateState(state);
-                    return;
-                }
-            // Otherwise check if this child has the wanted state
-            } else if (curr._currentState && curr._currentState.getLeadingName() === leadingName) {
-                curr.delegateState(state);
-                return;
+            if ((!name && curr._defaultState) || (name && curr._states[name])) {
+                return curr.delegateState(state);
             }
         }
 
