@@ -249,6 +249,7 @@ define([
                 } catch (e) {
                     advance = false;
                     err = e;
+                    err.state = state;
                 }
             }
 
