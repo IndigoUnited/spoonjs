@@ -101,13 +101,13 @@ define([
      *
      * An error will be thrown if the state being registered already exists.
      *
-     * @param {String} state     The state
-     * @param {Route}  [route]   The route associated to the state
-     * @param {Object} [options] The default options of the state
+     * @param {String}    state      The state
+     * @param {Route}    [route]     The route associated to the state
+     * @param {Function} [validator] A validator to be run before entering the state
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
-    StateRegistry.prototype.register = function (state, route, options) {
+    StateRegistry.prototype.register = function (state, route, validator) {
         if (has('debug') && this._states[state]) {
             throw new Error('State "' + state + '" is already registered.');
         }
@@ -115,7 +115,7 @@ define([
         // Add to the states object
         this._states[state] = {
             route: route,
-            options: options
+            validator: validator
         };
 
         // Add to the routes array
@@ -204,19 +204,16 @@ define([
      *  - route:        false to not change the address value
      *  - replace:      true to replace the address value instead of adding a new history entry
      *  - silent:       true to silently change the state, without emitting an event
-     *  - interceptors: 'run' will run them,
-     *                  'skip' will skip initially and keep skiping if switching to the previous state,
-     *                  'reset' will skip and reset them
+     *  - interceptors: true to run the interceptors, false otherwise
      *
      * @param {String|State} state     The state name or the state object
      * @param {Object}       [params]  The state parameters if the state was a string
      * @param {Object}       [options] The options
      *
-     * @return {Boolean} True if the transition will be made, false otherwise
+     * @return {Boolean} True if the current state is not the same, false otherwise
      */
     StateRegistry.prototype.setCurrent = function (state, params, options) {
-        var registered,
-            that = this;
+        var that = this;
 
         // Handle args
         if (typeof state === 'string') {
@@ -225,14 +222,14 @@ define([
             options = params;
         }
 
-        registered = this._states[state.getFullName()];
-
         // Set default options and merge them with the user ones
         options = mixIn({
+            force: false,
             route: true,
             replace: !this._currentState,  // Replace URL if it's the first state
-            interceptors: 'run'
-        }, registered && registered.options, options);
+            silent: false,
+            interceptors:  true
+        }, options);
 
         // Only change if the current state is not the same
         if (this.isCurrent(state) && !options.force) {
@@ -241,21 +238,37 @@ define([
 
         // Handle interceptors before changing the state
         this._handleInterceptors(options.interceptors, state, function (advance) {
-            var url;
+            var url,
+                registered = that._states[state.getFullName()],
+                err;
 
-            // If the user canceled the state in an interceptor,
-            // restore current state url and emit a 'cancel' event
+            // Run the state validator if the interceptors told us to advance the state
+            if (advance && registered && registered.validator) {
+                try {
+                    registered.validator(state.getParams());
+                } catch (e) {
+                    advance = false;
+                    err = e;
+                }
+            }
+
+            // If we should not advance because of an interceptor or because of a state validator,
+            // restore address value and abort!
             if (!advance) {
                 if (that._address) {
                     url = that._currentState && that._getStateUrl(that._currentState);
 
                     if (url) {
                         that._currentUrl = url;
-                        that._address.setValue(url);
+                        that._address.setValue(url, { replace: true });
                     }
                 }
 
-                that._emit('cancel', state);
+                if (err) {
+                    that._emit('error', err);
+                } else {
+                    that._emit('cancel', state);
+                }
             // Otherwise proceed to change..
             } else {
                 that._previousState = that._currentState;
@@ -474,7 +487,7 @@ define([
         // to the routes array because he is already there..
         this._states[finalState] = {
             route: route,
-            options: this._states[initialState].options
+            validator: this._states[initialState].validator
         };
     };
 
@@ -615,40 +628,27 @@ define([
      *
      * While the interceptors are being run, the address will be disabled.
      *
-     * @param {String}   behavior The behavior to apply
+     * @param {Boolean}  run      True to run the interceptors, false otherwise
      * @param {State}    state    The state object
      * @param {Function} callback The callback to call when done
      */
-    StateRegistry.prototype._handleInterceptors = function (behavior, state, callback) {
+    StateRegistry.prototype._handleInterceptors = function (run, state, callback) {
         var interceptors = this._interceptors,
-            length = interceptors.length,
+            length,
             that = this;
-
-        // Reset behavior
-        if (behavior === 'reset') {
-            that._interceptors = [];
-            that._skipInterceptors = false;
-            return callback(true);
-        }
 
         if (this._interceptors.running) {
             throw new Error('Cannot change state while running interceptors');
         }
 
-        // Skip behavior
-        if (behavior === 'skip') {
-            this._skipInterceptors = true;
-            return callback(true);
-        }
-
-        // Handle skip flag
-        if (this._skipInterceptors && this._previousState && this._previousState.isFullyEqual(state)) {
-            return callback(true);
+        // Reset the interceptors the user didn't want to run them
+        if (!run) {
+            that._interceptors = [];
         }
 
         // Do not proceed if there are no interceptors
+        length = interceptors.length;
         if (!length) {
-            this._skipInterceptors = false;
             return callback(true);
         }
 
@@ -656,25 +656,31 @@ define([
             var interceptor;
 
             if (index === length) {
-                // Re-enable address & reset interceptors
-                that._address && that._address.enable();
-                that._interceptors = [];
-                that._skipInterceptors = false;
-
-                return callback(true);
+                return done(true);
             }
 
             interceptor = interceptors[index];
-            interceptor.fn.call(interceptor.ctx, state, function (advance) {
-                if (advance === false) {
-                    that._address && that._address.enable();
-                    that._interceptors.running = false;
 
-                    return callback(false);
-                }
+            // Use a try to catch to handle programming errors gracefully
+            try {
+                interceptor.fn.call(interceptor.ctx, state, function (advance) {
+                    if (advance === false) {
+                        done(false);
+                    } else {
+                        iterator(index + 1);
+                    }
+                });
+            } finally {
+                done(false);
+            }
+        }
 
-                iterator(index + 1);
-            });
+        function done(advance) {
+            // Re-enable address & reset interceptors
+            that._address && that._address.enable();
+            that._interceptors = [];
+
+            callback(advance);
         }
 
         // Disable address & mark as running

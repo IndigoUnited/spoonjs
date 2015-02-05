@@ -44,6 +44,25 @@ define([
         return joined || '/';
     }
 
+    /**
+     * Chains a parent stte validator with a state child validator.
+     *
+     * @param {Function} parentValidator The parent validator
+     * @param {Function} childValidator  The child validator
+     *
+     * @return {Function} The chained function
+     */
+    function chainStateValidator(parentValidator, childValidator) {
+        if (!childValidator || !parentValidator) {
+            return childValidator || parentValidator;
+        }
+
+        return function (state) {
+            parentValidator(state);
+            childValidator(state);
+        };
+    }
+
     config = config || {};
     config = config.state || {};
 
@@ -84,7 +103,7 @@ define([
                 value.$state = curr.$state ? curr.$state + '.' + key : key;
                 value.$pattern = curr.$fullPattern || patternJoin(curr.$pattern, value.$pattern || key);
                 value.$constraints = fillIn(value.$constraints || {}, curr.$constraints);
-
+                value.$validator = chainStateValidator(curr.$validator, value.$validator);
                 queue.push(value);
             // String -> state has a route
             } else if (typeof value === 'string') {
@@ -93,7 +112,7 @@ define([
                     state: curr.$state ? curr.$state + '.' + key : key,
                     pattern: patternJoin(curr.$pattern, value),
                     constraints: curr.$constraints,
-                    options: curr.$options,
+                    validator: curr.$validator,
                     priority: curr.$priority || 0
                 });
             } else if (has('debug')) {
@@ -106,7 +125,7 @@ define([
                 state: curr.$state,
                 pattern: curr.$fullPattern || curr.$pattern,
                 constraints: curr.$constraints,
-                options: curr.$options,
+                validator: curr.$validator,
                 priority: curr.$priority || 0
             });
         }
@@ -130,7 +149,7 @@ define([
     length = arr.length;
     for (x = 0; x < length; x += 1) {
         curr = arr[x];
-        registry.register(curr.state, curr.pattern ? new Route(curr.state, curr.pattern, curr.constraints) : null, curr.options);
+        registry.register(curr.state, curr.pattern ? new Route(curr.state, curr.pattern, curr.constraints) : null, curr.validator);
     }
 
     // Inject the address if the routing is enabled
