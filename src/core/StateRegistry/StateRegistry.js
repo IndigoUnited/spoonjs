@@ -237,21 +237,8 @@ define([
         }
 
         // Handle interceptors before changing the state
-        this._handleInterceptors(options.interceptors, state, function (advance) {
-            var url,
-                registered = that._states[state.getFullName()],
-                err;
-
-            // Run the state validator if the interceptors told us to advance the state
-            if (advance && registered && registered.validator) {
-                try {
-                    registered.validator(state.getParams());
-                } catch (e) {
-                    advance = false;
-                    err = e;
-                    err.state = state;
-                }
-            }
+        this._handleInterceptors(options.interceptors, state, function (err, advance) {
+            var url;
 
             // If we should not advance because of an interceptor or because of a state validator,
             // restore address value and abort!
@@ -626,6 +613,7 @@ define([
     /**
      * Runs all the interceptor in series.
      * The interceptors will be reseted if the state changed.
+     * It will also run the state validator which is a "implicit" interceptor.
      *
      * While the interceptors are being run, the address will be disabled.
      *
@@ -642,16 +630,12 @@ define([
             throw new Error('Cannot change state while running interceptors');
         }
 
-        // Reset the interceptors the user didn't want to run them
+        // Reset the interceptors if the user didn't want to run them
         if (!run) {
             that._interceptors = [];
         }
 
-        // Do not proceed if there are no interceptors
         length = interceptors.length;
-        if (!length) {
-            return callback(true);
-        }
 
         function iterator(index) {
             var interceptor;
@@ -677,11 +661,31 @@ define([
         }
 
         function done(advance) {
-            // Re-enable address & reset interceptors
-            that._address && that._address.enable();
-            that._interceptors = [];
+            var registered = that._states[state.getFullName()];
 
-            callback(advance);
+            // Re-enable address & mark as no longer running
+            that._address && that._address.enable();
+            that._interceptors.running = false;
+
+            if (!advance) {
+                return callback(null, false);
+            }
+
+            // Finally, run the state validator
+            if (registered && registered.validator) {
+                try {
+                    registered.validator(state.getParams());
+                } catch (err) {
+                    err.state = state;
+
+                    return callback(err, false);
+                }
+            }
+
+            // At this point, we will advance to the state
+            // so we must reset the interceptors
+            that._interceptors = [];
+            callback(null, true);
         }
 
         // Disable address & mark as running
