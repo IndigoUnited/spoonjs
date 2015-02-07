@@ -1,5 +1,3 @@
-/*jshint loopfunc:true*/
-
 /**
  * StateRegistry class.
  */
@@ -7,6 +5,7 @@ define([
     'events-emitter/MixableEventsEmitter',
     './State',
     './Route',
+    '../../util/booleanSeries',
     'mout/array/find',
     'mout/array/findIndex',
     'mout/array/remove',
@@ -17,7 +16,8 @@ define([
     'mout/queryString/encode',
     'has',
     'jquery'
-], function (MixableEventsEmitter, State, Route, find, findIndex, remove, hasOwn, mixIn, startsWith, decode, encode, has, $) {
+], function (MixableEventsEmitter, State, Route, booleanSeries, find, findIndex, remove,
+             hasOwn, mixIn, startsWith, decode, encode, has, $) {
 
     'use strict';
 
@@ -27,7 +27,7 @@ define([
     function StateRegistry() {
         this._states = {};
         this._routes = [];
-        this._interceptors = [];
+        this._interceptor = null;
 
         // Replace all functions that need to be bound
         this._handleLinkClick = this._handleLinkClick.bind(this);
@@ -204,7 +204,7 @@ define([
      *  - route:        false to not change the address value
      *  - replace:      true to replace the address value instead of adding a new history entry
      *  - silent:       true to silently change the state, without emitting an event
-     *  - interceptors: true to run the interceptors, false otherwise
+     *  - interceptor:  true to run the interceptor, false otherwise
      *
      * @param {String|State} state     The state name or the state object
      * @param {Object}       [params]  The state parameters if the state was a string
@@ -228,7 +228,7 @@ define([
             route: true,
             replace: !this._currentState,  // Replace URL if it's the first state
             silent: false,
-            interceptors:  true
+            interceptor:  true
         }, options);
 
         // Only change if the current state is not the same
@@ -236,13 +236,13 @@ define([
             return false;
         }
 
-        // Handle interceptors before changing the state
-        this._handleInterceptors(options.interceptors, state, function (err, advance) {
+        // Decide if we should change the state based on the interceptor &
+        // state validator results
+        this._shouldChangeCarryOn(state, options.interceptor, function (err, carryOn) {
             var url;
 
-            // If we should not advance because of an interceptor or because of a state validator,
-            // restore address value and abort!
-            if (!advance) {
+            // If we should not carry on, restore the state URL
+            if (!carryOn) {
                 if (that._address) {
                     url = that._currentState && that._getStateUrl(that._currentState);
 
@@ -252,6 +252,7 @@ define([
                     }
                 }
 
+                // Emit either an error or a cancel
                 if (err) {
                     that._emit('error', err);
                 } else {
@@ -330,48 +331,21 @@ define([
     };
 
     /**
-     * Configures a interceptor that will be run before actually changing the state.
+     * Configures an interceptor that will be run before changing to a new state.
      * This easily allows use cases such as "are you sure you want to quit".
      *
-     * The interceptor will be added to the start of the interceptors array.
+     * Set the interceptor to null if you wish to remove it.
      *
-     * @param {Function} fn  The interceptor
-     * @param {Object}   ctx The context
-     *
-     * @return {StateRegistry} The instance itself to allow chaining
-     */
-    StateRegistry.prototype.addInterceptor = function (fn, ctx) {
-        if (this._interceptors.running) {
-            throw new Error('Cannot add interceptor while running them');
-        }
-
-        this.removeInterceptor(fn, ctx);
-        this._interceptors.unshift({ fn: fn, ctx: ctx });
-
-        return this;
-    };
-
-    /**
-     * Removes a previously added interceptor.
-     *
-     * @param {Function} fn The interceptor
+     * @param {Function} interceptor The interceptor
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
-    StateRegistry.prototype.removeInterceptor = function (fn, ctx) {
-        var index;
-
-        if (this._interceptors.running) {
-            throw new Error('Cannot remove interceptor while running them');
+    StateRegistry.prototype.intercept = function (interceptor) {
+        if (this._blocked) {
+            throw new Error('Cannot set interceptor while blocked');
         }
 
-        index = findIndex(this._interceptors, function (obj) {
-            return obj.fn === fn && obj.ctx === ctx;
-        });
-
-        if (index !== -1) {
-            this._interceptors.splice(index, 1);
-        }
+        this._interceptor = interceptor;
 
         return this;
     };
@@ -560,36 +534,39 @@ define([
             options;
 
         // Only parse links with state protocol
-        if (startsWith(url, 'state://')) {
-            event.preventDefault();
-
-            // If the link is internal, then we just prevent default behaviour
-            if (type !== 'internal') {
-                // Ignore if we have interceptors running (equivalent to address is disabled)
-                if (this._interceptors.running) {
-                    return;
-                }
-
-                pos = url.lastIndexOf('/');
-                // Extract the name and the params
-                if (pos === -1) {
-                    state = url.substr(8);
-                } else {
-                    state = url.substring(8, pos);
-                    params = decode(url.substr(pos + 1));
-                }
-
-                // Extract options from attributes
-                options = {
-                    force: element.getAttribute('data-url-force') === 'true'
-                    // No need to parse route and replace options here because they will be always false
-                };
-
-                this.setCurrent(state, params, options);
-            } else if (has('debug')) {
-                console.info('[spoonjs] Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
-            }
+        if (!startsWith(url, 'state://')) {
+            return;
         }
+
+        event.preventDefault();
+
+        // Ignore if the URL is flagged as internal
+        if (type === 'internal') {
+            has('debug') && console.info('[spoonjs] Link poiting to state "' + state + '" is flagged as internal and as such event#preventDefault() was called on the event.');
+            return;
+        }
+
+        // Stop here if we are blocked
+        if (this._blocked) {
+            return;
+        }
+
+        // Extract the name and the params
+        pos = url.lastIndexOf('/');
+        if (pos === -1) {
+            state = url.substr(8);
+        } else {
+            state = url.substring(8, pos);
+            params = decode(url.substr(pos + 1));
+        }
+
+        // Extract options from attributes
+        options = {
+            force: element.getAttribute('data-url-force') === 'true'
+            // No need to parse route and replace options here because they will be always false
+        };
+
+        this.setCurrent(state, params, options);
     };
 
     /**
@@ -611,93 +588,65 @@ define([
     };
 
     /**
-     * Runs all the interceptor in series.
-     * The interceptors will be reseted if the state changed.
-     * It will also run the state validator which is a "implicit" interceptor.
+     * Decides if the state change should carry on.
      *
-     * While the interceptors are being run, the address will be disabled.
+     * The change will happen if the interceptor passes as well as
+     * the state validator.
      *
-     * @param {Boolean}  run      True to run the interceptors, false otherwise
-     * @param {State}    state    The state object
-     * @param {Function} callback The callback to call when done
+     * While this is happening, the address will be disabled and no other
+     * state change will be allowed.
+     * When done, the interceptor will be cleared automatically.
+     *
+     * @param {State}    state       The state object
+     * @param {Boolean}  interceptor False to skip the interceptor, true otherwise
+     * @param {Function} callback    The callback to call when done
      */
-    StateRegistry.prototype._handleInterceptors = function (run, state, callback) {
-        var interceptors = this._interceptors,
-            length,
-            that = this;
+    StateRegistry.prototype._shouldChangeCarryOn = function (state, interceptor, callback) {
+        var that = this,
+            registered,
+            funcs;
 
-        if (this._interceptors.running) {
-            throw new Error('Cannot change state while running interceptors');
+        if (this._blocked) {
+            throw new Error('Cannot change state while the state registry is blocked');
         }
 
-        // Reset the interceptors if the user didn't want to run them
-        if (!run) {
-            that._interceptors = [];
-        }
-
-        length = interceptors.length;
-
-        function iterator(index) {
-            var interceptor;
-
-            if (index === length) {
-                return done(true);
-            }
-
-            interceptor = interceptors[index];
-
-            // Use a try to catch to handle programming errors gracefully
-            try {
-                interceptor.fn.call(interceptor.ctx, state, function (advance) {
-                    if (advance === false) {
-                        done(false);
-                    } else {
-                        iterator(index + 1);
-                    }
-                });
-            } finally {
-                done(false);
-            }
-        }
-
-        function done(advance) {
-            var registered = that._states[state.getFullName()];
-
-            // Re-enable address & mark as no longer running
-            that._address && that._address.enable();
-            that._interceptors.running = false;
-
-            if (!advance) {
-                return callback(null, false);
-            }
-
-            // Finally, run the state validator
-            if (registered && registered.validator) {
-                try {
-                    registered.validator(state.getParams());
-                } catch (err) {
-                    err.state = state;
-
-                    return callback(err, false);
-                }
-            }
-
-            // At this point, we will advance to the state
-            // so we must reset the interceptors
-            that._interceptors = [];
-            callback(null, true);
-        }
-
-        // Disable address & mark as running
+        // Disable address & mark as blocked
         this._address && this._address.disable();
-        this._interceptors.running = true;
+        this._blocked = true;
 
-        iterator(0);
+        funcs = [];
+
+        // Push the interceptor if configured
+        interceptor && this._interceptor && funcs.push(this._interceptor.bind(null, state.getParams()));
+
+        // Push the state validator if any
+        registered = this._states[state.getFullName()];
+        registered && registered.validator && funcs.push(registered.validator.bind(null, state.getParams()));
+
+        booleanSeries(funcs, function (err, carryOn) {
+            // Ignore if we were destroyed meanwhile..
+            if (that._destroyed) {
+                return;
+            }
+
+            // Re-enable address & mark as no longer blocked
+            that._address && that._address.enable();
+            that._blocked = false;
+
+            if (err || !carryOn) {
+                callback(err, false);
+            } else {
+                // At this point, we will carry on to the state
+                // so we must reset the interceptor
+                that._interceptor = null;
+                callback(null, true);
+            }
+        });
     };
 
     /**
      * Releases any listeners and resources.
-     * This method is called only once after a destroy several call.
+     * This method is called only once after a destroy call.
      *
      * @see StateRegistry#destroy
      */
