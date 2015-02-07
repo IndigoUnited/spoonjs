@@ -659,7 +659,7 @@ define([
         $(document.body).off('click', 'a', this._handleLinkClick);
 
         this.unsetAddress();
-        this._currentState = null;
+        this._currentState = this._interceptor = null;
     };
 
     return StateRegistry;
