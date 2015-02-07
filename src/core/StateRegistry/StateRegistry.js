@@ -254,6 +254,7 @@ define([
 
                 // Emit either an error or a cancel
                 if (err) {
+                    err.state = state;
                     that._emit('error', err);
                 } else {
                     that._emit('cancel', state);
@@ -633,6 +634,7 @@ define([
             that._address && that._address.enable();
             that._blocked = false;
 
+            // Does it failed?
             if (err || !carryOn) {
                 callback(err, false);
             } else {
