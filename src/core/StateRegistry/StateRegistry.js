@@ -439,7 +439,7 @@ define([
             return;
         }
 
-        has('debug') && console.info('[spoonjs] Registering final state after transition, which is "' + finalState + '",');
+        has('debug') && console.info('[spoonjs] Registering final state after transition, which is "' + finalState + '".');
 
         // Grab the route
         route = find(this._routes, function (route) {
