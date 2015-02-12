@@ -462,22 +462,23 @@ define([
             }
         }
 
-        // The second cycle is loose
-        for (x = 0; x < length; x += 1) {
-            curr = this._downlinks[x];
+        // The second cycle is loose and only works if we got a state
+        if (name) {
+            for (x = 0; x < length; x += 1) {
+                curr = this._downlinks[x];
 
-            if (!(curr instanceof Controller)) {
-                continue;
+                if (!(curr instanceof Controller)) {
+                    continue;
+                }
+
+                if (curr._states[name]) {
+                    return curr.delegateState(state);
+                }
             }
 
-            // If the state has no name, check if this child has a registered default state
-            if ((!name && curr._defaultState) || (name && curr._states[name])) {
-                return curr.delegateState(state);
+            if (has('debug')) {
+                console.warn('[spoonjs] No child controller of "' + this.$name + '" can handle the "' + name + '" state.');
             }
-        }
-
-        if (name && has('debug')) {
-            console.warn('[spoonjs] No child controller of "' + this.$name + '" can handle the "' + name + '" state.');
         }
     };
 
