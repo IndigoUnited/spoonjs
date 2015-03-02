@@ -76,6 +76,15 @@ define([
     };
 
     /**
+     * Checks if the instance is linked.
+     *
+     * @return {Boolean} True if it is, false otherwise
+     */
+    Joint.prototype.isLinked = function () {
+        return !!this._uplink;
+    };
+
+    /**
      * Checks if the instance is destroyed.
      *
      * @return {Boolean} True if it is, false otherwise
