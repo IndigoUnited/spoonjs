@@ -66,7 +66,7 @@ define([
             this._address.enable();
             this._address.off('change', this._onAddressChange, this);
             this._address = null;
-            this._currentUrl = null;
+            this._currentUrl = this._lastUrl = null;
         }
     };
 
@@ -239,17 +239,15 @@ define([
         // Decide if we should change the state based on the interceptor &
         // state validator results
         this._shouldChangeCarryOn(state, options.interceptor, function (err, carryOn) {
-            var url;
+            var temp;
 
             // If we should not carry on, restore the state URL
             if (!carryOn) {
-                if (that._address) {
-                    url = that._currentState && that._getStateUrl(that._currentState);
-
-                    if (url) {
-                        that._currentUrl = url;
-                        that._address.setValue(url, { replace: true });
-                    }
+                if (that._address && that._lastUrl) {
+                    temp = that._currentUrl;
+                    that._currentUrl = that._lastUrl;
+                    that._lastUrl = temp;
+                    that._address.setValue(that._currentUrl, { replace: true });
                 }
 
                 // Emit either an error or a cancel
@@ -402,6 +400,7 @@ define([
         if (this._address && options.route) {
             url = this._getStateUrl(this._currentState);
             if (url) {
+                this._lastUrl = this._currentUrl;
                 this._currentUrl = url;
                 this._address.setValue(url, options);
             }
@@ -483,6 +482,7 @@ define([
             return null;
         }
 
+        this._lastUrl = this._currentUrl;
         this._currentUrl = value;
 
         // Find if there's a matching route for the new address value
