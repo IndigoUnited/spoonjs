@@ -153,8 +153,8 @@ define([
      */
     View.prototype.render = function (data) {
         if (has('debug') && this._rendered) {
-            console.warn('Calling render on "' + this.$name + '" when it is already rendered.');
-            console.warn('Some views might not be prepared for double rendering, consider creating an "update" method.');
+            console.warn('[spoonjs] Calling render on "' + this.$name + '" when it is already rendered.');
+            console.warn('[spoonjs] Some views might not be prepared for double rendering, consider creating an "update" method.');
         }
 
         this._element.children().remove();
