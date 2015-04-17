@@ -343,10 +343,34 @@ define([
      */
     StateRegistry.prototype.intercept = function (interceptor) {
         if (this._blocked) {
-            throw new Error('Cannot set interceptor while blocked');
+            has('debug') && console.warn('[spoonjs] Cannot set interceptor while blocked');
+
+            return this;
         }
 
         this._interceptor = interceptor;
+
+        return this;
+    };
+
+    /**
+     * Block the state registry.
+     *
+     * @return {StateRegistry} The instance itself to allow chaining
+     */
+    StateRegistry.prototype.block = function () {
+        this._blocked = true;
+
+        return this;
+    };
+
+    /**
+     * Unblock the state registry.
+     *
+     * @return {StateRegistry} The instance itself to allow chaining
+     */
+    StateRegistry.prototype.unblock = function () {
+        this._blocked = false;
 
         return this;
     };
@@ -356,7 +380,7 @@ define([
      *
      * @return {Boolean} True if it is, false otherwise
      */
-    StateRegistry.prototype.isBlocked = function (state, params) {
+    StateRegistry.prototype.isBlocked = function () {
         return this._blocked;
     };
 
@@ -620,6 +644,8 @@ define([
 
         if (this._blocked) {
             has('debug') && console.warn('[spoonjs] Cannot change state while the state registry is blocked');
+
+            return;
         }
 
         // Disable address & mark as blocked
