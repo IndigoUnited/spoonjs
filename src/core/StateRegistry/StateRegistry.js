@@ -28,6 +28,7 @@ define([
         this._states = {};
         this._routes = [];
         this._interceptor = null;
+        this._blocked = false;
 
         // Replace all functions that need to be bound
         this._handleLinkClick = this._handleLinkClick.bind(this);
@@ -332,6 +333,7 @@ define([
     /**
      * Configures an interceptor that will be run before changing to a new state.
      * This easily allows use cases such as "are you sure you want to quit".
+     * The state registry will be blocked until the interceptors are run and finalized.
      *
      * Set the interceptor to null if you wish to remove it.
      *
@@ -347,6 +349,15 @@ define([
         this._interceptor = interceptor;
 
         return this;
+    };
+
+    /**
+     * Check if the state registry is blocked, waiting for an interceptor to finalize.
+     *
+     * @return {Boolean} True if it is, false otherwise
+     */
+    StateRegistry.prototype.isBlocked = function (state, params) {
+        return this._blocked;
     };
 
     /**
@@ -608,7 +619,7 @@ define([
             funcs;
 
         if (this._blocked) {
-            throw new Error('Cannot change state while the state registry is blocked');
+            has('debug') && console.warn('[spoonjs] Cannot change state while the state registry is blocked');
         }
 
         // Disable address & mark as blocked
