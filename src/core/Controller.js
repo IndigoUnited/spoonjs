@@ -117,9 +117,7 @@ define([
             currentState;
 
         // Assume app state if not passed
-        if (!state) {
-            state = stateRegistry.getCurrent();
-        } else if (state.$info) {
+        if (state.$info) {
             state = state.$info.newState;
         }
 

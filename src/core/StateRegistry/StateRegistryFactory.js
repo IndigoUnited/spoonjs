@@ -11,11 +11,12 @@ define([
     'services/address',
     'app-config',
     'mout/lang/isObject',
+    'mout/object/hasOwn',
     'mout/object/fillIn',
     'mout/object/size',
     'mout/array/sort',
     'has'
-], function (StateRegistry, Route, address, config, isObject, fillIn, size, sort, has) {
+], function (StateRegistry, Route, address, config, isObject, hasOwn, fillIn, size, sort, has) {
 
     'use strict';
 
@@ -30,8 +31,12 @@ define([
     function patternJoin(pattern1, pattern2) {
         var joined;
 
-        pattern1 = pattern1 ? pattern1.replace(trimSlashRegExp, '') : '';
-        pattern2 = pattern2 ? pattern2.replace(trimSlashRegExp, '') : '';
+        if (pattern1 == null || pattern2 == null) {
+            return null;
+        }
+
+        pattern1 = (pattern1 || '').replace(trimSlashRegExp, '');
+        pattern2 = (pattern2 || '').replace(trimSlashRegExp, '');
 
         joined = pattern1 + '/' + pattern2;
 
@@ -67,7 +72,7 @@ define([
     config = config.state || {};
 
     var registry = new StateRegistry(),
-        states = config.states || [],
+        states = config.states || {},
         curr,
         key,
         value,
@@ -78,6 +83,8 @@ define([
         length,
         queue = [],
         arr = [];
+
+    states.$pattern = '/';
 
     // Process the states and add them to the registry
     // The code bellow uses a stack (deep first) to avoid recursion
@@ -101,7 +108,7 @@ define([
             // Object -> add to the processing queue
             } else if (isObject(value)) {
                 value.$state = curr.$state ? curr.$state + '.' + key : key;
-                value.$pattern = curr.$fullPattern || patternJoin(curr.$pattern, value.$pattern || key);
+                value.$pattern = curr.$fullPattern || patternJoin(curr.$pattern, hasOwn(value, '$pattern') ? value.$pattern : key);
                 value.$constraints = fillIn(value.$constraints || {}, curr.$constraints);
                 value.$validator = chainStateValidator(curr.$validator, value.$validator);
                 queue.push(value);
