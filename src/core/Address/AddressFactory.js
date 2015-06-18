@@ -9,10 +9,12 @@ define([
     'app-config',
     'address/AddressHash',
     'address/AddressHTML5',
+    'address/util/parseUrl',
+    'address/util/trimSlashes',
     'mout/string/startsWith',
     'mout/string/endsWith',
     'has'
-], function (config, AddressHash, AddressHTML5, startsWith, endsWith, has) {
+], function (config, AddressHash, AddressHTML5, parseUrl, trimSlashes, startsWith, endsWith, has) {
 
     'use strict';
 
@@ -20,20 +22,13 @@ define([
         address,
         useHTML5,
         pos,
+        parsed,
         tmp;
 
     config = config || {};
     config = config.address || {};
     options.basePath = config.basePath || '/';
     options.translate = location.protocol === 'file:' ? false : config.translate;
-
-    // Ensure that the base path starts and ends with a /
-    if (!endsWith(options.basePath, '/')) {
-        options.basePath += '/';
-    }
-    if (!startsWith(options.basePath, '/')) {
-        options.basePath = '/' + options.basePath;
-    }
 
     useHTML5 = !!config.html5;
 
@@ -43,6 +38,7 @@ define([
         // If we have an hash, set its value as the current one
         if (options.translate) {
             pos = location.href.indexOf('#');
+
             if (pos !== -1) {
                 address.setValue(location.href.substr(pos + 1));
             }
@@ -58,18 +54,21 @@ define([
             address = AddressHash.getInstance(options);
 
             // Check if the URL is an HTML5 one and redirect it to the translated one
-            if (options.translate && !address.getValue() && location.pathname.length > 1 && location.pathname.indexOf('#') === -1) {
-                pos = location.pathname.indexOf(options.basePath);
+            if (options.translate && location.href.indexOf('#') === -1) {
+                parsed = parseUrl(location.href);
+                parsed.pathname = '/' + trimSlashes.leading(parsed.pathname);
+                options.basePath = trimSlashes(options.basePath);
+                pos = parsed.pathname.indexOf('/' + options.basePath);
+
                 if (pos === 0) {
                     // Extract the value after the base path
-                    tmp = location.pathname.substr(pos + options.basePath.length);
-                    // Remove trailing slashes and file names
-                    tmp = tmp.replace(/\/*$/g, '').replace(/[^\/]*\.[^\/]+$/, '');
+                    tmp = trimSlashes(location.pathname.substr(pos + options.basePath.length + 1));
+
                     if (tmp) {
                         // Disable the address
                         address.disable();
                         // Finally redirect
-                        window.location = location.protocol + '//' + location.hostname + (location.port && location.port != 80 ? ':' + location.port : '') + options.basePath + '#/' + tmp;
+                        window.location = parsed.protocol + parsed.doubleSlash + parsed.host + '/' + options.basePath + '#/' + tmp;
                     }
                 }
             }
