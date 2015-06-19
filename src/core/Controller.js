@@ -318,7 +318,7 @@ define([
         state = {
             name: name,
             fullName: name,
-            params: {}
+            params: this._currentState ? mixIn({}, this._currentState.getParams()) : {}
         };
 
         // Local
@@ -332,7 +332,7 @@ define([
 
             // Concatenate name & mix in relevant params
             state.fullName = ancestorState.getName() + (state.fullName ? '.' + state.fullName : '');
-            fillIn(state.params, ancestor._currentStateParams);
+            fillIn(state.params, ancestorState.getParams());
 
             ancestor = ancestor._uplink;
         }
@@ -387,7 +387,6 @@ define([
         // Update current state
         this._previousState = this._currentState;
         this._currentState = state.clone();
-        this._currentStateParams = pick(this._currentState.getParams(), this._states[this._currentState.getName()].params);
 
         // Ensure $info gets up to date
         params = this._currentState.getParams();
