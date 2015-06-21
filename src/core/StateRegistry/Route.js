@@ -120,7 +120,7 @@ define([
 
                 // Check if parameter was forgotten
                 if (has('debug') && !hasOwn(params, placeholderName)) {
-                    throw new Error('Missing param "' + placeholderName + '".');
+                    throw new Error('Missing param "' + placeholderName + '" for route "' + this._name + '".');
                 }
 
                 // Coerce it into a string
