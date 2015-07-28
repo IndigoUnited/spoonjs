@@ -53,8 +53,14 @@ define([
         // Resolve the state
         resolved = this._resolveState(name, params);
 
+        if (!resolved) {
+            has('debug') && console.warn('[spoonjs] generateUrl failed, please read the previous warning');
+            return '';
+        }
+
         if (resolved.internal) {
-            throw new Error('Cannot generate a URL for internal state "' + name + '" in "' + this.$name + '".');
+            has('debug') && console.warn('[spoonjs] Cannot generate a URL for internal state "' + name + '" in "' + this.$name + '".');
+            return '';
         }
 
         return stateRegistry.generateUrl(resolved.fullName, resolved.params, absolute);
@@ -77,6 +83,11 @@ define([
         // Resolve the state
         // Note that parameters are shallow cloned to avoid side-effects
         resolved = this._resolveState(name, mixIn({}, params));
+
+        if (!resolved) {
+            has('debug') && console.warn('[spoonjs] setState failed, please read the previous warning');
+            return null;
+        }
 
         // If the state is not ours, simply set it on the state registry
         if (resolved.absolute || resolved.relative) {
@@ -324,8 +335,9 @@ define([
         if (name.charAt(0) === '/') {
             name = name.substr(1);
 
-            if (has('debug') && !stateRegistry.isRegistered(name)) {
-                throw new Error('Resolved "' + name + '" as absolute but its not registered in the state registry.');
+            if (!stateRegistry.isRegistered(name)) {
+                has('debug') && console.warn('[spoonjs] Resolved "' + name + '" as absolute but its not registered in the state registry.');
+                return null;
             }
 
             return { fullName: name, params: params, absolute: true };
@@ -333,16 +345,22 @@ define([
 
         // Relative
         if (startsWith(name, '../')) {
-            if (has('debug') && (!this._uplink || !(this._uplink instanceof Controller))) {
-                throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '" because controller has no parent.');
+            if (!this._uplink) {
+                has('debug') && console.warn('[spoonjs] Cannot resolve relative state "' + name + '" in "' + this.$name + '" because controller has no parent.');
+                return null;
             }
 
             resolved = this._uplink._resolveState(name.substr(3), params);
+            if (!resolved) {
+                return null;
+            }
+
             resolved.relative = true;
             delete resolved.name;
 
-            if (has('debug') && !resolved.global) {
-                throw new Error('Relative state "' + name + '" in "' + this.$name + '" is not a global state (only global are supported for now).');
+            if (!resolved.global) {
+                has('debug') && console.warn('[spoonjs] Relative state "' + name + '" in "' + this.$name + '" is not a global state (only global are supported for now).');
+                return null;
             }
 
             return resolved;
@@ -360,8 +378,9 @@ define([
             localName = name.split('.')[0];
 
             // Validate if state exists
-            if (has('debug') && !this._states[localName]) {
-                throw new Error('Unknown state "' + localName + '" in "' + this.$name + '".');
+            if (!this._states[localName]) {
+                has('debug') && console.warn('[spoonjs] Unknown state "' + localName + '" in "' + this.$name + '".');
+                return null;
             }
 
             // Is this an internal state? If so end it here..
@@ -386,7 +405,8 @@ define([
                 ancestorState = ancestor.getState();
 
                 if (!ancestorState) {
-                    throw new Error('Unable to resolve full state when controller "' + this.$name + '" is not in any state.');
+                    has('debug') && console.warn('[spoonjs] Unable to resolve full state when controller "' + this.$name + '" is not in any state.');
+                    return null;
                 }
 
                 // Concatenate name & mix in relevant params
