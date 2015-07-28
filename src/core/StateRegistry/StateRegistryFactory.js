@@ -50,7 +50,7 @@ define([
     }
 
     /**
-     * Chains a parent stte validator with a state child validator.
+     * Chains a parent state validator with a state child validator.
      *
      * @param {Function} parentValidator The parent validator
      * @param {Function} childValidator  The child validator
