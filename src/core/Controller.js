@@ -84,6 +84,12 @@ define([
             return this;
         }
 
+        // Check if state is internal and the resolved controller is not ourselves
+        if (resolved.internal && resolved.controller !== this) {
+            resolved.controller.setState(resolved.fullName, resolved.params);
+            return this;
+        }
+
         // Act differently if this state is global
         if (resolved.global) {
             // If so attempt to change the global state, aborting if it succeeded
@@ -94,7 +100,6 @@ define([
             // Since the global state is equal, grab it to avoid creating unnecessary
             // state objects
             state = stateRegistry.getCurrent().seekTo(resolved.name);
-        // Otherwise state is local
         } else {
             state = stateRegistry._createStateInstance(resolved.name, resolved.params);
 
@@ -307,6 +312,7 @@ define([
     Controller.prototype._resolveState = function (name, params) {
         var resolved,
             ancestor,
+            controller,
             fullName,
             localName,
             ancestorState;
@@ -360,7 +366,13 @@ define([
 
             // Is this an internal state? If so end it here..
             if (this._states[localName].internal) {
-                return { name: name, params: params, internal: true };
+                return {
+                    fullName: name,
+                    name: name,
+                    params: params,
+                    internal: true,
+                    controller: this
+                };
             }
         }
 
@@ -381,11 +393,33 @@ define([
                 fullName = ancestorState.getName() + (fullName ? '.' + fullName : '');
                 fillIn(params, ancestor._currentStateParams);
 
+                // If the ancestor state is internal, stop here
+                if (ancestor._states[ancestorState.getName()].internal) {
+                    controller = ancestor;
+                    break;
+                }
+
                 ancestor = ancestor._uplink;
             }
         }
 
-        return { fullName: fullName, name: name, params: params, global: stateRegistry.isRegistered(fullName) };
+        // Internal state detected..
+        if (controller) {
+            return {
+                fullName: fullName,
+                name: name,
+                params: params,
+                internal: true,
+                controller: controller
+            };
+        }
+
+        return {
+            fullName: fullName,
+            name: name,
+            params: params,
+            global: stateRegistry.isRegistered(fullName)
+        };
     };
 
     /**
