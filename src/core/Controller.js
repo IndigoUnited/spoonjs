@@ -366,6 +366,15 @@ define([
             return resolved;
         }
 
+        // TODO: Find a good way to identify if a state is global in a feasible way
+        //       At the moment, if two controllers (one global and one internal) have an index state
+        //       and share the same parent, they will conflict
+        //       Users have to prefix the states with ! in order to resolve this kind of situations but
+        //       this is a poor solution
+        //       Ideally this would be handled transparently by the framework
+        //       Also, because of this, we are unable to correctly identify a default state has a global
+        //       state if it has not yet been registered by the automatic mechanism of states registration
+
         // Local
         // Fill in with the default state
         if (!name && this._defaultState) {
