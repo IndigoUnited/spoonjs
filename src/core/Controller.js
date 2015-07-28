@@ -9,11 +9,10 @@ define([
     'mout/string/startsWith',
     'mout/object/size',
     'mout/object/pick',
-    'mout/object/mixIn',
     'mout/object/fillIn',
-    'mout/array/find',
+    'mout/object/mixIn',
     'has'
-], function (Joint, stateRegistry, startsWith, size, pick, mixIn, fillIn, find, has) {
+], function (Joint, stateRegistry, startsWith, size, pick, fillIn, mixIn, has) {
 
     'use strict';
 
@@ -49,13 +48,16 @@ define([
      * @return {String} The generated URL
      */
     Controller.prototype.generateUrl = function (name, params, absolute) {
-        var state;
+        var resolved;
 
         // Resolve the state
-        state = this._resolveFullState(name);
-        mixIn(state.params, params);
+        resolved = this._resolveState(name, params);
 
-        return stateRegistry.generateUrl(state.fullName, state.params, absolute);
+        if (resolved.internal) {
+            throw new Error('Cannot generate a URL for internal state "' + name + '" in "' + this.$name + '".');
+        }
+
+        return stateRegistry.generateUrl(resolved.fullName, resolved.params, absolute);
     };
 
     /**
@@ -69,31 +71,32 @@ define([
      * @return {Controller} The instance itself to allow chaining
      */
     Controller.prototype.setState = function (name, params, options) {
-        var stateMeta,
+        var resolved,
             state;
 
         // Resolve the state
-        stateMeta = this._resolveFullState(name);
-        mixIn(stateMeta.params, params);
+        // Note that parameters are shallow cloned to avoid side-effects
+        resolved = this._resolveState(name, mixIn({}, params));
 
-        // If the state is absolute, simply set it on the state registry
-        if (stateMeta.name == null) {
-            stateRegistry.setCurrent(stateMeta.fullName, stateMeta.params, options);
+        // If the state is not ours, simply set it on the state registry
+        if (resolved.absolute || resolved.relative) {
+            stateRegistry.setCurrent(resolved.fullName, resolved.params, options);
             return this;
         }
 
-        // Check if the state is globally registered
-        if (stateRegistry.isRegistered(stateMeta.fullName)) {
+        // Act differently if this state is global
+        if (resolved.global) {
             // If so attempt to change the global state, aborting if it succeeded
-            if (stateRegistry.setCurrent(stateMeta.fullName, stateMeta.params, options)) {
+            if (stateRegistry.setCurrent(resolved.fullName, resolved.params, options)) {
                 return this;
             }
 
             // Since the global state is equal, grab it to avoid creating unnecessary
             // state objects
-            state = stateRegistry.getCurrent().seekTo(stateMeta.name);
+            state = stateRegistry.getCurrent().seekTo(resolved.name);
+        // Otherwise state is local
         } else {
-            state = stateRegistry._createStateInstance(stateMeta.name, stateMeta.params);
+            state = stateRegistry._createStateInstance(resolved.name, resolved.params);
 
             // Generate local metadata
             state.getParams().$info = {
@@ -204,7 +207,8 @@ define([
             func,
             matches,
             regExp = this.constructor._stateParamsRegExp || Controller._stateParamsRegExp,
-            states = this._states;
+            states = this._states,
+            internal;
 
         this._states = {};
         this._nrStates = size(states);
@@ -213,11 +217,19 @@ define([
         for (key in states) {
             func = states[key];
 
+            // Check if this state is internal
+            if (!key.indexOf('!')) {
+                key = key.substr(1);
+                internal = true;
+            } else {
+                internal = false;
+            }
+
             // Process the params specified in the parentheses
             matches = key.match(regExp);
             if (matches) {
                 key = key.substr(0, key.indexOf('('));
-                this._states[key] = {};
+                this._states[key] = { internal: internal };
 
                 // If user specified state(*), then the state changes every time
                 // even if the params haven't changed
@@ -227,7 +239,7 @@ define([
                     this._states[key].params = matches[1].split(/\s*,\s*/);
                 }
             } else {
-                this._states[key] = {};
+                this._states[key] = { internal: internal };
             }
 
             if (has('debug')) {
@@ -277,74 +289,103 @@ define([
     },
 
     /**
-     * Resolves a full state name.
+     * Resolves a state.
      *
      * If name starts with a / then state is absolute.
      * If name starts with ../ then state is relative.
      * If empty will try to map to the default state.
-     * Otherwise the full state name will be resolved from the local name.
+     * If not empty, strict validation will be made against the name
      *
-     * @param {String} [name] The state name
+     * The full state name will be resolved by navigating through the ancestors,
+     * unless the state is flagged as internal.
      *
-     * @return {Object} The full state name and params
+     * @param {String} [name]   The state name
+     * @param {Object} [params] The state params
+     *
+     * @return {Object} An object with the name, params and some flags
      */
-    Controller.prototype._resolveFullState = function (name) {
-        var state,
+    Controller.prototype._resolveState = function (name, params) {
+        var resolved,
             ancestor,
+            fullName,
+            localName,
             ancestorState;
 
         name = name || '';
+        params = params || {};
 
         // Absolute
         if (name.charAt(0) === '/') {
-            return {
-                fullName: name.substr(1),
-                params: {}
-            };
+            name = name.substr(1);
+
+            if (has('debug') && !stateRegistry.isRegistered(name)) {
+                throw new Error('Resolved "' + name + '" as absolute but its not registered in the state registry.');
+            }
+
+            return { fullName: name, params: params, absolute: true };
         }
 
-        // Relative
+        // Relative which will be resolved
         if (startsWith(name, '../')) {
             if (has('debug') && (!this._uplink || !(this._uplink instanceof Controller))) {
-                throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '".');
+                throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '" because controller has no parent.');
             }
 
-            state = this._uplink._resolveFullState(name.substr(3));
-            delete state.name;  // Remove name because state is not local
+            resolved = this._uplink._resolveState(name.substr(3), params);
+            resolved.relative = true;
+            delete resolved.name;
 
-            return state;
+            if (has('debug') && !resolved.global) {
+                throw new Error('Relative state "' + name + '" in "' + this.$name + '" is not a global state (only global are supported for now).');
+            }
+
+            return resolved;
         }
-
-        state = {
-            name: name,
-            fullName: name,
-            params: {}
-        };
 
         // Local
-        ancestor = this._uplink;
-        while (ancestor && ancestor instanceof Controller) {
-            ancestorState = ancestor.getState();
-            if (!ancestorState) {
-                // Break here, the ancestor is not in any state
-                break;
+        // Fill in with the default state
+        if (!name && this._defaultState) {
+            name = this._defaultState.name;
+            params = fillIn(params, this._defaultState.params);
+        }
+
+        // If name was specified, do some special stuff
+        if (name) {
+            localName = name.split('.')[0];
+
+            // Validate if state exists
+            if (has('debug') && !this._states[localName]) {
+                throw new Error('Unknown state "' + localName + '" in "' + this.$name + '".');
             }
 
-            // Concatenate name & mix in relevant params
-            state.fullName = ancestorState.getName() + (state.fullName ? '.' + state.fullName : '');
-            fillIn(state.params, ancestor._currentStateParams);
-
-            ancestor = ancestor._uplink;
+            // Is this an internal state? If so end it here..
+            if (this._states[localName].internal) {
+                return { name: name, params: params, internal: true };
+            }
         }
 
-        // If no state name is set, use default state
-        if (!state.name && this._defaultState) {
-            state.name = this._defaultState.name;
-            state.fullName = state.fullName || this._defaultState.name;
-            mixIn(state.params, this._defaultState.params);
+        // If we end up here, then we need to build the full name based on the ancestors
+        fullName = name;
+
+        if (this._uplink) {
+            ancestor = this._uplink;
+
+            while (ancestor && ancestor instanceof Controller) {
+                ancestorState = ancestor.getState();
+
+                if (!ancestorState) {
+                    throw new Error('Unable to resolve full state when controller "' + this.$name + '" is not in any state.');
+                }
+
+                // Concatenate name & mix in relevant params
+                fullName = ancestorState.getName() + (fullName ? '.' + fullName : '');
+                fillIn(params, ancestor._currentStateParams);
+
+                ancestor = ancestor._uplink;
+            }
         }
 
-        return state;
+        return { fullName: fullName, name: name, params: params, global: stateRegistry.isRegistered(fullName) };
     };
 
     /**
