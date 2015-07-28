@@ -331,7 +331,7 @@ define([
             return { fullName: name, params: params, absolute: true };
         }
 
-        // Relative which will be resolved
+        // Relative
         if (startsWith(name, '../')) {
             if (has('debug') && (!this._uplink || !(this._uplink instanceof Controller))) {
                 throw new Error('Cannot resolve relative state "' + name + '" in "' + this.$name + '" because controller has no parent.');
