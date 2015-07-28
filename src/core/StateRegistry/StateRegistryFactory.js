@@ -82,7 +82,9 @@ define([
         x,
         length,
         queue = [],
-        arr = [];
+        arr = [],
+        hasFullPattern,
+        hasFullValidator;
 
     states.$pattern = '/';
 
@@ -92,6 +94,8 @@ define([
 
     while (queue.length) {
         curr = queue.shift();
+        hasFullPattern = hasOwn(curr, '$fullPattern');
+        hasFullValidator = hasOwn(curr, '$fullValidator');
 
         for (key in curr) {
             if (key.charAt(0) === '$') {
@@ -108,9 +112,9 @@ define([
             // Object -> add to the processing queue
             } else if (isObject(value)) {
                 value.$state = curr.$state ? curr.$state + '.' + key : key;
-                value.$pattern = curr.$fullPattern || patternJoin(curr.$pattern, hasOwn(value, '$pattern') ? value.$pattern : key);
+                value.$pattern = hasFullPattern ? curr.$fullPattern : patternJoin(curr.$pattern, hasOwn(value, '$pattern') ? value.$pattern : key);
                 value.$constraints = fillIn(value.$constraints || {}, curr.$constraints);
-                value.$validator = chainStateValidator(curr.$validator, value.$validator);
+                value.$validator = hasFullValidator ? curr.$fullValidator : chainStateValidator(curr.$validator, value.$validator);
                 queue.push(value);
             // String -> state has a route
             } else if (typeof value === 'string') {
@@ -130,9 +134,9 @@ define([
         if (curr.$state) {
             arr.push({
                 state: curr.$state,
-                pattern: curr.$fullPattern || curr.$pattern,
+                pattern: hasFullPattern ? curr.$fullPattern : curr.$pattern,
                 constraints: curr.$constraints,
-                validator: curr.$validator,
+                validator: hasFullValidator ? curr.$fullValidator : curr.$validator,
                 priority: curr.$priority || 0
             });
         }
