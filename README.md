@@ -240,3 +240,7 @@ Simple
 ### Build process
 
 The building process will be based on automaton, allowing the user to completely customise the build.
+
+## Documentation
+
+You may check the documentation [here](http://indigounited.github.io/spoonjs/).
