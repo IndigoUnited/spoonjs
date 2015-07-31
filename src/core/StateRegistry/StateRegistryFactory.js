@@ -90,6 +90,8 @@ define([
 
     // Process the states and add them to the registry
     // The code bellow uses a stack (deep first) to avoid recursion
+    // TODO: This code bellow is not actually a deep first algorithm nor respects the natural
+    //       order of states; this needs to be fixed!
     queue.push(states);
 
     while (queue.length) {
@@ -144,7 +146,7 @@ define([
 
     // Sort the array according to the priority
     // We use mout's sort because it's stable!
-    sort(arr, function (val1, val2) {
+    arr = sort(arr, function (val1, val2) {
         if (val1.priority === val2.priority) {
             return 0;
         }
