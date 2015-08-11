@@ -4,10 +4,11 @@
  * Route class.
  */
 define([
+    'services/address',
     'mout/string/escapeRegExp',
     'mout/object/hasOwn',
     'has'
-], function (escapeRegExp, hasOwn, has) {
+], function (address, escapeRegExp, hasOwn, has) {
 
     'use strict';
 
@@ -87,8 +88,9 @@ define([
         matches = url.match(this._regExp);
         if (matches) {
             params = {};
+
             for (x = matches.length - 1; x >= 1; x -= 1) {
-                params[this._placeholderNames[x - 1]] = matches[x];
+                params[this._placeholderNames[x - 1]] = address.decodeSegment(matches[x]);
             }
         } else {
             params = null;
@@ -132,7 +134,7 @@ define([
                 }
 
                 // Replace it in the URL
-                url = url.replace(this.constructor._placeholdersRegExpReplace, placeholderValue);
+                url = url.replace(this.constructor._placeholdersRegExpReplace, address.encodeSegment(placeholderValue));
             }
         }
 
