@@ -70,7 +70,16 @@ define([
      */
     Joint.prototype.off = function (event, fn, context) {
         this._emitter.off(event, fn, context);
-        broadcaster.off(event, fn, context);
+
+        // Remove the events from the broadcaster carefully,
+        // specially the user is trying to remove all the events
+        if (event && fn) {
+            broadcaster.off(event, fn, context);
+        } else {
+            this._emitter.forEach(function (_event, fn, context) {
+                !event || _event === event && this._emitter.off(_event, fn, context);
+            });
+        }
 
         return this;
     };
