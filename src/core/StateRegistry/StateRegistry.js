@@ -27,7 +27,7 @@ define([
     function StateRegistry() {
         this._states = {};
         this._routes = [];
-        this._interceptor = null;
+        this._interceptors = [];
         this._blocked = false;
 
         // Replace all functions that need to be bound
@@ -205,7 +205,7 @@ define([
      *  - route:        false to not change the address value
      *  - replace:      true to replace the address value instead of adding a new history entry
      *  - silent:       true to silently change the state, without emitting an event
-     *  - interceptor:  true to run the interceptor, false otherwise
+     *  - interceptors: true to run the interceptors, false otherwise
      *
      * @param {String|State} state     The state name or the state object
      * @param {Object}       [params]  The state parameters if the state was a string
@@ -229,7 +229,7 @@ define([
             route: true,
             replace: !this._currentState,  // Replace URL if it's the first state
             silent: false,
-            interceptor:  true
+            interceptors:  true
         }, options);
 
         // Only change if the current state is not the same
@@ -239,7 +239,7 @@ define([
 
         // Decide if we should change the state based on the interceptor &
         // state validator results
-        this._shouldChangeCarryOn(state, options.interceptor, function (err, carryOn) {
+        this._shouldChangeCarryOn(state, options.interceptors, function (err, carryOn) {
             var temp;
 
             // If we should not carry on, restore the state URL
@@ -331,24 +331,39 @@ define([
     };
 
     /**
-     * Configures an interceptor that will be run before changing to a new state.
+     * Adds an interceptor that will be run before changing to a new state.
      * This easily allows use cases such as "are you sure you want to quit".
      * The state registry will be blocked until the interceptors are run and finalized.
      *
-     * Set the interceptor to null if you wish to remove it.
+     * If an interceptor with the same id exists, it will be removed before adding the new one.
+     * Note that the interceptor will be placed at the beginning of the stack.
      *
-     * @param {Function} interceptor The interceptor
+     * @param {String}   id The interceptor id
+     * @param {Function} fn The interceptor function
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
-    StateRegistry.prototype.intercept = function (interceptor) {
-        if (this._blocked) {
-            has('debug') && console.warn('[spoonjs] Cannot set interceptor while blocked');
+    StateRegistry.prototype.addInterceptor = function (id, fn) {
+        this.removeInterceptor(id);
+        this._interceptors.unshift({ id: id, fn: fn });
 
-            return this;
-        }
+        return this;
+    };
 
-        this._interceptor = interceptor;
+    /**
+     * Removes a previously added interceptor.
+     *
+     * @param {String} id The interceptor id
+     *
+     * @return {StateRegistry} The instance itself to allow chaining
+     */
+    StateRegistry.prototype.removeInterceptor = function (id) {
+        var index;
+
+        index = findIndex(this._interceptors, function (interceptor) {
+            return interceptor.id === id;
+        });
+        index !== -1 && this._interceptors.splice(index, 1);
 
         return this;
     };
@@ -626,16 +641,14 @@ define([
     /**
      * Decides if the state change should carry on.
      *
-     * The change will happen if the interceptor passes as well as
-     * the state validator.
+     * The change will happen if the state validator as well as all the interceptors pass.
      *
      * While this is happening, the address will be disabled and no other
      * state change will be allowed.
-     * When done, the interceptor will be cleared automatically.
      *
-     * @param {State}    state       The state object
-     * @param {Boolean}  interceptor False to skip the interceptor, true otherwise
-     * @param {Function} callback    The callback to call when done
+     * @param {State}    state        The state object
+     * @param {Boolean}  interceptors False to skip the interceptors, true otherwise
+     * @param {Function} callback     The callback to call when done
      */
     StateRegistry.prototype._shouldChangeCarryOn = function (state, interceptor, callback) {
         var that = this,
@@ -654,14 +667,19 @@ define([
 
         funcs = [];
 
-        // Push the interceptor if configured
-        interceptor && this._interceptor && funcs.push(this._interceptor.bind(null, state.getParams()));
-
         // Push the state validator if any
         registered = this._states[state.getFullName()];
         registered && registered.validator && funcs.push(registered.validator.bind(null, state.getParams()));
 
-        booleanSeries(funcs, function (err, carryOn) {
+        // Push the interceptors if any
+        interceptor && this._interceptors.forEach(function (interceptor) {
+            var fn = interceptor.fn.bind(null, state.getParams());
+
+            fn.$interceptorId = interceptor.id;
+            funcs.push(fn);
+        });
+
+        booleanSeries(funcs, function (err, carryOn, fn) {
             // Ignore if we were destroyed meanwhile..
             if (that._destroyed) {
                 return;
@@ -673,11 +691,16 @@ define([
 
             // Does it failed?
             if (err || !carryOn) {
+                if (has('debug')) {
+                    if (fn.$interceptorId) {
+                        console.warn('[spoonjs] Interceptor with id "' + fn.$interceptorId + '"" canceled state transition');
+                    } else {
+                        console.warn('[spoonjs] State validator of state "' + state.getFullName() + '" failed, canceling transition..');
+                    }
+                }
+
                 callback(err, false);
             } else {
-                // At this point, we will carry on to the state
-                // so we must reset the interceptor
-                that._interceptor = null;
                 callback(null, true);
             }
         });
@@ -696,7 +719,7 @@ define([
         $(document.body).off('click', 'a', this._handleLinkClick);
 
         this.unsetAddress();
-        this._currentState = this._interceptor = null;
+        this._currentState = this._interceptors = null;
     };
 
     return StateRegistry;

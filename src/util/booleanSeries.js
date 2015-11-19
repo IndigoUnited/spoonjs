@@ -35,7 +35,7 @@ define(['has'], function (has) {
 
                     // If there's an error or carry on === false, then abort
                     if (err || carryOn === false) {
-                        callback(err, false);
+                        callback(err, false, func);
                     } else {
                         iterator();
                     }
@@ -44,13 +44,13 @@ define(['has'], function (has) {
                 // Support sync usage
                 if (typeof carryOn === 'boolean') {
                     if (!carryOn) {
-                        callback(null, false);
+                        callback(null, false, func);
                     } else {
                         iterator();
                     }
                 }
             } catch (err) {
-                callback(err, false);
+                callback(err, false, func);
             }
         }
 
