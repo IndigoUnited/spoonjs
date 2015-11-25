@@ -135,7 +135,7 @@ define([
         var name,
             currentState;
 
-        // Assume app state if not passed
+        // Get state if this is a parameter bag
         if (state.$info) {
             state = state.$info.newState;
         }
