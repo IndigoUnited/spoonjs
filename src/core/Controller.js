@@ -97,7 +97,7 @@ define([
 
         // Check if state is internal and the resolved controller is not ourselves
         if (resolved.internal && resolved.controller !== this) {
-            resolved.controller.setState(resolved.fullName, resolved.params);
+            resolved.controller.setState(resolved.fullName, resolved.params, options);
             return this;
         }
 
@@ -135,36 +135,29 @@ define([
         var name,
             currentState;
 
-        // Get state if this is a parameter bag
+        // Get the state instance if this is a state parameter bag
         if (state.$info) {
             state = state.$info.newState;
         }
 
         // Ensure state is filled with the defaults
         this._fillStateIfEmpty(state);
-
         name = state.getName();
 
         // If still has no name it means there's no default state defined
         if (!name) {
-            if (has('debug') && this._nrStates) {
-                console.warn('[spoonjs] No default state defined in "' + this.$name + '".');
-            }
-
-            return;
-        }
-
-        // Check if state exists
-        if (!this._states[name]) {
-            if (has('debug')) {
-                console.warn('[spoonjs] Unknown state "' + name + '" on controller "' + this.$name + '".');
-            }
-
-            return;
+            has('debug') && console.warn('[spoonjs] No ' + (this._nrStates ? 'default state' : 'states') + ' defined in "' + this.$name + '".');
+            return this;
         }
 
         // If the current state is not the same, transition to it
         if (!this._isSameState(state)) {
+            // Handle unknown state here, giving support for *
+            if (!this._getStateMeta(name)) {
+                has('debug') && console.warn('[spoonjs] Unknown state "' + name + '" on controller "' + this.$name + '".');
+                return this;
+            }
+
             this._performStateChange(state);
         // Otherwise propagate it to child controllers
         } else {
@@ -184,6 +177,30 @@ define([
     };
 
     /**
+     * Asks a controller if it can handle a state.
+     *
+     * @param {Object|State|String} state The state parameter bag, a state instance or the state name
+     *
+     * @return {Boolean} True if it can, false otherwise
+     */
+    Controller.prototype.canHandleState = function (state) {
+        var name;
+
+        if (typeof state !== 'string') {
+            // Get the state instance if this is a state parameter bag
+            if (state.$info) {
+                state = state.$info.newState;
+            }
+
+            name = state.getName();
+        } else {
+            name = state;
+        }
+
+        return !!this._getStateMeta(name);
+    },
+
+    /**
      * Instruct the extend to merge states.
      *
      * {@inheritDoc}
@@ -196,6 +213,13 @@ define([
     };
 
     // --------------------------------------------
+
+    /**
+     *
+     */
+    Controller.prototype._getStateMeta = function (name) {
+        return this._states[name] || this._states['*'] || null;
+    },
 
     /**
      * Fills the state object with the default state if it's name is empty.
@@ -259,7 +283,7 @@ define([
             }
 
             if (has('debug')) {
-                if (!stateRegistry.isValid(key)) {
+                if (!stateRegistry.isValid(key) && key !== '*') {
                     throw new Error('State name "' + key + '" of "' + this.$name + '" has an invalid format.');
                 }
                 if (key.indexOf('.') !== -1) {
@@ -277,6 +301,7 @@ define([
                 throw new Error('State handler "' + key + '" of "' + this.$name + '" references a nonexistent function.');
             }
 
+            this._states[key].name = key;
             this._states[key].fn = func;
             this._states[key].params = this._states[key].params || [];
         }
@@ -326,7 +351,8 @@ define([
             controller,
             fullName,
             localName,
-            ancestorState;
+            ancestorState,
+            stateMeta;
 
         name = name || '';
         params = params || {};
@@ -377,31 +403,34 @@ define([
 
         // Local
         // Fill in with the default state
-        if (!name && this._defaultState) {
-            name = this._defaultState.name;
-            params = fillIn(params, this._defaultState.params);
-        }
-
-        // If name was specified, do some special stuff
-        if (name) {
-            localName = name.split('.')[0];
-
-            // Validate if state exists
-            if (!this._states[localName]) {
-                has('debug') && console.warn('[spoonjs] Unknown state "' + localName + '" in "' + this.$name + '".');
+        if (!name) {
+            if (this._defaultState) {
+                name = this._defaultState.name;
+                params = fillIn(params, this._defaultState.params);
+            } else {
+                has('debug') && console.warn('[spoonjs] No default state defined in ' + this.$name + '".');
                 return null;
             }
+        }
 
-            // Is this an internal state? If so end it here..
-            if (this._states[localName].internal) {
-                return {
-                    fullName: name,
-                    name: name,
-                    params: params,
-                    internal: true,
-                    controller: this
-                };
-            }
+        localName = name.split('.')[0];
+        stateMeta = this._getStateMeta(localName);
+
+        // Check if state exists locally
+        if (!stateMeta) {
+            has('debug') && console.warn('[spoonjs] Unknown state "' + localName + '" in "' + this.$name + '".');
+            return null;
+        }
+
+        // Is this an internal state? If so end it here..
+        if (stateMeta.internal) {
+            return {
+                fullName: name,
+                name: name,
+                params: params,
+                internal: true,
+                controller: this
+            };
         }
 
         // If we end up here, then we need to build the full name based on the ancestors
@@ -414,8 +443,7 @@ define([
                 ancestorState = ancestor.getState();
 
                 if (!ancestorState) {
-                    has('debug') && console.warn('[spoonjs] Unable to resolve full state when controller "' + this.$name + '" is not in any state.');
-                    return null;
+                    break;
                 }
 
                 // Concatenate name & mix in relevant params
@@ -423,7 +451,7 @@ define([
                 fillIn(params, ancestor._currentStateParams);
 
                 // If the ancestor state is internal, stop here
-                if (ancestor._states[ancestorState.getName()].internal) {
+                if (ancestor._getStateMeta(ancestorState.getName()).internal) {
                     controller = ancestor;
                     break;
                 }
@@ -454,29 +482,30 @@ define([
     /**
      * Checks if a given state is the same as the current controller state.
      *
-     * @param {State} state       The state
-     * @param {State} [baseState] The state to compare against, defaults to the current state
+     * @param {State} state The state
      *
      * @return {Boolean} True if the same, false otherwise
      */
-    Controller.prototype._isSameState = function (state, baseState) {
+    Controller.prototype._isSameState = function (state) {
         var stateMeta;
 
-        baseState = baseState || this._currentState;
-
-        if (!baseState) {
+        if (!this._currentState) {
             return false;
         }
 
-        stateMeta = this._states[state.getName()] || {};
+        stateMeta = this._getStateMeta(state.getName());
 
-        // Check if state is a wildcard
-        if (stateMeta.wildcard) {
+        // Compare them first
+        if (!this._currentState.isEqual(state, stateMeta.params)) {
             return false;
         }
 
-        // Check if equal
-        return baseState.isEqual(state, stateMeta.params);
+        // If they seem equal, but state is a wildcard
+        if (!stateMeta || stateMeta.wildcard) {
+            return false;
+        }
+
+        return true;
     };
 
     /**
@@ -485,9 +514,12 @@ define([
      *
      * @param {State}   state       The state
      * @param {Boolean} setPrevious True to set the previous state, false otherwise
+     *
+     * @return {Object} The state meta
      */
     Controller.prototype._setCurrentState = function (state, setPrevious) {
-        var params;
+        var stateMeta = this._getStateMeta(state.getName()),
+            params;
 
         if (setPrevious) {
             this._previousState = this._currentState;
@@ -495,7 +527,7 @@ define([
 
         // Update current state
         this._currentState = state.clone();
-        this._currentStateParams = pick(this._currentState.getParams(), this._states[this._currentState.getName()].params);
+        this._currentStateParams = pick(this._currentState.getParams(), stateMeta.params);
 
         // Ensure $info gets up to date
         params = this._currentState.getParams();
@@ -507,6 +539,8 @@ define([
         if (state === stateRegistry.getCurrent() && state.getFullName() !== this._currentState.getFullName()) {
             state.setFullName(this._currentState.getFullName());
         }
+
+        return stateMeta;
     };
 
     /**
@@ -518,14 +552,13 @@ define([
         var stateMeta;
 
         // Update internal state
-        this._setCurrentState(state, true);
+        stateMeta = this._setCurrentState(state, true);
 
         // Advance pointer
         state.next();
 
         // Execute handler
-        stateMeta = this._states[this._currentState.getName()];
-        stateMeta.fn.call(this, state.getParams());
+        stateMeta.fn.call(this, state.getParams(), state);
     };
 
     /**
@@ -589,7 +622,7 @@ define([
         }
     };
 
-    Controller._stateParamsRegExp = /\((.+?)\)/;
+    Controller._stateParamsRegExp = /\(([^\)]+)\)$/;
 
     return Controller;
 });
