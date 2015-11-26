@@ -483,13 +483,17 @@ define([
      * Sets the current state based on the passed in state.
      * Updates all the necessary properties used internally.
      *
-     * @param {State} state The state
+     * @param {State}   state       The state
+     * @param {Boolean} setPrevious True to set the previous state, false otherwise
      */
-    Controller.prototype._setCurrentState = function (state) {
+    Controller.prototype._setCurrentState = function (state, setPrevious) {
         var params;
 
+        if (setPrevious) {
+            this._previousState = this._currentState;
+        }
+
         // Update current state
-        this._previousState = this._currentState;
         this._currentState = state.clone();
         this._currentStateParams = pick(this._currentState.getParams(), this._states[this._currentState.getName()].params);
 
@@ -514,7 +518,7 @@ define([
         var stateMeta;
 
         // Update internal state
-        this._setCurrentState(state);
+        this._setCurrentState(state, true);
 
         // Advance pointer
         state.next();
@@ -537,7 +541,7 @@ define([
             x;
 
         // Update internal state
-        this._setCurrentState(state);
+        this._setCurrentState(state, false);
 
         // Advance pointer
         state.next();
