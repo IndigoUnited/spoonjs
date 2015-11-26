@@ -338,14 +338,19 @@ define([
      * If an interceptor with the same id exists, it will be removed before adding the new one.
      * Note that the interceptor will be placed at the beginning of the stack.
      *
-     * @param {String}   id The interceptor id
-     * @param {Function} fn The interceptor function
+     * @param {String}   id     The interceptor id
+     * @param {Function} fn     The interceptor function
+     * @param {Boolean}  [once] True to run the interceptor only once, false otherwise
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
-    StateRegistry.prototype.addInterceptor = function (id, fn) {
+    StateRegistry.prototype.addInterceptor = function (id, fn, once) {
         this.removeInterceptor(id);
-        this._interceptors.unshift({ id: id, fn: fn });
+        this._interceptors.unshift({
+            id: id,
+            fn: fn,
+            once: once != null ? !!once : true
+        });
 
         return this;
     };
@@ -701,6 +706,13 @@ define([
 
                 callback(err, false);
             } else {
+                // Clean interceptors that are meant to run once
+                if (that._interceptors.length) {
+                    that._interceptors = that._interceptors.filter(function (interceptor) {
+                        return !interceptor.once;
+                    });
+                }
+
                 callback(null, true);
             }
         });
