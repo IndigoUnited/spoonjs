@@ -113,6 +113,25 @@ define([
         }
     };
 
+    /**
+     * Checks if this joint is a descendant of the given joint.
+     *
+     * @return {Boolean} True if it is, false otherwise
+     */
+    Joint.prototype.isDescendantOf = function (joint) {
+        var ancestor = this._uplink;
+
+        while (ancestor) {
+            if (ancestor === joint) {
+                return true;
+            }
+
+            ancestor = this._uplink;
+        }
+
+        return false;
+    };
+
     // --------------------------------------------
 
     /**
