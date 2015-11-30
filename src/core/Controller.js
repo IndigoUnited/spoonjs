@@ -124,12 +124,6 @@ define([
             state = stateRegistry.getCurrent().seekTo(resolved.name);
         } else {
             state = stateRegistry._createStateInstance(resolved.name, resolved.params);
-
-            // Generate local metadata
-            state.getParams().$info = {
-                newState: state,
-                previousState: this._previousState
-            };
         }
 
         return this.delegateState(state);
@@ -150,6 +144,9 @@ define([
         if (state.$info) {
             state = state.$info.newState;
         }
+
+        // Ensure $info metadata
+        this._ensureStateParamsInfo(state);
 
         // Ensure state is filled with the defaults
         this._fillStateIfEmpty(state);
@@ -226,10 +223,30 @@ define([
     // --------------------------------------------
 
     /**
+     * Gets the state meta.
      *
+     * @param {String} name The state names
+     *
+     * @return {Object} The state meta
      */
     Controller.prototype._getStateMeta = function (name) {
         return this._states[name] || this._states['*'] || null;
+    },
+
+    /**
+     * Ensures that a state has $info filled in properly.
+     *
+     * @param {State} state The state
+     */
+    Controller.prototype._ensureStateParamsInfo = function (state) {
+        var params = state.getParams();
+
+        params.$info = params.$info || {};
+
+        if (!params.$info.newState) {
+            params.$info.newState = state;
+            params.$info.previousState = this._previousState;
+        }
     },
 
     /**
@@ -414,34 +431,31 @@ define([
 
         // Local
         // Fill in with the default state
-        if (!name) {
-            if (this._defaultState) {
-                name = this._defaultState.name;
-                params = fillIn(params, this._defaultState.params);
-            } else {
-                has('debug') && console.warn('[spoonjs] No default state defined in ' + this.$name + '".');
+        if (!name && this._defaultState) {
+            name = this._defaultState.name;
+            params = fillIn(params, this._defaultState.params);
+        }
+
+        if (name) {
+            localName = name.split('.')[0];
+            stateMeta = this._getStateMeta(localName);
+
+            // Check if state exists locally
+            if (!stateMeta) {
+                has('debug') && console.warn('[spoonjs] Unknown state "' + localName + '" in "' + this.$name + '".');
                 return null;
             }
-        }
 
-        localName = name.split('.')[0];
-        stateMeta = this._getStateMeta(localName);
-
-        // Check if state exists locally
-        if (!stateMeta) {
-            has('debug') && console.warn('[spoonjs] Unknown state "' + localName + '" in "' + this.$name + '".');
-            return null;
-        }
-
-        // Is this an internal state? If so end it here..
-        if (stateMeta.internal) {
-            return {
-                fullName: name,
-                name: name,
-                params: params,
-                internal: true,
-                controller: this
-            };
+            // Is this an internal state? If so end it here..
+            if (stateMeta.internal) {
+                return {
+                    fullName: name,
+                    name: name,
+                    params: params,
+                    internal: true,
+                    controller: this
+                };
+            }
         }
 
         // If we end up here, then we need to build the full name based on the ancestors
