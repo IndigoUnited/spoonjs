@@ -39,6 +39,17 @@ define([
     };
 
     /**
+     * Resets the controller state, including the previous state property.
+     *
+     * @return {Controller} The instance itself to allow chaining
+     */
+    Controller.prototype.resetState = function () {
+        this._currentState = this._previousState = null;
+
+        return this;
+    };
+
+    /**
      * Generates an URL for a state.
      *
      * @param {String}  name       The state name
