@@ -524,7 +524,7 @@ define([
         }
 
         // If they seem equal, but state is a wildcard
-        if (!stateMeta.wildcard) {
+        if (stateMeta.wildcard) {
             return false;
         }
 
