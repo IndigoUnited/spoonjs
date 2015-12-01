@@ -512,13 +512,11 @@ define([
      * @return {Boolean} True if the same, false otherwise
      */
     Controller.prototype._isSameState = function (state) {
-        var stateMeta;
+        var stateMeta = this._getStateMeta(state.getName());
 
-        if (!this._currentState) {
+        if (!stateMeta || !this._currentState) {
             return false;
         }
-
-        stateMeta = this._getStateMeta(state.getName());
 
         // Compare them first
         if (!this._currentState.isEqual(state, stateMeta.params)) {
@@ -526,7 +524,7 @@ define([
         }
 
         // If they seem equal, but state is a wildcard
-        if (!stateMeta || stateMeta.wildcard) {
+        if (!stateMeta.wildcard) {
             return false;
         }
 
