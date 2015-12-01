@@ -261,7 +261,7 @@ define([
             // Otherwise proceed to change..
             } else {
                 that._previousState = that._currentState;
-                that._currentState = state;
+                that._currentState = state.setCursor(0);
 
                 // Handle after change stuff
                 that._postChangeHandler(options);
