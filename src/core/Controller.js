@@ -154,7 +154,7 @@ define([
 
         // If still has no name it means there's no default state defined
         if (!name) {
-            has('debug') && console.warn('[spoonjs] No ' + (this._nrStates ? 'default state' : 'states') + ' defined in "' + this.$name + '".');
+            has('debug') && console.warn('[spoonjs] Can\'t delegate state to "' + this.$name + '" because ' + (this._nrStates ? ' there\'s no default state' : 'there are no states') + ' defined.');
             return this;
         }
 

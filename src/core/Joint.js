@@ -204,7 +204,7 @@ define([
         }
 
         if (has('debug')) {
-            console.warn('[spoonjs] Unhandled upcast event "' + event + '".');
+            console.warn('[spoonjs] Unhandled upcast event "' + event + '" emitted by "' + this.$name + '".');
         }
 
         return false;
@@ -266,7 +266,7 @@ define([
         }
 
         if (has('debug')) {
-            console.warn('[spoonjs] Unhandled upcast event "' + event + '".');
+            console.warn('[spoonjs] Unhandled upcast event "' + event + '" emitted by "' + this.$name + '".', args);
         }
 
         return false;

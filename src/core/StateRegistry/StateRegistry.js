@@ -698,7 +698,7 @@ define([
             if (err || !carryOn) {
                 if (has('debug')) {
                     if (fn.$interceptorId) {
-                        console.warn('[spoonjs] Interceptor with id "' + fn.$interceptorId + '"" canceled state transition');
+                        console.warn('[spoonjs] Interceptor with id "' + fn.$interceptorId + '" canceled state transition');
                     } else {
                         console.warn('[spoonjs] State validator of state "' + state.getFullName() + '" failed, canceling transition..');
                     }
