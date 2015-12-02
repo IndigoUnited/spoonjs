@@ -199,12 +199,19 @@ define([
      * @return {Boolean} True if it was handled, false otherwise
      */
     Joint.prototype._bubbleUp = function (event, args) {
-        if (this._uplink) {
-            return this._uplink._upcast.apply(this._uplink, arguments);
+        var joint = this._uplink;
+
+        while (joint) {
+            if (joint._emitter.has(event)) {
+                joint._emitter.emit.apply(joint._emitter, arguments);
+                return true;
+            }
+
+            joint = joint._uplink;
         }
 
         if (has('debug')) {
-            console.warn('[spoonjs] Unhandled upcast event "' + event + '" emitted by "' + this.$name + '".');
+            console.warn('[spoonjs] Unhandled bubble up event "' + event + '" emitted by "' + this.$name + '".');
         }
 
         return false;
@@ -254,19 +261,19 @@ define([
      * @return {Boolean} True if it was handled, false otherwise
      */
     Joint.prototype._upcast = function (event, args) {
-        // Check if the event will be handled locally
-        if (this._emitter.has(event)) {
-            this._emitter.emit.apply(this._emitter, arguments);
-            return true;
-        }
+        var joint = this;
 
-        // Otherwise we will keep upcasting upwards the chain
-        if (this._uplink) {
-            return this._uplink._upcast.apply(this._uplink, arguments);
-        }
+        do {
+            if (joint._emitter.has(event)) {
+                joint._emitter.emit.apply(joint._emitter, arguments);
+                return true;
+            }
+
+            joint = joint._uplink;
+        } while (joint);
 
         if (has('debug')) {
-            console.warn('[spoonjs] Unhandled upcast event "' + event + '" emitted by "' + this.$name + '".', args);
+            console.warn('[spoonjs] Unhandled upcast event "' + event + '" emitted by "' + this.$name + '".');
         }
 
         return false;
