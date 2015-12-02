@@ -340,7 +340,7 @@ define([
      *
      * @param {String}   id     The interceptor id
      * @param {Function} fn     The interceptor function
-     * @param {Boolean}  [once] True to run the interceptor only once, false otherwise
+     * @param {Boolean}  [once] True to run the interceptor only once, false otherwise (defaults to false)
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
@@ -349,7 +349,7 @@ define([
         this._interceptors.unshift({
             id: id,
             fn: fn,
-            once: once != null ? !!once : true
+            once: !!once
         });
 
         return this;
