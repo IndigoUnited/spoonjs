@@ -4,12 +4,13 @@
  */
 define([
     'events-emitter/EventsEmitter',
+    'events-emitter/MixableEventsEmitter',
     'services/broadcaster',
     '../util/extend',
     'mout/array/insert',
     'mout/array/remove',
     'has'
-], function (EventsEmitter, broadcaster, extend, insert, remove, has) {
+], function (EventsEmitter, MixableEventsEmitter, broadcaster, extend, insert, remove, has) {
 
     'use strict';
 
@@ -69,13 +70,30 @@ define([
      * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.off = function (event, fn, context) {
-        // Remove the events from the broadcaster carefully,
-        // specially the user is trying to remove all the events
+        var parsed;
+
+        // Remove the events from the broadcaster carefully, specially if the user
+        // is trying to remove all the events either via .off(), .off('name') or .off('.namespace');
         if (event && fn) {
             broadcaster.off(event, fn, context);
         } else {
-            this._emitter.forEach(function (_event, fn, context) {
-                !event || _event === event && this._emitter.off(_event, fn, context);
+            parsed = MixableEventsEmitter.parseEvent(event);
+
+            this._emitter.forEachMeta(function (meta, context) {
+                var isSame;
+
+                // .off()
+                if (!parsed) {
+                    isSame = true;
+                // .off(name)
+                } else if (parsed.name) {
+                    isSame = parsed.name === meta.name;
+                // .off(.namespace)
+                }  else {
+                    isSame = parsed.ns === meta.ns;
+                }
+
+                isSame && broadcaster.off(meta.name, meta.fn, meta.context);
             }, this);
         }
 
