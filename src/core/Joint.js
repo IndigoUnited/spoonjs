@@ -69,8 +69,6 @@ define([
      * @return {Joint} The instance itself to allow chaining
      */
     Joint.prototype.off = function (event, fn, context) {
-        this._emitter.off(event, fn, context);
-
         // Remove the events from the broadcaster carefully,
         // specially the user is trying to remove all the events
         if (event && fn) {
@@ -78,8 +76,10 @@ define([
         } else {
             this._emitter.forEach(function (_event, fn, context) {
                 !event || _event === event && this._emitter.off(_event, fn, context);
-            });
+            }, this);
         }
+
+        this._emitter.off(event, fn, context);
 
         return this;
     };
