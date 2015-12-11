@@ -672,10 +672,6 @@ define([
 
         funcs = [];
 
-        // Push the state validator if any
-        registered = this._states[state.getFullName()];
-        registered && registered.validator && funcs.push(registered.validator.bind(null, state.getParams()));
-
         // Push the interceptors if any
         interceptor && this._interceptors.forEach(function (interceptor) {
             var fn = interceptor.fn.bind(null, state.getParams());
@@ -683,6 +679,10 @@ define([
             fn.$interceptorId = interceptor.id;
             funcs.push(fn);
         });
+
+        // Push the state validator if any
+        registered = this._states[state.getFullName()];
+        registered && registered.validator && funcs.push(registered.validator.bind(null, state.getParams()));
 
         booleanSeries(funcs, function (err, carryOn, fn) {
             // Ignore if we were destroyed meanwhile..
