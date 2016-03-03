@@ -546,7 +546,7 @@ define([
                     console.warn('[spoonjs] No state matched the URL "' + value + '".');
                 }
 
-                return this._emit('unknown', value);
+                return that._emit('unknown', value);
             }
 
             // Create the state instance

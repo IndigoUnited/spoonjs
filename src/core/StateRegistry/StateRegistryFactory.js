@@ -82,15 +82,13 @@ define([
     }
 
     function normalizeEntry(entry) {
-        // normalize everything to an object
+        // normalize entry itself to $url
         if (entry.value == null) {
             entry.value = { $url: null };
-        } else if (typeof entry.value === 'string') {
-            entry.value = { $url: [{ pattern: entry.value }] };
-        } else if (typeof entry.value.$url === 'string') {
-            entry.value .$url = [{ pattern: entry.value.$url }];
+        } else if (typeof entry.value === 'string' || Array.isArray(entry.value)) {
+            entry.value = { $url: entry.value };
         } else if (!hasOwn(entry.value, '$url')) {
-            entry.value.$url = [{ pattern: '/' + entry.key }];
+            entry.value.$url = '/' + entry.key;
         }
 
         // entry.value.$url can be a string, an array of strings or an array of objects
