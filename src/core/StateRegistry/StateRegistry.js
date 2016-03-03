@@ -425,9 +425,7 @@ define([
 
         if (has('debug')) {
             console.info('[spoonjs] State changed to "' + state + '".');
-            if (!this.isRegistered(state)) {
-                console.warn('[spoonjs] State "' + state + '" is not registered.');
-            }
+            !this.isRegistered(state) && console.warn('[spoonjs] State "' + state + '" is not registered.');
         }
 
         params.$info = params.$info || {};
@@ -542,9 +540,7 @@ define([
 
             // Didn't match?
             if (!didMatch) {
-                if (has('debug')) {
-                    console.warn('[spoonjs] No state matched the URL "' + value + '".');
-                }
+                has('debug') && console.warn('[spoonjs] No state matched the URL "' + value + '".');
 
                 return that._emit('unknown', value);
             }
@@ -639,7 +635,8 @@ define([
         });
 
         if (!route) {
-            console.warn('[spoonjs] None of "' + state.getFullName() + '" routes satisfied the passed parameters');
+            console.warn('[spoonjs] None of "' + state.getFullName() + '" routes satisfied the passed parameters', state.getParams());
+            console.trace('[spoonjs] trace');
             return '';
         }
 

@@ -230,6 +230,7 @@ define([
 
         if (has('debug')) {
             console.warn('[spoonjs] Unhandled bubble up event "' + event + '" emitted by "' + this.$name + '".');
+            console.trace('[spoonjs] trace');
         }
 
         return false;
@@ -292,6 +293,7 @@ define([
 
         if (has('debug')) {
             console.warn('[spoonjs] Unhandled upcast event "' + event + '" emitted by "' + this.$name + '".');
+            console.trace('[spoonjs] trace');
         }
 
         return false;

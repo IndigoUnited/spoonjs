@@ -81,6 +81,7 @@ define([
 
         if (has('debug')) {
             console.warn('[spoonjs] Unhandled broadcast event "' + event + '".');
+            console.trace('[spoonjs] trace');
         }
 
         return false;
