@@ -5,19 +5,20 @@ define([
     'events-emitter/MixableEventsEmitter',
     './State',
     './Route',
-    '../../util/booleanSeries',
+    '../../util/series',
     'mout/array/find',
     'mout/array/findIndex',
     'mout/array/remove',
     'mout/object/hasOwn',
     'mout/object/mixIn',
+    'mout/lang/toArray',
     'mout/string/startsWith',
     'mout/queryString/decode',
     'mout/queryString/encode',
     'has',
     'jquery'
-], function (MixableEventsEmitter, State, Route, booleanSeries, find, findIndex, remove,
-             hasOwn, mixIn, startsWith, decode, encode, has, $) {
+], function (MixableEventsEmitter, State, Route, series, find, findIndex, remove,
+             hasOwn, mixIn, toArray, startsWith, decode, encode, has, $) {
 
     'use strict';
 
@@ -83,7 +84,7 @@ define([
      * @param {String} [route]   The route (URL fragment)
      * @param {Object} [options] The options, see StateRegistry#setCurrent
      *
-     * @return {Boolean} True if it changed state, false otherwise
+     * @return {StateRegistry} The instance itself to allow chaining
      */
     StateRegistry.prototype.parse = function (route, options) {
         // Manually call the change handler with the passed route
@@ -94,68 +95,49 @@ define([
             type: 'external'
         };
 
-        return this._onAddressChange(obj, options);
+        this._onAddressChange(obj, options);
+
+        return this;
     };
 
     /**
-     * Registers a state with a route and default options.
+     * Registers a state.
      *
      * An error will be thrown if the state being registered already exists.
      *
-     * @param {String}    state      The state
-     * @param {Route}    [route]     The route associated to the state
-     * @param {Function} [validator] A validator to be run before entering the state
+     * @param {String}      state       The state
+     * @param {Function}    [validator] A validator to be run before entering the state
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
-    StateRegistry.prototype.register = function (state, route, validator) {
+    StateRegistry.prototype.register = function (state, validator) {
         if (has('debug') && this._states[state]) {
             throw new Error('State "' + state + '" is already registered.');
         }
 
-        // Add to the states object
-        this._states[state] = {
-            route: route,
-            validator: validator
-        };
-
-        // Add to the routes array
-        if (route) {
-            this._routes.push(route);
-        }
+        this._states[state] = this._states[state] || { routes: [], validator: validator };
 
         return this;
     };
 
     /**
-     * Unregisters a state.
+     * Registers a route for a state.
      *
-     * @param {String} state The state
+     * An error will be thrown if the state associated to the route does not exist.
+     *
+     * @param {Route} route The route
      *
      * @return {StateRegistry} The instance itself to allow chaining
      */
-    StateRegistry.prototype.unregister = function (state) {
-        var registered = this._states[state];
+    StateRegistry.prototype.addRoute = function (route) {
+        var state = route.getName();
 
-        // Remove it from the states object
-        delete this._states[state];
-
-        if (registered && registered.route) {
-            // Remote it from the routes array
-            remove(this._routes, registered.route);
+        if (has('debug') && !this._states[state]) {
+            throw new Error('State "' + state + '" is not yet registered.');
         }
 
-        return this;
-    };
-
-    /**
-     * Unregisters all the registered states.
-     *
-     * @return {StateRegistry} The instance itself to allow chaining
-     */
-    StateRegistry.prototype.unregisterAll = function () {
-        this._states = {};
-        this._routes = [];
+        this._states[state].routes.push(route);
+        this._routes.push(route);
 
         return this;
     };
@@ -181,7 +163,7 @@ define([
     StateRegistry.prototype.isRoutable = function (state) {
         var registered = this._states[state];
 
-        return !!(registered && registered.route);
+        return !!(registered && registered.routes.length);
     };
 
     /**
@@ -310,7 +292,7 @@ define([
      * @param {Object}       [params]   The state parameters if the state was a string
      * @param {Boolean}      [absolute] True to only generate an absolute URL, false otherwise
      *
-     * @return {String} The URL for the state or null if unable to generate one
+     * @return {String} The URL for the state or an empty string if unable to generate the URL
      */
     StateRegistry.prototype.generateUrl = function (state, params, absolute) {
         var url;
@@ -322,12 +304,13 @@ define([
         }
 
         url = this._getStateUrl(state);
-        if (!url || !this._address) {
+
+        if (url == null || !this._address) {
             params = State.filterSpecial(state.getParams());
             return 'state://' + state.getFullName() + '/' + encode(params);
         }
 
-        return this._address.generateUrl(url, absolute);
+        return url && this._address.generateUrl(url, absolute);
     };
 
     /**
@@ -485,7 +468,7 @@ define([
      * @param {String} finalState   The final state
      */
     StateRegistry.prototype._checkFinalState = function (initialState, finalState) {
-        var route;
+        var routes;
 
         // Abort if already registered
         if (!this._states[initialState] || this._states[finalState]) {
@@ -496,14 +479,14 @@ define([
         has('debug') && console.info('[spoonjs] Registering final state after transition, which is "' + finalState + '".');
 
         // Grab the route
-        route = find(this._routes, function (route) {
+        routes = this._routes.filter(function (route) {
             return route.getName() === initialState;
         }),
 
         // Finally add it.. note that we don't need to push
         // to the routes array because he is already there..
         this._states[finalState] = {
-            route: route,
+            route: routes,
             validator: this._states[initialState].validator
         };
     };
@@ -518,12 +501,9 @@ define([
      * @return {Boolean} True if it matched a registered state, false otherwise
      */
     StateRegistry.prototype._onAddressChange = function (obj, options) {
-        var x,
-            value = obj.newValue,
-            length,
-            route,
-            state,
-            params;
+        var value = obj.newValue,
+            that = this,
+            matchedParams;
 
         // Ensure that the value starts with a /
         if (!startsWith(value, '/')) {
@@ -541,36 +521,48 @@ define([
         this._currentUrl = value;
 
         // Find if there's a matching route for the new address value
-        length = this._routes.length;
-        for (x = 0; x < length; x += 1) {
-            route = this._routes[x];
+        series.some(this._routes, function (route, callback) {
+            route.match(value, function (err, params) {
+                matchedParams = params;
+                callback(err, params);
+            });
+        }, function (err, didMatch, route) {
+            var state;
 
-            // Test the route against the value
-            if (route.test(value)) {
-                // Create the state instance
-                state = this._createStateInstance(route.getName(), route.match(value));
-                params = state.getParams();
-                params.$info = {};
-
-                // Associate the address info to the params
-                if (obj.event) {
-                    obj = mixIn({}, obj);
-                    delete obj.event;       // Delete the event to avoid memory leaks
-                }
-                params.$info.address = obj;
-
-                // Finally change to the state
-                this.setCurrent(state, options);
-
-                return true;
+            // Ignore if we were destroyed meanwhile..
+            // Ignore if the URL changed meanwhile
+            if (that._destroyed || that._currentUrl !== value) {
+                return;
             }
-        }
 
-        if (has('debug')) {
-            console.warn('[spoonjs] No state matched the URL "' + value + '".');
-        }
+            // Did it failed?
+            if (err) {
+                return that._emit('error', err);
+            }
 
-        this._emit('unknown', value);
+            // Didn't match?
+            if (!didMatch) {
+                if (has('debug')) {
+                    console.warn('[spoonjs] No state matched the URL "' + value + '".');
+                }
+
+                return this._emit('unknown', value);
+            }
+
+            // Create the state instance
+            state = that._createStateInstance(route.getName(), matchedParams);
+
+            // Associate the address info to the params
+            matchedParams.$info = {};
+            if (obj.event) {
+                obj = mixIn({}, obj);
+                delete obj.event;       // Delete the event to avoid memory leaks
+            }
+            matchedParams.$info.address = obj;
+
+            // Finally change to the state
+            that.setCurrent(state, options);
+        });
 
         return false;
     };
@@ -634,10 +626,21 @@ define([
      */
     StateRegistry.prototype._getStateUrl = function (state) {
         var registered = this._states[state.getFullName()],
-            route = registered && registered.route;
+            routes = registered && registered.routes,
+            route;
+
+        if (!routes) {
+            return null;
+        }
+
+        // Find the appropriate route
+        route = find(routes, function (route) {
+            return route.satisfies(state.getParams());
+        });
 
         if (!route) {
-            return null;
+            console.warn('[spoonjs] None of "' + state.getFullName() + '" routes satisfied the passed parameters');
+            return '';
         }
 
         return route.generateUrl(state.getParams());
@@ -658,7 +661,7 @@ define([
     StateRegistry.prototype._shouldChangeCarryOn = function (state, interceptor, callback) {
         var that = this,
             registered,
-            funcs;
+            fns;
 
         if (this._blocked) {
             has('debug') && console.warn('[spoonjs] Cannot change state while the state registry is blocked');
@@ -670,21 +673,23 @@ define([
         this._address && this._address.disable();
         this._blocked = true;
 
-        funcs = [];
+        fns = [];
 
         // Push the interceptors if any
         interceptor && this._interceptors.forEach(function (interceptor) {
             var fn = interceptor.fn.bind(null, state.getParams());
 
             fn.$interceptorId = interceptor.id;
-            funcs.push(fn);
+            fns.push(fn);
         });
 
         // Push the state validator if any
         registered = this._states[state.getFullName()];
-        registered && registered.validator && funcs.push(registered.validator.bind(null, state.getParams()));
+        registered && registered.validator && fns.push(registered.validator.bind(null, state.getParams()));
 
-        booleanSeries(funcs, function (err, carryOn, fn) {
+        series.every(fns, function (fn, callback) {
+            return fn(callback);
+        }, function (err, carryOn, fn) {
             // Ignore if we were destroyed meanwhile..
             if (that._destroyed) {
                 return;

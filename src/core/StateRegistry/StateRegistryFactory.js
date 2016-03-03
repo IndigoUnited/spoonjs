@@ -11,158 +11,206 @@ define([
     'services/address',
     'app-config',
     'mout/lang/isObject',
+    'mout/lang/toArray',
+    'mout/object/forOwn',
     'mout/object/hasOwn',
     'mout/object/fillIn',
     'mout/object/size',
     'mout/array/sort',
+    '../../util/series',
     'has'
-], function (StateRegistry, Route, address, config, isObject, hasOwn, fillIn, size, sort, has) {
+], function (StateRegistry, Route, address, config, isObject, toArray,
+             forOwn, hasOwn, fillIn, size, sort, series, has) {
 
     'use strict';
+
+    config = config || {};
+    config = config.state || {};
+
+    var registry = new StateRegistry(),
+        trimSlashRegExp = /(^\/+)|(\/+$)/g,
+        cleanDoubleSlashRegExp = /\/\/+/g,
+        paramsRegExp = /\(.+?\)/g,
+        queue = [],
+        node;
 
     /**
      * Joins two patterns, standardizing them.
      *
-     * @param {String} pattern1 The first pattern
-     * @param {String} pattern2 The second pattern
+     * @param {String} [pattern1] The first pattern
+     * @param {String} [pattern2] The second pattern
      *
      * @return {String} The joined pattern
      */
     function patternJoin(pattern1, pattern2) {
         var joined;
 
-        if (pattern1 == null || pattern2 == null) {
-            return null;
+        if (pattern1 != null && pattern2 != null) {
+            joined = pattern1 + '/' + pattern2;
+            joined = '/' + joined.replace(cleanDoubleSlashRegExp, '/').replace(trimSlashRegExp, '');
+
+            return joined;
         }
 
-        pattern1 = (pattern1 || '').replace(trimSlashRegExp, '');
-        pattern2 = (pattern2 || '').replace(trimSlashRegExp, '');
-
-        joined = pattern1 + '/' + pattern2;
-
-        if (joined.charAt(0) !== '/') {
-            joined = '/' + joined;
-        }
-
-        joined = joined.replace(cleanSlashRegExp, '/').replace(trimSlashRegExp, '');
-
-        return joined || '/';
+        return pattern1 || pattern2;
     }
 
     /**
-     * Chains a parent state validator with a state child validator.
+     * Chains a parent function with a child function (series).
      *
-     * @param {Function} parentValidator The parent validator
-     * @param {Function} childValidator  The child validator
+     * @param {Function} [parentFn] The parent function
+     * @param {Function} [childFn]  The child function
      *
      * @return {Function} The chained function
      */
-    function chainStateValidator(parentValidator, childValidator) {
-        if (!childValidator || !parentValidator) {
-            return childValidator || parentValidator;
+    function chainSeries(parentFn, childFn) {
+        if (parentFn && childFn) {
+            return function () {
+                var args = toArray(arguments);
+                var callback = args.pop();
+
+                series.every([parentFn, childFn], function (fn, callback) {
+                    args = args.concat([]);
+                    args.push(callback);
+
+                    return fn.apply(null, args);
+                }, callback);
+            };
         }
 
-        return function (state) {
-            parentValidator(state);
-            childValidator(state);
-        };
+        return parentFn || childFn;
     }
 
-    config = config || {};
-    config = config.state || {};
-
-    var registry = new StateRegistry(),
-        states = config.states || {},
-        curr,
-        key,
-        value,
-        trimSlashRegExp = /\/+$/g,
-        cleanSlashRegExp = /\/\/+/g,
-        paramsRegExp = /\(.+?\)/g,
-        x,
-        length,
-        queue = [],
-        arr = [],
-        hasFullPattern,
-        hasFullValidator;
-
-    states.$pattern = '/';
-
-    // Process the states and add them to the registry
-    // The code bellow uses a stack (deep first) to avoid recursion
-    // TODO: This code bellow is not actually a deep first algorithm nor respects the natural
-    //       order of states; this needs to be fixed!
-    queue.push(states);
-
-    while (queue.length) {
-        curr = queue.shift();
-        hasFullPattern = hasOwn(curr, '$fullPattern');
-        hasFullValidator = hasOwn(curr, '$fullValidator');
-
-        for (key in curr) {
-            if (key.charAt(0) === '$') {
-                continue;
-            }
-
-            value = curr[key];
-            key = key.replace(paramsRegExp, '');    // Remove the parentheses if any
-
-            // Boolean falsy -> state has no route
-            if (!value) {
-                // We can add it already because the priority only apply to states with routes
-                registry.register(curr.$state ? curr.$state + '.' + key : key);
-            // Object -> add to the processing queue
-            } else if (isObject(value)) {
-                value.$state = curr.$state ? curr.$state + '.' + key : key;
-                value.$pattern = hasFullPattern ? curr.$fullPattern : patternJoin(curr.$pattern, hasOwn(value, '$pattern') ? value.$pattern : key);
-                value.$constraints = fillIn(value.$constraints || {}, curr.$constraints);
-                value.$validator = hasFullValidator ? curr.$fullValidator : chainStateValidator(curr.$validator, value.$validator);
-                queue.push(value);
-            // String -> state has a route
-            } else if (typeof value === 'string') {
-                // Add to the array to be sorted later
-                arr.push({
-                    state: curr.$state ? curr.$state + '.' + key : key,
-                    pattern: patternJoin(curr.$pattern, value),
-                    constraints: curr.$constraints,
-                    validator: curr.$validator,
-                    priority: curr.$priority || 0
-                });
-            } else if (has('debug')) {
-                throw new Error('Unexpected "' + key + '" while parsing states.');
-            }
+    function normalizeEntry(entry) {
+        // normalize everything to an object
+        if (entry.value == null) {
+            entry.value = { $url: null };
+        } else if (typeof entry.value === 'string') {
+            entry.value = { $url: [{ pattern: entry.value }] };
+        } else if (typeof entry.value.$url === 'string') {
+            entry.value .$url = [{ pattern: entry.value.$url }];
+        } else if (!hasOwn(entry.value, '$url')) {
+            entry.value.$url = [{ pattern: '/' + entry.key }];
         }
 
-        if (curr.$state) {
-            arr.push({
-                state: curr.$state,
-                pattern: hasFullPattern ? curr.$fullPattern : curr.$pattern,
-                constraints: curr.$constraints,
-                validator: hasFullValidator ? curr.$fullValidator : curr.$validator,
-                priority: curr.$priority || 0
+        // entry.value.$url can be a string, an array of strings or an array of objects
+        // normalize everything to an array of objects
+        if (entry.value.$url) {
+            entry.value.$url = (Array.isArray(entry.value.$url) ? entry.value.$url : [entry.value.$url])
+            .map(function (url) {
+                if (typeof url === 'string') {
+                    url = { pattern: url };
+                }
+
+                url.supersede = !!(url.supersede || false);
+
+                return url;
+            });
+            entry.value.$url = entry.value.$url.length ? entry.value.$url : null;
+        }
+
+        // entry.value.$validator can be a function or an object
+        // normalize everything to an object
+        if (entry.value.$validator) {
+            if (typeof entry.value.$validator === 'function') {
+                entry.value.$validator = { fn: entry.value.$validator };
+            }
+
+            entry.value.$validator.supersede = !!(entry.value.$validator.supersede || false);
+        }
+
+        // entry.value.$probe can be a function or an object
+        // normalize everything to an object
+        if (entry.value.$probe) {
+            if (typeof entry.value.$probe === 'function') {
+                entry.value.$probe = { fn: entry.value.$probe };
+            }
+
+            entry.value.$probe.supersede = !!(entry.value.$probe.supersede || false);
+        }
+    }
+
+    function parseEntryAsNode(entry) {
+        var node = {};
+        var children;
+
+        normalizeEntry(entry);
+
+        node.state = entry.parentNode ? entry.parentNode.state + '.' + entry.key : entry.key;
+
+        if (entry.value.$validator) {
+            node.validator = entry.value.$validator.supersede ?
+                entry.value.$validator.fn :
+                chainSeries(entry.parentNode && entry.parentNode.validator, entry.value.$validator.fn);
+        } else {
+            node.validator = entry.parentNode && entry.parentNode.validator;
+        }
+
+        if (entry.value.$probe) {
+            node.probe = entry.value.$probe.supersede ?
+                entry.value.$probe.fn :
+                chainSeries(entry.parentNode && entry.parentNode.probe, entry.value.$probe.fn);
+        } else {
+            node.probe = entry.parentNode && entry.parentNode.probe;
+        }
+
+        if (!entry.value.$url || (entry.parentNode && !entry.parentNode.urls)) {
+            node.urls = null;
+        } else if (!entry.parentNode) {
+            node.urls = entry.value.$url.map(function (valueUrl) { return valueUrl.pattern; });
+        } else {
+            node.urls = [];
+
+            entry.value.$url.forEach(function (valueUrl) {
+                entry.parentNode.urls.forEach(function (parentUrl) {
+                    node.urls.push(valueUrl.supersede ? valueUrl.pattern : patternJoin(parentUrl, valueUrl.pattern));
+                });
             });
         }
+
+        // Extract the children
+        forOwn(entry.value, function (value, key) {
+            if (key.charAt(0) !== '$') {
+                children = children || [];
+                children.push({ key: key, value: value });
+            }
+        });
+
+        // If it has children, it is a branch
+        if (children) {
+            node.type = 'branch';
+            node.children = children;
+        } else {
+            node.type = 'leaf';
+        }
+
+        return node;
     }
 
-    // Sort the array according to the priority
-    // We use mout's sort because it's stable!
-    arr = sort(arr, function (val1, val2) {
-        if (val1.priority === val2.priority) {
-            return 0;
-        }
 
-        if (val1.priority > val2.priority) {
-            return -1;
-        }
-
-        return 1;
+    // Process the states
+    // The code bellow uses a stack (deep first) to avoid recursion
+    forOwn(config.states, function (value, key) {
+        queue.push({ parentNode: null, key: key.replace(paramsRegExp, ''), value: value });
     });
 
-    // Add the sorted array to the registry
-    length = arr.length;
-    for (x = 0; x < length; x += 1) {
-        curr = arr[x];
-        registry.register(curr.state, curr.pattern ? new Route(curr.state, curr.pattern, curr.constraints) : null, curr.validator);
+    while (queue.length) {
+        node = parseEntryAsNode(queue.shift());
+
+        // Register this state
+        registry.register(node.state, node.validator);
+
+        // Add to routes to be sorted later
+        node.urls && node.urls.forEach(function (url) {
+            registry.addRoute(new Route(node.state, url, node.probe));
+        });
+
+        // Keep iterating
+        if (node.type === 'branch') {
+            node.children.forEach(function (child) {
+                queue.unshift({ parentNode: node, key: child.key, value: child.value });
+            });
+        }
     }
 
     // Inject the address if the routing is enabled

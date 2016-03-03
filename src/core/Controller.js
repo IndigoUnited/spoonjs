@@ -9,10 +9,11 @@ define([
     'mout/string/startsWith',
     'mout/object/size',
     'mout/object/pick',
+    'mout/object/filter',
     'mout/object/fillIn',
     'mout/object/mixIn',
     'has'
-], function (Joint, stateRegistry, startsWith, size, pick, fillIn, mixIn, has) {
+], function (Joint, stateRegistry, startsWith, size, pick, filter, fillIn, mixIn, has) {
 
     'use strict';
 
@@ -551,6 +552,7 @@ define([
         // Update current state
         this._currentState = state.clone();
         this._currentStateParams = pick(this._currentState.getParams(), stateMeta.params);
+        this._currentStateParams = filter(this._currentStateParams, function (value) { return !!value; });
 
         // Ensure $info gets up to date
         params = this._currentState.getParams();
