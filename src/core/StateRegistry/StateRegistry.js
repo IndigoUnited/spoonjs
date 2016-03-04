@@ -635,8 +635,11 @@ define([
         });
 
         if (!route) {
-            console.warn('[spoonjs] None of "' + state.getFullName() + '" routes satisfied the passed parameters', state.getParams());
-            console.trace('[spoonjs] trace');
+            if (has('debug')) {
+                console.warn('[spoonjs] None of "' + state.getFullName() + '" routes satisfied the passed parameters', state.getParams());
+                console.trace('[spoonjs] trace');
+            }
+
             return '';
         }
 
