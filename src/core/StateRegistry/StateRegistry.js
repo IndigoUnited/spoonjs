@@ -484,7 +484,7 @@ define([
         // Finally add it.. note that we don't need to push
         // to the routes array because he is already there..
         this._states[finalState] = {
-            route: routes,
+            routes: routes,
             validator: this._states[initialState].validator
         };
     };
