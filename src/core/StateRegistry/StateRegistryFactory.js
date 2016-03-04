@@ -1,4 +1,4 @@
-/*jshint regexp:false */
+/*jshint loopfunc:true */
 
 /**
  * StateRegistry factory.
@@ -205,7 +205,7 @@ define([
 
         // Keep iterating
         if (node.type === 'branch') {
-            node.children.forEach(function (child) {
+            node.children.reverse().forEach(function (child) {
                 queue.unshift({ parentNode: node, key: child.key, value: child.value });
             });
         }
