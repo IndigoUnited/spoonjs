@@ -625,7 +625,7 @@ define([
             routes = registered && registered.routes,
             route;
 
-        if (!routes.length) {
+        if (!routes || !routes.length) {
             return null;
         }
 
