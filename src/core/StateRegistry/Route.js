@@ -87,7 +87,7 @@ define([
         probeRet = this._probe(params, function (err, ok) {
             callback(err, ok ? params : null);
         });
-        probeRet === true && callback(null, params);
+        typeof probeRet === 'boolean' && callback(null, probeRet ? params : false);
     };
 
     /**
